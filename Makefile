@@ -1,13 +1,13 @@
-prefix=/usr/bin
+prefix = /usr/bin
 
-YAIT_SRCS=yait/main.c
-YAIR_DOC_SRCS=yait-doc/main.c
+YAIT_SRCS := $(wildcard yait/*.c)
+YAIT_DOC_SRCS := $(wildcard yait-doc/*.c)
 
-YAIT_OBJS = $(addprefix obj/yait,$(patsubst yait/%,obj/%,$(patsubst %.c,%.o,$(notdir $(YAIT_SRCS)))))
-YAIT_DOC_OBJS = $(addprefix obj/yait-doc,$(patsubst yait-doc/%,obj/%,$(patsubst %.c,%.o,$(notdir $(YAIT_DOC_SRCS)))))
+YAIT_OBJS := $(patsubst yait/%.c,obj/yait/%.o,$(YAIT_SRCS))
+YAIT_DOC_OBJS := $(patsubst yait-doc/%.c,obj/yait-doc/%.o,$(YAIT_DOC_SRCS))
 
-YAIT=$(prefix)/yait
-YAIT_DOC=$(prefix)/yait-doc
+YAIT := bin/yait
+YAIT_DOC := bin/yait-doc
 
 -include config.mak
 
@@ -17,26 +17,25 @@ all:
 	@exit 1
 else
 
-all: clean obj bin $(YAIT) $(YAIT_DOC)
+all: obj bin $(YAIT) $(YAIT_DOC)
 
 obj:
-	mkdir -p $@/yait
-	mkdir -p $@/yait-doc
+	mkdir -p obj/yait obj/yait-doc
 
 bin:
-	mkdir -p $@
+	mkdir -p bin
 
-obj/yait/%.o: yait/**/%.c
+obj/yait/%.o: yait/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-obj/yait-doc/%.o: yait-doc/**/%.c
+obj/yait-doc/%.o: yait-doc/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(YAIT): 
-	$(CC) $(YAIT_SCRS) -o ./bin/yait
+$(YAIT): $(YAIT_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
 
-$(YAIT_DOC): 
-	$(CC) $(YAIT_DOC_SRCS) -o ./bin/yait-doc
+$(YAIT_DOC): $(YAIT_DOC_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
 
 endif
 
@@ -52,6 +51,6 @@ clean:
 	rm -rf obj bin
 
 dist-clean: clean
-	rm config.mak
+	rm -f config.mak
 
 .PHONY: all clean dist-clean install uninstall
