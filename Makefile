@@ -1,13 +1,10 @@
 prefix = /usr/bin
 
 YAIT_SRCS := $(wildcard yait/*.c)
-YAIT_DOC_SRCS := $(wildcard yait-doc/*.c)
 
 YAIT_OBJS := $(patsubst yait/%.c,obj/yait/%.o,$(YAIT_SRCS))
-YAIT_DOC_OBJS := $(patsubst yait-doc/%.c,obj/yait-doc/%.o,$(YAIT_DOC_SRCS))
 
 YAIT := bin/yait
-YAIT_DOC := bin/yait-doc
 
 -include config.mak
 
@@ -20,7 +17,7 @@ else
 all: obj bin $(YAIT) $(YAIT_DOC)
 
 obj:
-	mkdir -p obj/yait obj/yait-doc
+	mkdir -p obj/yait
 
 bin:
 	mkdir -p bin
@@ -28,14 +25,9 @@ bin:
 obj/yait/%.o: yait/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-obj/yait-doc/%.o: yait-doc/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
 $(YAIT): $(YAIT_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(YAIT_DOC): $(YAIT_DOC_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
 
 endif
 
