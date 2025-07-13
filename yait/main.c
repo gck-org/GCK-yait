@@ -1,6 +1,6 @@
-#include <stdio.h>
+#include "../lib/print.h"
 
 int main(void) {
-  printf("Hello, Yait!\n");
+  printfn("error: incomplete binary.");
   return 0;
 }

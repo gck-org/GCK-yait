@@ -1,6 +1,6 @@
 prefix = /usr/bin
 
-YAIT_SRCS := $(wildcard yait/*.c)
+YAIT_SRCS := $(wildcard yait/*.c) $(wildcard lib/*.c)
 
 YAIT_OBJS := $(patsubst yait/%.c,obj/yait/%.o,$(YAIT_SRCS))
 
