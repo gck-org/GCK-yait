@@ -1,8 +1,15 @@
 #include "../core/file.h"
 #include "../core/print.h"
+#include "../core/standard.h"
 #include "format.h"
+#include <stdlib.h>
+#include <string.h>
+
+#define AUTHORS vx_clutch
 
 int create (format_t);
+
+void usage () {};
 
 int
 main (int argc, char **argv)
@@ -12,9 +19,17 @@ main (int argc, char **argv)
       printfn ("error: not enough arguments.");
       return 1;
     }
+  int status = parse_standard_options (usage, argc, argv);
+  if (status)
+    {
+      printfn ("error: %s", strerror (status));
+      return 1;
+    }
   format_t conf;
   conf.name = argv[1];
-  conf.nogit = false;
+  conf.git = true;
+  conf.clang_format = true;
+  conf.licence = BSD3;
   create (conf);
   return 0;
 }
@@ -22,11 +37,14 @@ main (int argc, char **argv)
 int
 create (format_t fmt)
 {
-  error_t err = take(fmt.name);
-  if (!err.null) {
-    printfn("failed to create or enter directory: %s", err.src);
-    return 1;
-  }
+  error_t err = take (fmt.name);
+  if (!err.null)
+    {
+      printfn ("failed to create or enter directory: %s", err.src);
+      return 1;
+    }
+  if (fmt.git)
+    system ("git init --quiet");
   touch ("README",
          "%s ( concise description )\n\n"
          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
@@ -99,5 +117,17 @@ create (format_t fmt)
          "printf \"LDFLAGS=%%s\\n\" \"$LDFLAGS\" >> config.mak\n"
          "printf \"CC=%%s\\n\" \"$CC\" >> config.mak\n"
          "printf \"done\\n\"\n");
+  if (fmt.clang_format)
+    touch (".clang-format", "Language: Cpp\nBasedOnStyle: GNU\n");
+  switch (fmt.licence)
+    {
+    case BSD3:
+      touch ("COPYING",
+             "https://raw.githubusercontent.com/teamdigitale/licenses/"
+             "refs/heads/master/BSD-3-Clause");
+      break;
+    default:
+      break;
+    }
   return 0;
 }

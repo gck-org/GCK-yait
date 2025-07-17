@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 typedef enum {
-  OPENBSD3,
+  BSD3,
   GPLv3,
   MIT,
   UNLICENCE,
@@ -17,7 +17,8 @@ typedef enum {
 } lib_t;
 
 typedef struct {
-  bool nogit;
+  bool git;
+  bool clang_format;
   licence_t licence;
   char *name;
 } format_t;
