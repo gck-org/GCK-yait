@@ -1,7 +1,6 @@
 #include "../core/file.h"
 #include "../core/print.h"
 #include "format.h"
-#include <stdio.h>
 
 int create (format_t);
 
@@ -23,7 +22,11 @@ main (int argc, char **argv)
 int
 create (format_t fmt)
 {
-  take (fmt.name);
+  error_t err = take(fmt.name);
+  if (!err.null) {
+    printfn("failed to create or enter directory: %s", err.src);
+    return 1;
+  }
   touch ("README",
          "%s ( concise description )\n\n"
          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
@@ -56,7 +59,7 @@ create (format_t fmt)
          "exit 0\n"
          "}\n"
          "\n"
-         "echo () { printf \"%s\\n\" \"$*\" ; }\n"
+         "echo () { printf \"%%s\\n\" \"$*\" ; }\n"
          "cmdexists () { type \"$1\" >/dev/null 2>&1 ; }\n"
          "trycc () { test -z \"$CC\" && cmdexists \"$1\" && CC=$1 ; }\n"
          "\n"
@@ -77,7 +80,7 @@ create (format_t fmt)
          "trycc gcc\n"
          "trycc cc\n"
          "trycc clang\n"
-         "printf \"%s\\n\" \"$CC\"\n"
+         "printf \"%%s\\n\" \"$CC\"\n"
          "\n"
          "printf \"checking weather C compiler works... \"\n"
          "status=\"fail\"\n"
@@ -86,16 +89,15 @@ create (format_t fmt)
          "if output=$($CC $CFLAGS -c -o /dev/null \"$tmpc\" 2>&1) ; then\n"
          "printf \"yes\\n\"\n"
          "else\n"
-         "printf \"no; %s\\n\" \"$output\"\n"
+         "printf \"no; %%s\\n\" \"$output\"\n"
          "exit 1\n"
          "fi\n"
          "\n"
          "printf \"creating config.mak... \"\n"
-         "printf \"PREFIX=%s\\n\" \"$prefix\" > config.mak\n"
-         "printf \"CFLAGS=%s\\n\" \"$CFLAGS\" >> config.mak\n"
-         "printf \"LDFLAGS=%s\\n\" \"$LDFLAGS\" >> config.mak\n"
-         "printf \"CC=%s\\n\" \"$CC\" >> config.mak\n"
-         "printf \"done\\n\"\n",
-         NULL);
+         "printf \"PREFIX=%%s\\n\" \"$prefix\" > config.mak\n"
+         "printf \"CFLAGS=%%s\\n\" \"$CFLAGS\" >> config.mak\n"
+         "printf \"LDFLAGS=%%s\\n\" \"$LDFLAGS\" >> config.mak\n"
+         "printf \"CC=%%s\\n\" \"$CC\" >> config.mak\n"
+         "printf \"done\\n\"\n");
   return 0;
 }

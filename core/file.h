@@ -4,9 +4,7 @@
 #include "e.h"
 #include <unistd.h>
 
-#define take(x, ...)                                                           \
-  dir(x, ##__VA_ARGS__);                                                       \
-  chdir(x);
+error_t take(const char *dirname);
 
 error_t touch(char *, char *, ...);
 error_t dir(char *, ...);

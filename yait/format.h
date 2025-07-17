@@ -20,7 +20,6 @@ typedef struct {
   bool nogit;
   licence_t licence;
   char *name;
-  lib_t libraries[];
 } format_t;
 
 #endif
