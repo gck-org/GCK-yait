@@ -1,10 +1,9 @@
 prefix = /usr/bin
 
-YAIT_SRCS := $(wildcard yait/*.c) $(wildcard lib/*.c)
+YAIT_SRCS := $(wildcard yait/*.c) $(wildcard core/*.c)
+YAIT_OBJS := $(patsubst yait/%.c,c-out/obj/%.o,$(YAIT_SRCS))
 
-YAIT_OBJS := $(patsubst yait/%.c,obj/yait/%.o,$(YAIT_SRCS))
-
-YAIT := bin/yait
+YAIT := c-out/bin/yait
 
 -include config.mak
 
@@ -14,15 +13,13 @@ all:
 	@exit 1
 else
 
-all: obj bin $(YAIT) $(YAIT_DOC)
+all: build $(YAIT) $(YAIT_DOC)
 
-obj:
-	mkdir -p obj/yait
+build:
+	mkdir -p c-out/bin
+	mkdir -p c-out/obj
 
-bin:
-	mkdir -p bin
-
-obj/yait/%.o: yait/%.c
+c-out/obj/%.o: yait/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(YAIT): $(YAIT_OBJS)
@@ -40,9 +37,9 @@ uninstall:
 	exit 1
 
 clean:
-	rm -rf obj bin
+	rm -rf c-out
 
 dist-clean: clean
 	rm -f config.mak
 
-.PHONY: all clean dist-clean install uninstall
+.PHONY: all clean dist-clean install uninstall build format

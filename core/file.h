@@ -2,8 +2,13 @@
 #define FILE_H
 
 #include "e.h"
+#include <unistd.h>
 
-error_t write(char *, char *, ...);
-void printfn(char *, ...);
+#define take(x, ...)                                                           \
+  dir(x, ##__VA_ARGS__);                                                       \
+  chdir(x);
+
+error_t touch(char *, char *, ...);
+error_t dir(char *, ...);
 
 #endif

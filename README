@@ -5,6 +5,3 @@ definitely complete. This tool will create a new directory containing all
 project files needed for your new C ( maybe C++ ) project. It provides you with
 a build system and some basic source files to give you a kick start on your new
 project--with optional libraries!
-
-For a more in-depth explanation of how to use the tool refer to `--help` or use
-the doc tool `yait-doc`.
