@@ -7,14 +7,23 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+bool
+contains_percent (const char *s)
+{
+  while (*s)
+    {
+      if (*s == '%')
+        return true;
+      s++;
+    }
+  return false;
+}
+
 error_t
 touch (char *path, char *format, ...)
 {
   error_t err = { 0 };
-  err.null = true; // success by default
-
-  va_list args;
-  va_start (args, format);
+  err.null = true;
 
   FILE *fp = fopen (path, "w");
   if (!fp)
@@ -22,14 +31,22 @@ touch (char *path, char *format, ...)
       err.null = false;
       err.status = errno;
       err.src = strerror (errno);
-      va_end (args);
       return err;
     }
 
-  vfprintf (fp, format, args);
-  fclose (fp);
+  if (contains_percent (format))
+    {
+      va_list args;
+      va_start (args, format);
+      vfprintf (fp, format, args);
+      va_end (args);
+    }
+  else
+    {
+      fputs (format, fp);
+    }
 
-  va_end (args);
+  fclose (fp);
   return err;
 }
 
