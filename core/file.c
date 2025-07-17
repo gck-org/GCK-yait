@@ -7,46 +7,52 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-error_t touch(char *path, char *format, ...) {
-  error_t err = {0};
+error_t
+touch (char *path, char *format, ...)
+{
+  error_t err = { 0 };
   err.null = true; // success by default
 
   va_list args;
-  va_start(args, format);
+  va_start (args, format);
 
-  FILE *fp = fopen(path, "w");
-  if (!fp) {
-    err.null = false;
-    err.status = errno;
-    err.src = strerror(errno);
-    va_end(args);
-    return err;
-  }
+  FILE *fp = fopen (path, "w");
+  if (!fp)
+    {
+      err.null = false;
+      err.status = errno;
+      err.src = strerror (errno);
+      va_end (args);
+      return err;
+    }
 
-  vfprintf(fp, format, args);
-  fclose(fp);
+  vfprintf (fp, format, args);
+  fclose (fp);
 
-  va_end(args);
+  va_end (args);
   return err;
 }
 
-error_t dir(char *format, ...) {
-  error_t err = {0};
+error_t
+dir (char *format, ...)
+{
+  error_t err = { 0 };
   err.null = true; // success by default
 
   va_list args;
-  va_start(args, format);
+  va_start (args, format);
 
   char path[1024];
-  vsnprintf(path, sizeof(path), format, args);
+  vsnprintf (path, sizeof (path), format, args);
 
-  va_end(args);
+  va_end (args);
 
-  if (mkdir(path, 0777) < 0) {
-    err.null = false;
-    err.status = errno;
-    err.src = strerror(errno);
-  }
+  if (mkdir (path, 0777) < 0)
+    {
+      err.null = false;
+      err.status = errno;
+      err.src = strerror (errno);
+    }
 
   return err;
 }
