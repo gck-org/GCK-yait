@@ -8,8 +8,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#define AUTHORS vx_clutch
-
 int create (format_t);
 
 void usage () {};
