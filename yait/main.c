@@ -3,14 +3,42 @@
 #include "../core/print.h"
 #include "../core/standard.h"
 #include "format.h"
+#include <ctype.h>
 #include <pwd.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 int create (format_t);
 
-void usage () {};
+#define print_option(left, right)                                             \
+  printf ("  %-20s %-20s"                                                     \
+          "\n",                                                               \
+          left, right)
+
+void
+usage (int status)
+{
+  if (status != 0)
+    fprintf (stderr, "Try 'yait --help' for more information.\n");
+  else
+    {
+      printf ("Usage: yait [OPTION]... [PROJECT] (NAME)\n");
+      printf ("Creates a C project with opinionated defaults.\nWhen only "
+              "given first argument it will detect your name\n\n");
+      printf ("Mandatory arguments to long options are mandatory for short "
+              "options too\n");
+      print_option ("-l, --license=NAME",
+                    "Set license (gpl, mit, bsd) [default: gpl]");
+      print_option ("--use-cpp", "Uses the CPP language instead of C");
+      print_option ("--git", "Initialize git repository");
+      print_option ("--GNU",
+                    "Adds stand GNU argument parsing to your project");
+      printf ("    --help\tdisplay the help text and exit\n");
+      printf ("    --version\toutput version information and exit\n");
+    }
+}
 
 int
 main (int argc, char **argv)
@@ -45,10 +73,10 @@ main (int argc, char **argv)
 int
 create (format_t fmt)
 {
-  error_t err = take (fmt.project);
-  if (!err.null)
+  int err = take (fmt.project);
+  if (err)
     {
-      printfn ("failed to create or enter directory: %s", err.src);
+      printfn ("failed to create or enter directory: %s", strerror (err));
       return 1;
     }
   if (fmt.git)
@@ -125,6 +153,24 @@ create (format_t fmt)
          "printf \"LDFLAGS=%%s\\n\" \"$LDFLAGS\" >> config.mak\n"
          "printf \"CC=%%s\\n\" \"$CC\" >> config.mak\n"
          "printf \"done\\n\"\n");
+  char *mkfile_name;
+  strcpy(mkfile_name, fmt.project);
+  for (char *p = mkfile_name; *p; ++p) *p = toupper(*p);
+  touch ("Makefile",
+         "prefix = /usr/bin\n\n%s_SRCS := $(wildcard yait/*.c) $(wildcard "
+         "core/*.c)\n%s_OBJS := $(patsubst "
+         "yait/%.c,c-out/obj/%.o,$(%s_SRCS))\n\n%s := "
+         "c-out/bin/yait\n\n-include config.mak\n\nifeq ($(wildcard "
+         "config.mak),)\nall:\n\t@echo \"File config.mak not found, run "
+         "configure\"\n\t@exit 1\nelse\n\nall: build $(%s) "
+         "$(%s_DOC)\n\nbuild:\n\tmkdir -p c-out/bin\n\tmkdir -p "
+         "c-out/obj\n\nc-out/obj/%.o: yait/%.c\n\t$(CC) $(CFLAGS) -c $< -o "
+         "$@\n\n$(%s): $(%s_OBJS)\n\t$(CC) $(CFLAGS) -DCOMMIT=$(shell git "
+         "rev-list --count --all) $^ -o $@\n\n\nendif\n\ninstall:\n\t@echo "
+         "\"NOT IMPL\"\n\texit 1\n\nuninstall:\n\t@echo \"NOT IMPL\"\n\texit "
+         "1\n\nclean:\n\trm -rf c-out\n\ndist-clean: clean\n\trm -f "
+         "config.mak\n\n.PHONY: all clean dist-clean install uninstall build "
+         "format\n", mkfile_name, mkfile_name, mkfile_name, mkfile_name, mkfile_name, mkfile_name);
   if (fmt.clang_format)
     touch (".clang-format", "Language: Cpp\nBasedOnStyle: GNU\n");
   switch (fmt.licence)
@@ -162,5 +208,10 @@ create (format_t fmt)
     default:
       break;
     }
+  take (fmt.project);
+  touch ("main.c",
+         "#include <stdio.h>\n\nint main(void) {\n  printf(\"%s: Hello "
+         "%s!\\n\");\nreturn 0;\n}",
+         fmt.project, fmt.name);
   return 0;
 }
