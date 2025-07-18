@@ -10,7 +10,7 @@ int parse_standard_options(void (*usage)(), int argc, char **argv) {
       usage();
       exit(0);
     } else if (strcmp(argv[i], "--version") == 0) {
-      printf("%s %s %d\n", PROGRAM, VERSION, COMMIT);
+      printf("%s %s %d\nCopyright (C) %d %s.\n%s\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRNTY, to the extent permitted by law.\n", PROGRAM, VERSION, COMMIT, YEAR, AUTHOR, LICENSE_LINE);
       exit(0);
     }
   }

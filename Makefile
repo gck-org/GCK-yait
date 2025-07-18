@@ -20,7 +20,7 @@ build:
 	mkdir -p c-out/obj
 
 c-out/obj/%.o: yait/%.c
-	$(CC) $(CFLAGS) -DCOMMIT=$(shell git rev-list --count --all) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(YAIT): $(YAIT_OBJS)
 	$(CC) $(CFLAGS) -DCOMMIT=$(shell git rev-list --count --all) $^ -o $@
