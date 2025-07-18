@@ -3,7 +3,6 @@
 
 #define PROGRAM "yait"
 
-#define ORGANIZATION "vx_clutch"
 #define VERSION "pre-alpha"
 #define YEAR 2025
 
