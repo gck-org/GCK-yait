@@ -1,9 +1,12 @@
+#include "../config.h"
 #include "../core/file.h"
 #include "../core/print.h"
 #include "../core/standard.h"
 #include "format.h"
+#include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define AUTHORS vx_clutch
 
@@ -20,13 +23,20 @@ main (int argc, char **argv)
       return 1;
     }
   int status = parse_standard_options (usage, argc, argv);
-  if (status)
+  if (status && status != 1)
     {
       printfn ("error: %s", strerror (status));
       return 1;
     }
   format_t conf;
-  conf.name = argv[1];
+  conf.project = argv[1];
+  if (argc > 2)
+    conf.name = argv[2];
+  else
+    {
+      struct passwd *pw = getpwuid (getuid ());
+      conf.name = pw ? pw->pw_name : NULL;
+    }
   conf.git = true;
   conf.clang_format = true;
   conf.licence = BSD3;
@@ -37,7 +47,7 @@ main (int argc, char **argv)
 int
 create (format_t fmt)
 {
-  error_t err = take (fmt.name);
+  error_t err = take (fmt.project);
   if (!err.null)
     {
       printfn ("failed to create or enter directory: %s", err.src);
@@ -58,7 +68,7 @@ create (format_t fmt)
          "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
          "proident, sunt in\n"
          "culpa qui officia deserunt mollit anim id est laborum.",
-         fmt.name);
+         fmt.project);
   touch ("configure",
          "#!/bin/sh\n"
          "\n"
@@ -122,9 +132,34 @@ create (format_t fmt)
   switch (fmt.licence)
     {
     case BSD3:
-      touch ("COPYING",
-             "https://raw.githubusercontent.com/teamdigitale/licenses/"
-             "refs/heads/master/BSD-3-Clause");
+      touch (
+          "COPYING",
+          "BSD 3-Clause License\n\nCopyright (c) %d, "
+          "%s\n\nRedistribution and use in source and binary forms, "
+          "with or without\nmodification, are permitted provided that the "
+          "following conditions are met:\n\n1. Redistributions of source code "
+          "must retain the above copyright notice, this\n   list of "
+          "conditions and the following disclaimer.\n\n2. Redistributions in "
+          "binary form must reproduce the above copyright notice,\n   this "
+          "list of conditions and the following disclaimer in the "
+          "documentation\n   and/or other materials provided with the "
+          "distribution.\n\n3. Neither the name of the copyright holder nor "
+          "the names of its\n   contributors may be used to endorse or "
+          "promote products derived from\n   this software without specific "
+          "prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE "
+          "COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR "
+          "IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED "
+          "WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE "
+          "ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR "
+          "CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, "
+          "SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT "
+          "LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF "
+          "USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED "
+          "AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT "
+          "LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN "
+          "ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE "
+          "POSSIBILITY OF SUCH DAMAGE.\n",
+          YEAR, fmt.name);
       break;
     default:
       break;

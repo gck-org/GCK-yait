@@ -20,6 +20,7 @@ typedef struct {
   bool git;
   bool clang_format;
   licence_t licence;
+  char *project;
   char *name;
 } format_t;
 

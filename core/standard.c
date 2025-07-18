@@ -14,5 +14,5 @@ int parse_standard_options(void (*usage)(), int argc, char **argv) {
       exit(0);
     }
   }
-  return -1;
+  return 1;
 }
