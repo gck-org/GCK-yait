@@ -104,81 +104,88 @@ create_project (format_t fmt)
       return 1;
     }
   if (fmt.git)
-    system ("git init --quiet");
+    err = system ("git init --quiet");
+  if (err)
+    {
+      printfn ("failed on git initialize: %s", strerror (err));
+      return 1;
+    }
   if (!fmt.name)
     fmt.name = DEFAULT_USER_NAME;
-  create_file_with_content ("README",
-         "%s ( concise description )\n\n"
-         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
-         "eiusmod tempor\n"
-         "incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
-         "veniam, quis\n"
-         "nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
-         "consequat.\n"
-         "Duis aute irure dolor in reprehenderit in voluptate velit esse "
-         "cillum dolore eu\n"
-         "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
-         "proident, sunt in\n"
-         "culpa qui officia deserunt mollit anim id est laborum.",
-         fmt.project ? fmt.project : DEFAULT_PROJECT_NAME);
-  create_file_with_content ("configure",
-         "#!/bin/sh\n"
-         "\n"
-         "usage() {\n"
-         "cat <<EOF\n"
-         "Usage: $0 [OPTION]... [VAR=VALUE]...\n"
-         "\n"
-         "To assign environment variables (e.g., CC, CFLAGS...), specify them "
-         "as\n"
-         "VAR=VALUE.\n"
-         "\n"
-         "  CC      C compiler command [detected]\n"
-         "  CFLAGS  C compiler flags [-g, ...]\n"
-         "\n"
-         "EOF\n"
-         "exit 0\n"
-         "}\n"
-         "\n"
-         "echo () { printf \"%%s\\n\" \"$*\" ; }\n"
-         "cmdexists () { type \"$1\" >/dev/null 2>&1 ; }\n"
-         "trycc () { test -z \"$CC\" && cmdexists \"$1\" && CC=$1 ; }\n"
-         "\n"
-         "prefix=/usr/bin/\n"
-         "CFLAGS=\"-Wall -Wextra -O2\"\n"
-         "LDFLAGS=\n"
-         "CC=\n"
-         "\n"
-         "for arg ; do\n"
-         "case \"$arg\" in\n"
-         "--help|h) usage ;;\n"
-         "CFLAGS=*) CFLAGS=${arg#*=} ;;\n"
-         "LDFLAGS=*) LDFLAGS=${arg#*=} ;;\n"
-         "esac\n"
-         "done\n"
-         "\n"
-         "printf \"checking for C compiler... \"\n"
-         "trycc gcc\n"
-         "trycc cc\n"
-         "trycc clang\n"
-         "printf \"%%s\\n\" \"$CC\"\n"
-         "\n"
-         "printf \"checking weather C compiler works... \"\n"
-         "status=\"fail\"\n"
-         "tmpc=\"$(mktemp -d)/test.c\"\n"
-         "echo \"typedef int x;\" > \"$tmpc\"\n"
-         "if output=$($CC $CFLAGS -c -o /dev/null \"$tmpc\" 2>&1) ; then\n"
-         "printf \"yes\\n\"\n"
-         "else\n"
-         "printf \"no; %%s\\n\" \"$output\"\n"
-         "exit 1\n"
-         "fi\n"
-         "\n"
-         "printf \"creating config.mak... \"\n"
-         "printf \"PREFIX=%%s\\n\" \"$prefix\" > config.mak\n"
-         "printf \"CFLAGS=%%s\\n\" \"$CFLAGS\" >> config.mak\n"
-         "printf \"LDFLAGS=%%s\\n\" \"$LDFLAGS\" >> config.mak\n"
-         "printf \"CC=%%s\\n\" \"$CC\" >> config.mak\n"
-         "printf \"done\\n\"\n");
+  create_file_with_content (
+      "README",
+      "%s ( concise description )\n\n"
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
+      "eiusmod tempor\n"
+      "incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
+      "veniam, quis\n"
+      "nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+      "consequat.\n"
+      "Duis aute irure dolor in reprehenderit in voluptate velit esse "
+      "cillum dolore eu\n"
+      "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+      "proident, sunt in\n"
+      "culpa qui officia deserunt mollit anim id est laborum.",
+      fmt.project ? fmt.project : DEFAULT_PROJECT_NAME);
+  create_file_with_content (
+      "configure",
+      "#!/bin/sh\n"
+      "\n"
+      "usage() {\n"
+      "cat <<EOF\n"
+      "Usage: $0 [OPTION]... [VAR=VALUE]...\n"
+      "\n"
+      "To assign environment variables (e.g., CC, CFLAGS...), specify them "
+      "as\n"
+      "VAR=VALUE.\n"
+      "\n"
+      "  CC      C compiler command [detected]\n"
+      "  CFLAGS  C compiler flags [-g, ...]\n"
+      "\n"
+      "EOF\n"
+      "exit 0\n"
+      "}\n"
+      "\n"
+      "echo () { printf \"%%s\\n\" \"$*\" ; }\n"
+      "cmdexists () { type \"$1\" >/dev/null 2>&1 ; }\n"
+      "trycc () { test -z \"$CC\" && cmdexists \"$1\" && CC=$1 ; }\n"
+      "\n"
+      "prefix=/usr/bin/\n"
+      "CFLAGS=\"-Wall -Wextra -O2\"\n"
+      "LDFLAGS=\n"
+      "CC=\n"
+      "\n"
+      "for arg ; do\n"
+      "case \"$arg\" in\n"
+      "--help|h) usage ;;\n"
+      "CFLAGS=*) CFLAGS=${arg#*=} ;;\n"
+      "LDFLAGS=*) LDFLAGS=${arg#*=} ;;\n"
+      "esac\n"
+      "done\n"
+      "\n"
+      "printf \"checking for C compiler... \"\n"
+      "trycc gcc\n"
+      "trycc cc\n"
+      "trycc clang\n"
+      "printf \"%%s\\n\" \"$CC\"\n"
+      "\n"
+      "printf \"checking weather C compiler works... \"\n"
+      "status=\"fail\"\n"
+      "tmpc=\"$(mktemp -d)/test.c\"\n"
+      "echo \"typedef int x;\" > \"$tmpc\"\n"
+      "if output=$($CC $CFLAGS -c -o /dev/null \"$tmpc\" 2>&1) ; then\n"
+      "printf \"yes\\n\"\n"
+      "else\n"
+      "printf \"no; %%s\\n\" \"$output\"\n"
+      "exit 1\n"
+      "fi\n"
+      "\n"
+      "printf \"creating config.mak... \"\n"
+      "printf \"PREFIX=%%s\\n\" \"$prefix\" > config.mak\n"
+      "printf \"CFLAGS=%%s\\n\" \"$CFLAGS\" >> config.mak\n"
+      "printf \"LDFLAGS=%%s\\n\" \"$LDFLAGS\" >> config.mak\n"
+      "printf \"CC=%%s\\n\" \"$CC\" >> config.mak\n"
+      "printf \"done\\n\"\n");
   // Create a safe uppercase version of the project name for Makefile variables
   char *mkfile_name = strdup (fmt.project);
   if (!mkfile_name)
@@ -192,43 +199,45 @@ create_project (format_t fmt)
       if (*p >= 'a' && *p <= 'z')
         *p = *p - 'a' + 'A';
     }
-  create_file_with_content ("Makefile",
-         "prefix = /usr/bin\n\n"
-         "%s_SRCS := $(wildcard *.c)\n"
-         "%s_OBJS := $(patsubst %%.c,c-out/obj/%%.o,$(%s_SRCS))\n\n"
-         "%s := c-out/bin/%s\n\n"
-         "-include config.mak\n\n"
-         "ifeq ($(wildcard config.mak),)\n"
-         "all:\n"
-         "\t@echo \"File config.mak not found, run configure\"\n"
-         "\t@exit 1\n"
-         "else\n\n"
-         "all: build $(%s)\n\n"
-         "build:\n"
-         "\tmkdir -p c-out/bin\n"
-         "\tmkdir -p c-out/obj\n\n"
-         "c-out/obj/%%.o: %%.c\n"
-         "\t$(CC) $(CFLAGS) -c $< -o $@\n\n"
-         "$(%s): $(%s_OBJS)\n"
-         "\t$(CC) $(CFLAGS) -DCOMMIT=$(shell git rev-list --count --all "
-         "2>/dev/null || echo 0) $^ -o $@\n\n"
-         "endif\n\n"
-         "install:\n"
-         "\t@echo \"NOT IMPL\"\n"
-         "\texit 1\n\n"
-         "uninstall:\n"
-         "\t@echo \"NOT IMPL\"\n"
-         "\texit 1\n\n"
-         "clean:\n"
-         "\trm -rf c-out\n\n"
-         "dist-clean: clean\n"
-         "\trm -f config.mak\n\n"
-         ".PHONY: all clean dist-clean install uninstall build format\n",
-         mkfile_name, mkfile_name, mkfile_name, mkfile_name, fmt.project,
-         mkfile_name, mkfile_name, mkfile_name);
+  create_file_with_content (
+      "Makefile",
+      "prefix = /usr/bin\n\n"
+      "%s_SRCS := $(wildcard *.c)\n"
+      "%s_OBJS := $(patsubst %%.c,c-out/obj/%%.o,$(%s_SRCS))\n\n"
+      "%s := c-out/bin/%s\n\n"
+      "-include config.mak\n\n"
+      "ifeq ($(wildcard config.mak),)\n"
+      "all:\n"
+      "\t@echo \"File config.mak not found, run configure\"\n"
+      "\t@exit 1\n"
+      "else\n\n"
+      "all: build $(%s)\n\n"
+      "build:\n"
+      "\tmkdir -p c-out/bin\n"
+      "\tmkdir -p c-out/obj\n\n"
+      "c-out/obj/%%.o: %%.c\n"
+      "\t$(CC) $(CFLAGS) -c $< -o $@\n\n"
+      "$(%s): $(%s_OBJS)\n"
+      "\t$(CC) $(CFLAGS) -DCOMMIT=$(shell git rev-list --count --all "
+      "2>/dev/null || echo 0) $^ -o $@\n\n"
+      "endif\n\n"
+      "install:\n"
+      "\t@echo \"NOT IMPL\"\n"
+      "\texit 1\n\n"
+      "uninstall:\n"
+      "\t@echo \"NOT IMPL\"\n"
+      "\texit 1\n\n"
+      "clean:\n"
+      "\trm -rf c-out\n\n"
+      "dist-clean: clean\n"
+      "\trm -f config.mak\n\n"
+      ".PHONY: all clean dist-clean install uninstall build format\n",
+      mkfile_name, mkfile_name, mkfile_name, mkfile_name, fmt.project,
+      mkfile_name, mkfile_name, mkfile_name);
   free (mkfile_name);
   if (fmt.clang_format)
-    create_file_with_content (".clang-format", "Language: Cpp\nBasedOnStyle: GNU\n");
+    create_file_with_content (".clang-format",
+                              "Language: Cpp\nBasedOnStyle: GNU\n");
   switch (fmt.licence)
     {
     case BSD3:
@@ -266,10 +275,11 @@ create_project (format_t fmt)
       break;
     }
   create_and_enter_directory (fmt.project);
-  create_file_with_content ("main.c",
-         "#include <stdio.h>\n\nint main(void) {\n  printf(\"%s: Hello "
-         "%s!\\n\");\nreturn 0;\n}",
-         fmt.project ? fmt.project : DEFAULT_PROJECT_NAME,
-         fmt.name ? fmt.name : "World");
+  create_file_with_content (
+      "main.c",
+      "#include <stdio.h>\n\nint main(void) {\n  printf(\"%s: Hello "
+      "%s!\\n\");\nreturn 0;\n}",
+      fmt.project ? fmt.project : DEFAULT_PROJECT_NAME,
+      fmt.name ? fmt.name : "World");
   return 0;
 }
