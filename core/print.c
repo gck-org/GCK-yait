@@ -3,14 +3,14 @@
 #include <stdio.h>
 
 int
-printfn (char *format, ...)
+print_error_with_prefix (char *format, ...)
 {
   int len;
   va_list args;
   va_start (args, format);
   fprintf (stderr, "yait: ");
   len = vfprintf (stderr, format, args);
-  putchar ('\n');
+  fprintf (stderr, "\n"); /* Use stderr consistently */
   va_end (args);
   return len;
 }

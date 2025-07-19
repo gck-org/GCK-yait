@@ -10,12 +10,27 @@
 #include <string.h>
 #include <unistd.h>
 
-int create (format_t);
+/* Constants for program behavior */
+#define DEFAULT_USER_NAME "unknown"
+#define DEFAULT_PROJECT_NAME "Project"
+#define DEFAULT_LICENSE BSD3
+#define DEFAULT_GIT_INIT true
+#define DEFAULT_CLANG_FORMAT true
 
-#define print_option(left, right)                                             \
-  printf ("  %-20s %-20s"                                                     \
-          "\n",                                                               \
-          left, right)
+/**
+ * Create a new C project with the specified configuration
+ * @param fmt Project configuration structure
+ * @return 0 on success, non-zero on failure
+ */
+int create_project (format_t fmt);
+
+/**
+ * Print a formatted option line for help text
+ * @param option The option name (left side)
+ * @param description The option description (right side)
+ */
+#define print_option(option, description)                                     \
+  printf ("  %-20s %-20s\n", option, description)
 
 void
 usage (int status)
@@ -49,10 +64,10 @@ main (int argc, char **argv)
       return 1;
     }
   int status = parse_standard_options (usage, argc, argv);
-  if (status && status != 1)
+  if (status && status != HELP_REQUESTED)
     {
       printfn ("error: %s", strerror (status));
-      return 1;
+      return status;
     }
   format_t conf;
   conf.project = argv[1];
@@ -61,19 +76,28 @@ main (int argc, char **argv)
   else
     {
       struct passwd *pw = getpwuid (getuid ());
-      conf.name = pw ? pw->pw_name : NULL;
+      if (pw && pw->pw_name)
+        conf.name = pw->pw_name;
+      else
+        conf.name = DEFAULT_USER_NAME;
     }
-  conf.git = true;
-  conf.clang_format = true;
-  conf.licence = BSD3;
-  create (conf);
-  return 0;
+  conf.git = DEFAULT_GIT_INIT;
+  conf.clang_format = DEFAULT_CLANG_FORMAT;
+  conf.licence = DEFAULT_LICENSE;
+
+  int result = create_project (conf);
+  return result;
 }
 
+/**
+ * Create a new C project with the specified configuration
+ * @param fmt Project configuration structure
+ * @return 0 on success, non-zero on failure
+ */
 int
-create (format_t fmt)
+create_project (format_t fmt)
 {
-  int err = take (fmt.project);
+  int err = create_and_enter_directory (fmt.project);
   if (err)
     {
       printfn ("failed to create or enter directory: %s", strerror (err));
@@ -81,7 +105,9 @@ create (format_t fmt)
     }
   if (fmt.git)
     system ("git init --quiet");
-  touch ("README",
+  if (!fmt.name)
+    fmt.name = DEFAULT_USER_NAME;
+  create_file_with_content ("README",
          "%s ( concise description )\n\n"
          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
          "eiusmod tempor\n"
@@ -94,8 +120,8 @@ create (format_t fmt)
          "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
          "proident, sunt in\n"
          "culpa qui officia deserunt mollit anim id est laborum.",
-         fmt.project);
-  touch ("configure",
+         fmt.project ? fmt.project : DEFAULT_PROJECT_NAME);
+  create_file_with_content ("configure",
          "#!/bin/sh\n"
          "\n"
          "usage() {\n"
@@ -153,30 +179,60 @@ create (format_t fmt)
          "printf \"LDFLAGS=%%s\\n\" \"$LDFLAGS\" >> config.mak\n"
          "printf \"CC=%%s\\n\" \"$CC\" >> config.mak\n"
          "printf \"done\\n\"\n");
-  char *mkfile_name;
-  strcpy(mkfile_name, fmt.project);
-  for (char *p = mkfile_name; *p; ++p) *p = toupper(*p);
-  touch ("Makefile",
-         "prefix = /usr/bin\n\n%s_SRCS := $(wildcard yait/*.c) $(wildcard "
-         "core/*.c)\n%s_OBJS := $(patsubst "
-         "yait/%.c,c-out/obj/%.o,$(%s_SRCS))\n\n%s := "
-         "c-out/bin/yait\n\n-include config.mak\n\nifeq ($(wildcard "
-         "config.mak),)\nall:\n\t@echo \"File config.mak not found, run "
-         "configure\"\n\t@exit 1\nelse\n\nall: build $(%s) "
-         "$(%s_DOC)\n\nbuild:\n\tmkdir -p c-out/bin\n\tmkdir -p "
-         "c-out/obj\n\nc-out/obj/%.o: yait/%.c\n\t$(CC) $(CFLAGS) -c $< -o "
-         "$@\n\n$(%s): $(%s_OBJS)\n\t$(CC) $(CFLAGS) -DCOMMIT=$(shell git "
-         "rev-list --count --all) $^ -o $@\n\n\nendif\n\ninstall:\n\t@echo "
-         "\"NOT IMPL\"\n\texit 1\n\nuninstall:\n\t@echo \"NOT IMPL\"\n\texit "
-         "1\n\nclean:\n\trm -rf c-out\n\ndist-clean: clean\n\trm -f "
-         "config.mak\n\n.PHONY: all clean dist-clean install uninstall build "
-         "format\n", mkfile_name, mkfile_name, mkfile_name, mkfile_name, mkfile_name, mkfile_name);
+  // Create a safe uppercase version of the project name for Makefile variables
+  char *mkfile_name = strdup (fmt.project);
+  if (!mkfile_name)
+    {
+      printfn ("fatal: out of memory");
+      return 1;
+    }
+  // Convert to uppercase safely, only for ASCII characters
+  for (char *p = mkfile_name; *p; ++p)
+    {
+      if (*p >= 'a' && *p <= 'z')
+        *p = *p - 'a' + 'A';
+    }
+  create_file_with_content ("Makefile",
+         "prefix = /usr/bin\n\n"
+         "%s_SRCS := $(wildcard *.c)\n"
+         "%s_OBJS := $(patsubst %%.c,c-out/obj/%%.o,$(%s_SRCS))\n\n"
+         "%s := c-out/bin/%s\n\n"
+         "-include config.mak\n\n"
+         "ifeq ($(wildcard config.mak),)\n"
+         "all:\n"
+         "\t@echo \"File config.mak not found, run configure\"\n"
+         "\t@exit 1\n"
+         "else\n\n"
+         "all: build $(%s)\n\n"
+         "build:\n"
+         "\tmkdir -p c-out/bin\n"
+         "\tmkdir -p c-out/obj\n\n"
+         "c-out/obj/%%.o: %%.c\n"
+         "\t$(CC) $(CFLAGS) -c $< -o $@\n\n"
+         "$(%s): $(%s_OBJS)\n"
+         "\t$(CC) $(CFLAGS) -DCOMMIT=$(shell git rev-list --count --all "
+         "2>/dev/null || echo 0) $^ -o $@\n\n"
+         "endif\n\n"
+         "install:\n"
+         "\t@echo \"NOT IMPL\"\n"
+         "\texit 1\n\n"
+         "uninstall:\n"
+         "\t@echo \"NOT IMPL\"\n"
+         "\texit 1\n\n"
+         "clean:\n"
+         "\trm -rf c-out\n\n"
+         "dist-clean: clean\n"
+         "\trm -f config.mak\n\n"
+         ".PHONY: all clean dist-clean install uninstall build format\n",
+         mkfile_name, mkfile_name, mkfile_name, mkfile_name, fmt.project,
+         mkfile_name, mkfile_name, mkfile_name);
+  free (mkfile_name);
   if (fmt.clang_format)
-    touch (".clang-format", "Language: Cpp\nBasedOnStyle: GNU\n");
+    create_file_with_content (".clang-format", "Language: Cpp\nBasedOnStyle: GNU\n");
   switch (fmt.licence)
     {
     case BSD3:
-      touch (
+      create_file_with_content (
           "COPYING",
           "BSD 3-Clause License\n\nCopyright (c) %d, "
           "%s\n\nRedistribution and use in source and binary forms, "
@@ -184,7 +240,7 @@ create (format_t fmt)
           "following conditions are met:\n\n1. Redistributions of source code "
           "must retain the above copyright notice, this\n   list of "
           "conditions and the following disclaimer.\n\n2. Redistributions in "
-          "binary form must reproduce the above copyright notice,\n   this "
+          "binary form must reproduce the above copyright notice,\n   this\n"
           "list of conditions and the following disclaimer in the "
           "documentation\n   and/or other materials provided with the "
           "distribution.\n\n3. Neither the name of the copyright holder nor "
@@ -205,13 +261,15 @@ create (format_t fmt)
           "POSSIBILITY OF SUCH DAMAGE.\n",
           YEAR, fmt.name);
       break;
+    case GPLv3:
     default:
       break;
     }
-  take (fmt.project);
-  touch ("main.c",
+  create_and_enter_directory (fmt.project);
+  create_file_with_content ("main.c",
          "#include <stdio.h>\n\nint main(void) {\n  printf(\"%s: Hello "
          "%s!\\n\");\nreturn 0;\n}",
-         fmt.project, fmt.name);
+         fmt.project ? fmt.project : DEFAULT_PROJECT_NAME,
+         fmt.name ? fmt.name : "World");
   return 0;
 }

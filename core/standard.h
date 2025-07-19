@@ -1,6 +1,13 @@
 #ifndef STANDARD_H
 #define STANDARD_H
 
-int parse_standard_options(void (*)(), int argc, char **argv);
+/**
+ * Parse standard command line options (--help, --version)
+ * @param usage_func Function pointer to usage display function
+ * @param argc Argument count
+ * @param argv Argument vector
+ * @return 0 on success, 1 if help/version requested, errno on error
+ */
+int parse_standard_options(void (*usage_func)(), int argc, char **argv);
 
 #endif

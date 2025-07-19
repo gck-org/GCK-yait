@@ -12,7 +12,7 @@ parse_standard_options (void (*usage) (int), int argc, char **argv)
       if (strcmp (argv[i], "--help") == 0)
         {
           usage (0);
-          exit (0);
+          exit (EXIT_SUCCESS);
         }
       else if (strcmp (argv[i], "--version") == 0)
         {
@@ -20,8 +20,8 @@ parse_standard_options (void (*usage) (int), int argc, char **argv)
                   "you are free to change and redistribute it.\nThere is NO "
                   "WARRNTY, to the extent permitted by law.\n",
                   PROGRAM, VERSION, COMMIT, YEAR, AUTHORS, LICENSE_LINE);
-          exit (0);
+          exit (EXIT_SUCCESS);
         }
     }
-  return 1;
+  return HELP_REQUESTED;
 }

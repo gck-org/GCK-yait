@@ -1,4 +1,5 @@
 #include "file.h"
+#include "../config.h"
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -6,38 +7,39 @@
 #include <sys/types.h>
 
 int
-touch (char *path, char *format, ...)
+create_file_with_content (char *path, char *format, ...)
 {
   FILE *fp = fopen (path, "w");
   if (!fp)
     {
-      return 0;
+      return -1;
     }
-
-  else
-    {
-      va_list args;
-      va_start (args, format);
-      vfprintf (fp, format, args);
-      va_end (args);
-    }
+  va_list args;
+  va_start (args, format);
+  vfprintf (fp, format, args);
+  va_end (args);
 
   fclose (fp);
   return 0;
 }
 
 int
-dir (char *format, ...)
+create_directory (char *format, ...)
 {
   va_list args;
   va_start (args, format);
 
-  char path[1024];
-  vsnprintf (path, sizeof (path), format, args);
-
+  char path[MAX_PATH_LENGTH];
+  int result = vsnprintf (path, sizeof (path), format, args);
   va_end (args);
 
-  if (mkdir (path, 0777) < 0)
+  /* Check if the path was truncated */
+  if (result >= (int)sizeof (path))
+    {
+      return ENAMETOOLONG;
+    }
+
+  if (mkdir (path, DEFAULT_DIR_PERMISSIONS) < 0)
     {
       return errno;
     }
@@ -46,9 +48,9 @@ dir (char *format, ...)
 }
 
 int
-take (const char *dirname)
+create_and_enter_directory (const char *dirname)
 {
-  int err = dir ("%s", dirname);
+  int err = create_directory ("%s", dirname);
   if (err)
     {
       return err;
