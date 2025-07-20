@@ -37,9 +37,6 @@ trycc cc
 trycc clang
 printf "%s\n" "$CC"
 
-printf "checking for xxd... "
-trycc xxd
-
 printf "checking weather C compiler works... "
 status="fail"
 tmpc="$(mktemp -d)/test.c"

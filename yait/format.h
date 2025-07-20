@@ -25,14 +25,20 @@ typedef enum {
    */
 } lib_flags_t;
 
+/* Flag option type struct */
+typedef struct {
+  bool GNU;
+  bool git;
+  bool clang_format;
+} flags_t;
+
 /* Project configuration structure */
 typedef struct {
-  bool git;              /* Whether to initialize git repository */
-  bool clang_format;     /* Whether to create .clang-format file */
   licence_t licence;     /* License type for the project */
   char *project;         /* Project name */
   char *name;           /* Author/creator name */
   lib_flags_t libraries; /* Selected libraries (bit field) */
+  flags_t flag; /* Flags */
 } format_t;
 
 /* Default values */

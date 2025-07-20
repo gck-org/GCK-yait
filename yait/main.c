@@ -3,7 +3,6 @@
 #include "../core/print.h"
 #include "../core/standard.h"
 #include "format.h"
-#include <ctype.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,8 +80,11 @@ main (int argc, char **argv)
       else
         conf.name = DEFAULT_USER_NAME;
     }
-  conf.git = DEFAULT_GIT_INIT;
-  conf.clang_format = DEFAULT_CLANG_FORMAT;
+  conf.flag.git = DEFAULT_GIT_INIT;
+  conf.flag.clang_format = DEFAULT_CLANG_FORMAT;
+
+  conf.flag.GNU = true; // debug
+
   conf.licence = DEFAULT_LICENSE;
 
   int result = create_project (conf);
@@ -103,7 +105,7 @@ create_project (format_t fmt)
       printfn ("failed to create or enter directory: %s", strerror (err));
       return 1;
     }
-  if (fmt.git)
+  if (fmt.flag.git)
     err = system ("git init --quiet");
   if (err)
     {
@@ -202,7 +204,7 @@ create_project (format_t fmt)
   create_file_with_content (
       "Makefile",
       "prefix = /usr/bin\n\n"
-      "%s_SRCS := $(wildcard *.c)\n"
+      "%s_SRCS := $(wildcard %s*.c)\n"
       "%s_OBJS := $(patsubst %%.c,c-out/obj/%%.o,$(%s_SRCS))\n\n"
       "%s := c-out/bin/%s\n\n"
       "-include config.mak\n\n"
@@ -232,15 +234,18 @@ create_project (format_t fmt)
       "dist-clean: clean\n"
       "\trm -f config.mak\n\n"
       ".PHONY: all clean dist-clean install uninstall build format\n",
-      mkfile_name, mkfile_name, mkfile_name, mkfile_name, fmt.project,
-      mkfile_name, mkfile_name, mkfile_name);
+      mkfile_name, mkfile_name, mkfile_name, mkfile_name, mkfile_name,
+      fmt.project, mkfile_name, mkfile_name, mkfile_name);
   free (mkfile_name);
-  if (fmt.clang_format)
+  if (fmt.flag.clang_format)
     create_file_with_content (".clang-format",
                               "Language: Cpp\nBasedOnStyle: GNU\n");
+  char *license_line = "";
   switch (fmt.licence)
     {
     case BSD3:
+      license_line = "License BSD-3-Clause: BSD-3-Clause "
+                     "<https://opensource.org/licence/bsd-3-clause>";
       create_file_with_content (
           "COPYING",
           "BSD 3-Clause License\n\nCopyright (c) %d, "
@@ -274,12 +279,70 @@ create_project (format_t fmt)
     default:
       break;
     }
+  create_file_with_content ("config.h",
+                            "#ifndef CONFIG_H\n"
+                            "#define CONFIG_H\n\n"
+                            "/* Program information */\n"
+                            "#define PROGRAM \"%s\"\n"
+                            "#define LICENSE_LINE \"%s\"\n"
+                            "#define AUTHORS \"%s\"\n"
+                            "#define VERSION \"pre-alpha\"\n"
+                            "#define YEAR 2025\n\n"
+                            "#endif",
+                            fmt.project, license_line, fmt.name, YEAR);
   create_and_enter_directory (fmt.project);
-  create_file_with_content (
-      "main.c",
-      "#include <stdio.h>\n\nint main(void) {\n  printf(\"%s: Hello "
-      "%s!\\n\");\nreturn 0;\n}",
-      fmt.project ? fmt.project : DEFAULT_PROJECT_NAME,
-      fmt.name ? fmt.name : "World");
+  if (!fmt.flag.GNU)
+    {
+      create_file_with_content (
+          "main.c",
+          "#include <stdio.h>\n\nint main(void) {\n  printf(\"%s: Hello "
+          "%s!\\n\");\n  return 0;\n}",
+          fmt.project ? fmt.project : DEFAULT_PROJECT_NAME,
+          fmt.name ? fmt.name : "World");
+    }
+  else
+    {
+      create_file_with_content (
+          "main.c",
+          "#include <stdio.h>\n"
+          "#include \"standard.h\"\n"
+          "\n"
+          "void usage(int status) {\nprintf(\"Usage: %s [OPTION...]\\n\")\n}\n"
+          "\n"
+          "int main(void) {\n"
+          "parse_standard_options(NULL, argc, argv);\n"
+          "printf(\"%s: Hello "
+          "%s!\\n\");\n  return 0;\n}",
+          fmt.project, fmt.project ? fmt.project : DEFAULT_PROJECT_NAME,
+          fmt.name ? fmt.name : "World");
+    }
+  if (fmt.flag.GNU)
+    {
+      create_file_with_content (
+          "standard.c",
+          "#include \"standard.h\"\n#include \"../config.h\"\n#include "
+          "<stdio.h>\n#include <stdlib.h>\n#include "
+          "<string.h>\n\nint\nparse_standard_options (void (*usage) (int), "
+          "int argc, char **argv)\n{\n  for (int i = 1; i < argc; ++i)\n    "
+          "{\n      if (strcmp (argv[i], \"--help\") == 0)\n        {\n       "
+          "   usage (0);\n          exit (EXIT_SUCCESS);\n        }\n      "
+          "else if (strcmp (argv[i], \"--version\") == 0)\n        {\n        "
+          "  printf (\"%%s %%s %%d\\nCopyright (C) %%d %%s.\\n%%s\\nThis is "
+          "free "
+          "software: \"\n                  \"you are free to change and "
+          "redistribute it.\\nThere is NO \"\n                  \"WARRNTY, to "
+          "the extent permitted by law.\\n\",\n                  PROGRAM, "
+          "VERSION, COMMIT, YEAR, AUTHORS, LICENSE_LINE);\n          exit "
+          "(EXIT_SUCCESS);\n        }\n    }\n  return HELP_REQUESTED;\n}\n");
+      create_file_with_content (
+          "standard.h",
+          "#ifndef STANDARD_H\n#define STANDARD_H\n\n/**\n * Parse standard "
+          "command line options (--help, --version)\n * @param usage_func "
+          "Function pointer to usage display function\n * @param argc "
+          "Argument count\n * @param argv Argument vector\n * @return 0 on "
+          "success, 1 if help/version requested, errno on error\n */\nint "
+          "parse_standard_options(void (*usage_func)(), int argc, char "
+          "**argv);\n\n#endif\n");
+    }
   return 0;
 }

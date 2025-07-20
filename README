@@ -6,8 +6,4 @@ project files needed for your new C ( maybe C++ ) project. It provides you with
 a build system and some basic source files to give you a kick start on your new
 project--with optional libraries!
 
-The future of this project may be uncertain--however there are a few features I
-for sure want to have.
-  
-  A --GNU flag that will add basic flag parsing into the project for the
-  --version and --help flags.
+For more detailed documentation vist: <https://vx-clutch.github.io/vxserver.dev/docs/yait.html>

@@ -1,0 +1,10 @@
+#!/bin/env bash
+
+files=./embed/*
+
+touch embed_header.h
+echo "" > embed_header.h
+
+for f in $files; do
+  xxd -i >> embed_header.h
+done
