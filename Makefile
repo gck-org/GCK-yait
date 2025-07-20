@@ -43,4 +43,4 @@ clean:
 dist-clean: clean
 	rm -f config.mak
 
-.PHONY: all clean dist-clean install uninstall build format gen-file-embeds
+.PHONY: all clean dist-clean install uninstall build

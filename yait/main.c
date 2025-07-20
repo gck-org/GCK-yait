@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "contents.h"
 
 /* Constants for program behavior */
 #define DEFAULT_USER_NAME "unknown"
@@ -116,78 +117,11 @@ create_project (format_t fmt)
     fmt.name = DEFAULT_USER_NAME;
   create_file_with_content (
       "README",
-      "%s ( concise description )\n\n"
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
-      "eiusmod tempor\n"
-      "incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
-      "veniam, quis\n"
-      "nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
-      "consequat.\n"
-      "Duis aute irure dolor in reprehenderit in voluptate velit esse "
-      "cillum dolore eu\n"
-      "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
-      "proident, sunt in\n"
-      "culpa qui officia deserunt mollit anim id est laborum.",
+      readme_template,
       fmt.project ? fmt.project : DEFAULT_PROJECT_NAME);
   create_file_with_content (
       "configure",
-      "#!/bin/sh\n"
-      "\n"
-      "usage() {\n"
-      "cat <<EOF\n"
-      "Usage: $0 [OPTION]... [VAR=VALUE]...\n"
-      "\n"
-      "To assign environment variables (e.g., CC, CFLAGS...), specify them "
-      "as\n"
-      "VAR=VALUE.\n"
-      "\n"
-      "  CC      C compiler command [detected]\n"
-      "  CFLAGS  C compiler flags [-g, ...]\n"
-      "\n"
-      "EOF\n"
-      "exit 0\n"
-      "}\n"
-      "\n"
-      "echo () { printf \"%%s\\n\" \"$*\" ; }\n"
-      "cmdexists () { type \"$1\" >/dev/null 2>&1 ; }\n"
-      "trycc () { test -z \"$CC\" && cmdexists \"$1\" && CC=$1 ; }\n"
-      "\n"
-      "prefix=/usr/bin/\n"
-      "CFLAGS=\"-Wall -Wextra -O2\"\n"
-      "LDFLAGS=\n"
-      "CC=\n"
-      "\n"
-      "for arg ; do\n"
-      "case \"$arg\" in\n"
-      "--help|h) usage ;;\n"
-      "CFLAGS=*) CFLAGS=${arg#*=} ;;\n"
-      "LDFLAGS=*) LDFLAGS=${arg#*=} ;;\n"
-      "esac\n"
-      "done\n"
-      "\n"
-      "printf \"checking for C compiler... \"\n"
-      "trycc gcc\n"
-      "trycc cc\n"
-      "trycc clang\n"
-      "printf \"%%s\\n\" \"$CC\"\n"
-      "\n"
-      "printf \"checking weather C compiler works... \"\n"
-      "status=\"fail\"\n"
-      "tmpc=\"$(mktemp -d)/test.c\"\n"
-      "echo \"typedef int x;\" > \"$tmpc\"\n"
-      "if output=$($CC $CFLAGS -c -o /dev/null \"$tmpc\" 2>&1) ; then\n"
-      "printf \"yes\\n\"\n"
-      "else\n"
-      "printf \"no; %%s\\n\" \"$output\"\n"
-      "exit 1\n"
-      "fi\n"
-      "\n"
-      "printf \"creating config.mak... \"\n"
-      "printf \"PREFIX=%%s\\n\" \"$prefix\" > config.mak\n"
-      "printf \"CFLAGS=%%s\\n\" \"$CFLAGS\" >> config.mak\n"
-      "printf \"LDFLAGS=%%s\\n\" \"$LDFLAGS\" >> config.mak\n"
-      "printf \"CC=%%s\\n\" \"$CC\" >> config.mak\n"
-      "printf \"done\\n\"\n");
+      configure_template);
   // Create a safe uppercase version of the project name for Makefile variables
   char *mkfile_name = strdup (fmt.project);
   if (!mkfile_name)
@@ -203,76 +137,20 @@ create_project (format_t fmt)
     }
   create_file_with_content (
       "Makefile",
-      "prefix = /usr/bin\n\n"
-      "%s_SRCS := $(wildcard %s*.c)\n"
-      "%s_OBJS := $(patsubst %%.c,c-out/obj/%%.o,$(%s_SRCS))\n\n"
-      "%s := c-out/bin/%s\n\n"
-      "-include config.mak\n\n"
-      "ifeq ($(wildcard config.mak),)\n"
-      "all:\n"
-      "\t@echo \"File config.mak not found, run configure\"\n"
-      "\t@exit 1\n"
-      "else\n\n"
-      "all: build $(%s)\n\n"
-      "build:\n"
-      "\tmkdir -p c-out/bin\n"
-      "\tmkdir -p c-out/obj\n\n"
-      "c-out/obj/%%.o: %%.c\n"
-      "\t$(CC) $(CFLAGS) -c $< -o $@\n\n"
-      "$(%s): $(%s_OBJS)\n"
-      "\t$(CC) $(CFLAGS) -DCOMMIT=$(shell git rev-list --count --all "
-      "2>/dev/null || echo 0) $^ -o $@\n\n"
-      "endif\n\n"
-      "install:\n"
-      "\t@echo \"NOT IMPL\"\n"
-      "\texit 1\n\n"
-      "uninstall:\n"
-      "\t@echo \"NOT IMPL\"\n"
-      "\texit 1\n\n"
-      "clean:\n"
-      "\trm -rf c-out\n\n"
-      "dist-clean: clean\n"
-      "\trm -f config.mak\n\n"
-      ".PHONY: all clean dist-clean install uninstall build format\n",
+      makefile_template,
       mkfile_name, mkfile_name, mkfile_name, mkfile_name, mkfile_name,
       fmt.project, mkfile_name, mkfile_name, mkfile_name);
   free (mkfile_name);
   if (fmt.flag.clang_format)
-    create_file_with_content (".clang-format",
-                              "Language: Cpp\nBasedOnStyle: GNU\n");
+    create_file_with_content (".clang-format", clang_format_template);
   char *license_line = "";
   switch (fmt.licence)
     {
     case BSD3:
-      license_line = "License BSD-3-Clause: BSD-3-Clause "
-                     "<https://opensource.org/licence/bsd-3-clause>";
+      license_line = "License BSD-3-Clause: BSD-3-Clause <https://opensource.org/licence/bsd-3-clause>";
       create_file_with_content (
           "COPYING",
-          "BSD 3-Clause License\n\nCopyright (c) %d, "
-          "%s\n\nRedistribution and use in source and binary forms, "
-          "with or without\nmodification, are permitted provided that the "
-          "following conditions are met:\n\n1. Redistributions of source code "
-          "must retain the above copyright notice, this\n   list of "
-          "conditions and the following disclaimer.\n\n2. Redistributions in "
-          "binary form must reproduce the above copyright notice,\n   this\n"
-          "list of conditions and the following disclaimer in the "
-          "documentation\n   and/or other materials provided with the "
-          "distribution.\n\n3. Neither the name of the copyright holder nor "
-          "the names of its\n   contributors may be used to endorse or "
-          "promote products derived from\n   this software without specific "
-          "prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE "
-          "COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR "
-          "IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED "
-          "WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE "
-          "ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR "
-          "CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, "
-          "SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT "
-          "LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF "
-          "USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED "
-          "AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT "
-          "LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN "
-          "ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE "
-          "POSSIBILITY OF SUCH DAMAGE.\n",
+          bsd3_license_template,
           YEAR, fmt.name);
       break;
     case GPLv3:
@@ -280,23 +158,14 @@ create_project (format_t fmt)
       break;
     }
   create_file_with_content ("config.h",
-                            "#ifndef CONFIG_H\n"
-                            "#define CONFIG_H\n\n"
-                            "/* Program information */\n"
-                            "#define PROGRAM \"%s\"\n"
-                            "#define LICENSE_LINE \"%s\"\n"
-                            "#define AUTHORS \"%s\"\n"
-                            "#define VERSION \"pre-alpha\"\n"
-                            "#define YEAR 2025\n\n"
-                            "#endif",
+                            config_h_template,
                             fmt.project, license_line, fmt.name, YEAR);
   create_and_enter_directory (fmt.project);
   if (!fmt.flag.GNU)
     {
       create_file_with_content (
           "main.c",
-          "#include <stdio.h>\n\nint main(void) {\n  printf(\"%s: Hello "
-          "%s!\\n\");\n  return 0;\n}",
+          main_c_template,
           fmt.project ? fmt.project : DEFAULT_PROJECT_NAME,
           fmt.name ? fmt.name : "World");
     }
@@ -304,15 +173,7 @@ create_project (format_t fmt)
     {
       create_file_with_content (
           "main.c",
-          "#include <stdio.h>\n"
-          "#include \"standard.h\"\n"
-          "\n"
-          "void usage(int status) {\nprintf(\"Usage: %s [OPTION...]\\n\")\n}\n"
-          "\n"
-          "int main(void) {\n"
-          "parse_standard_options(NULL, argc, argv);\n"
-          "printf(\"%s: Hello "
-          "%s!\\n\");\n  return 0;\n}",
+          main_c_gnu_template,
           fmt.project, fmt.project ? fmt.project : DEFAULT_PROJECT_NAME,
           fmt.name ? fmt.name : "World");
     }
@@ -320,29 +181,10 @@ create_project (format_t fmt)
     {
       create_file_with_content (
           "standard.c",
-          "#include \"standard.h\"\n#include \"../config.h\"\n#include "
-          "<stdio.h>\n#include <stdlib.h>\n#include "
-          "<string.h>\n\nint\nparse_standard_options (void (*usage) (int), "
-          "int argc, char **argv)\n{\n  for (int i = 1; i < argc; ++i)\n    "
-          "{\n      if (strcmp (argv[i], \"--help\") == 0)\n        {\n       "
-          "   usage (0);\n          exit (EXIT_SUCCESS);\n        }\n      "
-          "else if (strcmp (argv[i], \"--version\") == 0)\n        {\n        "
-          "  printf (\"%%s %%s %%d\\nCopyright (C) %%d %%s.\\n%%s\\nThis is "
-          "free "
-          "software: \"\n                  \"you are free to change and "
-          "redistribute it.\\nThere is NO \"\n                  \"WARRNTY, to "
-          "the extent permitted by law.\\n\",\n                  PROGRAM, "
-          "VERSION, COMMIT, YEAR, AUTHORS, LICENSE_LINE);\n          exit "
-          "(EXIT_SUCCESS);\n        }\n    }\n  return HELP_REQUESTED;\n}\n");
+          standard_c_template);
       create_file_with_content (
           "standard.h",
-          "#ifndef STANDARD_H\n#define STANDARD_H\n\n/**\n * Parse standard "
-          "command line options (--help, --version)\n * @param usage_func "
-          "Function pointer to usage display function\n * @param argc "
-          "Argument count\n * @param argv Argument vector\n * @return 0 on "
-          "success, 1 if help/version requested, errno on error\n */\nint "
-          "parse_standard_options(void (*usage_func)(), int argc, char "
-          "**argv);\n\n#endif\n");
+          standard_h_template);
     }
   return 0;
 }
