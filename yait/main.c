@@ -85,8 +85,6 @@ main (int argc, char **argv)
   conf.flag.git = DEFAULT_GIT_INIT;
   conf.flag.clang_format = DEFAULT_CLANG_FORMAT;
 
-  conf.flag.GNU = true; // debug
-
   conf.licence = DEFAULT_LICENSE;
 
   int result = create_project (conf);
@@ -116,8 +114,8 @@ create_project (format_t fmt)
     }
   if (!fmt.name)
     fmt.name = DEFAULT_USER_NAME;
-  create_file_with_content ("README", readme_template,
-                            fmt.project ? fmt.project : DEFAULT_PROJECT_NAME);
+  create_file_with_content ("WHATNEXT.md", what_next_template);
+  create_file_with_content ("README", readme_template, fmt.project);
   create_file_with_content ("configure", configure_template);
   int status = system ("chmod +x configure");
   if (status)
@@ -141,7 +139,7 @@ create_project (format_t fmt)
   create_file_with_content ("Makefile", makefile_template, makefile_name,
                             makefile_name, makefile_name, makefile_name,
                             makefile_name, makefile_name, fmt.project,
-                            makefile_name, makefile_name);
+                            makefile_name);
   free (makefile_name);
   if (fmt.flag.clang_format)
     create_file_with_content (".clang-format", clang_format_template);
@@ -163,17 +161,13 @@ create_project (format_t fmt)
   create_and_enter_directory (fmt.project);
   if (!fmt.flag.GNU)
     {
-      create_file_with_content ("main.c", main_c_template,
-                                fmt.project ? fmt.project
-                                            : DEFAULT_PROJECT_NAME,
-                                fmt.name ? fmt.name : "World");
+      create_file_with_content ("main.c", main_c_template, fmt.project,
+                                fmt.name);
     }
   else
     {
       create_file_with_content ("main.c", main_c_gnu_template, fmt.project,
-                                fmt.project ? fmt.project
-                                            : DEFAULT_PROJECT_NAME,
-                                fmt.name ? fmt.name : "World");
+                                fmt.project, fmt.name);
     }
   if (fmt.flag.GNU)
     {
