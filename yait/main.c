@@ -30,7 +30,7 @@ int create_project (format_t fmt);
  * @param description The option description (right side)
  */
 #define print_option(option, description)                                     \
-  printf ("  %-20s %-20s\n", option, description)
+  printf ("        %-20s %-20s\n", option, description)
 
 void
 usage (int status)
@@ -50,8 +50,8 @@ usage (int status)
       print_option ("--git", "Initialize git repository");
       print_option ("--GNU",
                     "Adds stand GNU argument parsing to your project");
-      printf ("    --help\tdisplay the help text and exit\n");
-      printf ("    --version\toutput version information and exit\n");
+      printf ("                --help\tdisplay the help text and exit\n");
+      printf ("                --version\toutput version information and exit\n");
     }
 }
 
