@@ -23,19 +23,21 @@ CFLAGS="-Wall -Wextra -O2"
 LDFLAGS=
 CC=
 
-for arg ; do
-case "$arg" in
---help|h) usage ;;
-CFLAGS=*) CFLAGS=${arg#*=} ;;
-LDFLAGS=*) LDFLAGS=${arg#*=} ;;
-esac
-done
-
 printf "checking for C compiler... "
 trycc gcc
 trycc cc
 trycc clang
 printf "%s\n" "$CC"
+
+for arg ; do
+case "$arg" in
+--help|h) usage ;;
+CFLAGS=*) CFLAGS=${arg#*=} ;;
+LDFLAGS=*) LDFLAGS=${arg#*=} ;;
+CC=*) CC=${arg#*=} ;;
+esac
+done
+
 
 printf "checking weather C compiler works... "
 status="fail"

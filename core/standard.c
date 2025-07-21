@@ -7,7 +7,7 @@
 int
 parse_standard_options (void (*usage) (int), int argc, char **argv)
 {
-  for (int i = 1; i < argc; ++i)
+  for (int i = 0; i < argc; ++i)
     {
       if (strcmp (argv[i], "--help") == 0)
         {
@@ -24,4 +24,12 @@ parse_standard_options (void (*usage) (int), int argc, char **argv)
         }
     }
   return HELP_REQUESTED;
+}
+
+int
+initialize_main (int *argc, char ***argv)
+{
+  (*argc)--;
+  (*argv)++;
+  return 0;
 }

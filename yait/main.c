@@ -2,13 +2,13 @@
 #include "../core/file.h"
 #include "../core/print.h"
 #include "../core/standard.h"
+#include "contents.h"
 #include "format.h"
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "contents.h"
 
 /* Constants for program behavior */
 #define DEFAULT_USER_NAME "unknown"
@@ -63,16 +63,17 @@ main (int argc, char **argv)
       printfn ("error: not enough arguments.");
       return 1;
     }
-  int status = parse_standard_options (usage, argc, argv);
+  int status = initialize_main (&argc, &argv);
+  status = parse_standard_options (usage, argc, argv);
   if (status && status != HELP_REQUESTED)
     {
       printfn ("error: %s", strerror (status));
       return status;
     }
   format_t conf;
-  conf.project = argv[1];
+  conf.project = argv[0];
   if (argc > 2)
-    conf.name = argv[2];
+    conf.name = argv[1];
   else
     {
       struct passwd *pw = getpwuid (getuid ());
@@ -115,82 +116,69 @@ create_project (format_t fmt)
     }
   if (!fmt.name)
     fmt.name = DEFAULT_USER_NAME;
-  create_file_with_content (
-      "README",
-      readme_template,
-      fmt.project ? fmt.project : DEFAULT_PROJECT_NAME);
-  create_file_with_content (
-      "configure",
-      configure_template);
-  int status = system("chmod +x configure");
+  create_file_with_content ("README", readme_template,
+                            fmt.project ? fmt.project : DEFAULT_PROJECT_NAME);
+  create_file_with_content ("configure", configure_template);
+  int status = system ("chmod +x configure");
   if (status)
     {
       printfn ("error: %s", strerror (status));
       return status;
     }
   // Create a safe uppercase version of the project name for Makefile variables
-  char *mkfile_name = strdup (fmt.project);
-  if (!mkfile_name)
+  char *makefile_name = strdup (fmt.project);
+  if (!makefile_name)
     {
       printfn ("fatal: out of memory");
       return 1;
     }
   // Convert to uppercase safely, only for ASCII characters
-  for (char *p = mkfile_name; *p; ++p)
+  for (char *p = makefile_name; *p; ++p)
     {
       if (*p >= 'a' && *p <= 'z')
         *p = *p - 'a' + 'A';
     }
-  create_file_with_content (
-      "Makefile",
-      makefile_template,
-      mkfile_name, mkfile_name, mkfile_name, mkfile_name, mkfile_name,
-      fmt.project, mkfile_name, mkfile_name, mkfile_name);
-  free (mkfile_name);
+  create_file_with_content ("Makefile", makefile_template, makefile_name,
+                            makefile_name, makefile_name, makefile_name,
+                            makefile_name, makefile_name, fmt.project,
+                            makefile_name, makefile_name);
+  free (makefile_name);
   if (fmt.flag.clang_format)
     create_file_with_content (".clang-format", clang_format_template);
   char *license_line = "";
   switch (fmt.licence)
     {
     case BSD3:
-      license_line = "License BSD-3-Clause: BSD-3-Clause <https://opensource.org/licence/bsd-3-clause>";
-      create_file_with_content (
-          "COPYING",
-          bsd3_license_template,
-          YEAR, fmt.name);
+      license_line = "License BSD-3-Clause: BSD-3-Clause "
+                     "<https://opensource.org/licence/bsd-3-clause>";
+      create_file_with_content ("COPYING", bsd3_license_template, YEAR,
+                                fmt.name);
       break;
     case GPLv3:
     default:
       break;
     }
-  create_file_with_content ("config.h",
-                            config_h_template,
-                            fmt.project, license_line, fmt.name, YEAR);
+  create_file_with_content ("config.h", config_h_template, fmt.project,
+                            license_line, fmt.name, YEAR);
   create_and_enter_directory (fmt.project);
   if (!fmt.flag.GNU)
     {
-      create_file_with_content (
-          "main.c",
-          main_c_template,
-          fmt.project ? fmt.project : DEFAULT_PROJECT_NAME,
-          fmt.name ? fmt.name : "World");
+      create_file_with_content ("main.c", main_c_template,
+                                fmt.project ? fmt.project
+                                            : DEFAULT_PROJECT_NAME,
+                                fmt.name ? fmt.name : "World");
     }
   else
     {
-      create_file_with_content (
-          "main.c",
-          main_c_gnu_template,
-          fmt.project, fmt.project ? fmt.project : DEFAULT_PROJECT_NAME,
-          fmt.name ? fmt.name : "World");
+      create_file_with_content ("main.c", main_c_gnu_template, fmt.project,
+                                fmt.project ? fmt.project
+                                            : DEFAULT_PROJECT_NAME,
+                                fmt.name ? fmt.name : "World");
     }
   if (fmt.flag.GNU)
     {
-      create_file_with_content (
-          "standard.c",
-          standard_c_template);
-      create_file_with_content (
-          "standard.h",
-          standard_h_template);
+      create_file_with_content ("standard.c", standard_c_template);
+      create_file_with_content ("standard.h", standard_h_template);
     }
   return 0;
 }
