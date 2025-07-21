@@ -122,6 +122,12 @@ create_project (format_t fmt)
   create_file_with_content (
       "configure",
       configure_template);
+  int status = system("chmod +x configure");
+  if (status)
+    {
+      printfn ("error: %s", strerror (status));
+      return status;
+    }
   // Create a safe uppercase version of the project name for Makefile variables
   char *mkfile_name = strdup (fmt.project);
   if (!mkfile_name)
