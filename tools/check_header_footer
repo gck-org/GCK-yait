@@ -1,12 +1,20 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-header="// Copyright (C) 2025 $1 ( owestness@gmail.com )
-// See end of file for extended copyright information.\n"
-footer="
+# Usage: ./ensure_header_footer.sh filename
+
+FILE="$1"
+HEADER=$(cat <<'EOF'
+// Copyright (C) 2025 vx_clutch ( owestness@gmail.com )
+// See end of file for extended copyright information.
+EOF
+)
+HEADER+=$'\n'
+FOOTER=$(cat <<'EOF'
+
 /* yait is yet another init tool.
- * Copyright (C) 2025 $1
+ * Copyright (C) 2025 vx-clutch
  *
- * The file is part of yait.
+ * This file is part of yait.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -20,7 +28,7 @@ footer="
  * used to endorse or promote products derived from this software without
  * specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -32,19 +40,32 @@ footer="
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-"
+EOF
+)
 
-if [[ "$#" -lt 1 ]]; then
-  echo "Usage: $0 name file1 [file2 ...]"
+if [[ -z "$FILE" ]]; then
+  echo "Usage: $0 <filename>"
   exit 1
 fi
 
-for file in "${@:2}"; do
-  if [[ ! -f "$file" ]]; then
-    echo "Error: File '$file' not found, skipping."
-    continue
-  fi
+if [[ ! -f "$FILE" ]]; then
+  echo "Error: File '$FILE' does not exist."
+  exit 1
+fi
 
-  echo -e "$header\n$(cat "$file")\n$footer" > "$file"
-  echo "Processed file: $file"
-done
+TMP_FILE="$(mktemp)"
+
+read -r FIRST_LINE < "$FILE"
+if [[ "$FIRST_LINE" != "$HEADER" ]]; then
+  echo "$HEADER" > "$TMP_FILE"
+  cat "$FILE" >> "$TMP_FILE"
+  mv "$TMP_FILE" "$FILE"
+else
+  rm "$TMP_FILE"
+fi
+
+if [[ "$(tail -n 1 "$FILE")" != "$FOOTER" ]]; then
+  echo "$FOOTER" >> "$FILE"
+fi
+
+echo "Checked '$FILE' for header/footer."
