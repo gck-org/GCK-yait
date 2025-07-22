@@ -2,8 +2,15 @@
 
 # Usage: ./Cleanup [FILE]...
 
+make dist-clean
+
 lint_file() {
-  cppcheck --enable=all --quiet "$1"
+  local output
+  output=$(clang-tidy "$1" 2>&1 | grep -v -E 'Error while trying to load a compilation database|No compilation database found|fixed-compilation-database:|json-compilation-database:|Running without flags.')
+  if [[ -n "$output" ]]; then
+    echo "[LINT] $1:"
+    echo "$output"
+  fi
 }
 
 whitespace_cleanup() {
