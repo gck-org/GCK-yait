@@ -1,4 +1,4 @@
 PREFIX=/usr/bin/
-CFLAGS=-Wall -Wextra -O2
+CFLAGS=-Wall -Wextra -g
 LDFLAGS=
-CC=gcc
+CC=clang

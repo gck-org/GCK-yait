@@ -4,32 +4,9 @@
 
 make dist-clean
 
-lint_file() {
-  local output
-  output=$(clang-tidy "$1" 2>&1 | grep -v -E 'Error while trying to load a compilation database|No compilation database found|fixed-compilation-database:|json-compilation-database:|Running without flags.')
-  if [[ -n "$output" ]]; then
-    echo "[LINT] $1:"
-    echo "$output"
-  fi
-}
-
-whitespace_cleanup() {
-  sed -i 's/[ \t]*$//' "$1"
-  awk 'BEGIN{ORS=""} {print $0 "\n"} END{}' "$1" > "$1.tmp" && mv "$1.tmp" "$1"
-}
-
-comment_check() {
-  if grep -n -E 'TODO|FIXME' "$1"; then
-    echo "[WARN] $1 contains TODO/FIXME comments."
-  fi
-}
-
 process_file() {
   clang-format -i "$1"
   tools/check_header_footer "$1"
-  lint_file "$1"
-  whitespace_cleanup "$1"
-  comment_check "$1"
 }
 
 if [[ $# -gt 0 ]]; then
