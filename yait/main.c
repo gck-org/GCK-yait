@@ -1,21 +1,3 @@
-// Copyright (C) 2025 vx_clutch ( owestness@gmail.com )
-// See end of file for extended copyright information.
-
-// Copyright (C) 2025 vx_clutch ( owestness@gmail.com )
-// See end of file for extended copyright information.
-
-// Copyright (C) 2025 vx_clutch ( owestness@gmail.com )
-// See end of file for extended copyright information.
-
-// Copyright (C) 2025 vx_clutch ( owestness@gmail.com )
-// See end of file for extended copyright information.
-
-// Copyright (C) 2025 vx_clutch ( owestness@gmail.com )
-// See end of file for extended copyright information.
-
-// Copyright (C) 2025 vx_clutch ( owestness@gmail.com )
-// See end of file for extended copyright information.
-
 #include "../config.h"
 #include "../core/file.h"
 #include "../core/print.h"
@@ -28,350 +10,186 @@
 #include <string.h>
 #include <unistd.h>
 
-/* Constants for program behavior */
-#define DEFAULT_USER_NAME "unknown"
-#define DEFAULT_PROJECT_NAME "Project"
-#define DEFAULT_LICENSE BSD3
-#define DEFAULT_GIT_INIT true
-#define DEFAULT_CLANG_FORMAT true
+#define DEBUG
 
-/**
- * Create a new C project with the specified configuration
- * @param fmt Project configuration structure
- * @return 0 on success, non-zero on failure
- */
-int create_project (format_t fmt);
+#define DEFAULT_USER_NAME      "unknown"
+#define DEFAULT_PROJECT_NAME   "Project"
+#define DEFAULT_LICENSE        BSD3
+#define DEFAULT_GIT_INIT       true
+#define DEFAULT_CLANG_FORMAT   true
 
-/**
- * Print a formatted option line for help text
- * @param option The option name (left side)
- * @param description The option description (right side)
- */
-#define print_option(option, description)                                     \
-  printf ("        %-20s %-20s\n", option, description)
+#define print_option(option, description) \
+  printf("        %-20s %-20s\n", option, description)
+
+
+int create_license_if_needed(format_t);
+int create_makefile(format_t);
+int create_project(format_t);
+int get_license_line_and_create_license(format_t, char**);
+int maybe_apply_clang_format(format_t);
+int sanitize(format_t *);
+int setup_git_and_permissions(format_t);
 
 void
-usage (int status)
+usage(int status)
 {
   if (status != 0)
-    fprintf (stderr, "Try 'yait --help' for more information.\n");
-  else
     {
-      printf ("Usage: yait [OPTION]... [PROJECT] (NAME)\n");
-      printf ("Creates a C project with opinionated defaults.\nWhen only "
-              "given first argument it will detect your name\n\n");
-      printf ("Mandatory arguments to long options are mandatory for short "
-              "options too\n");
-      print_option ("-l, --license=NAME",
-                    "Set license (gpl, mit, bsd) [default: gpl]");
-      print_option ("--use-cpp", "Uses the CPP language instead of C");
-      print_option ("--git", "Initialize git repository");
-      print_option ("--GNU",
-                    "Adds stand GNU argument parsing to your project");
-      printf ("                --help\tdisplay the help text and exit\n");
-      printf (
-          "                --version\toutput version information and exit\n");
+      fprintf(stderr, "Try 'yait --help' for more information.\n");
+      return;
     }
+
+  printf("Usage: yait [OPTION]... [PROJECT] (NAME)\n");
+  printf("Creates a C project with opinionated defaults.\n");
+  printf("When only given the first argument it will detect your name.\n\n");
+  printf("Mandatory arguments to long options are mandatory for short options too\n");
+  print_option("-l, --license=NAME", "Set license (gpl, mit, bsd) [default: gpl]");
+  print_option("--use-cpp", "Uses the CPP language instead of C");
+  print_option("--git", "Initialize git repository");
+  print_option("--GNU", "Adds standard GNU argument parsing to your project");
+  printf("                --help     display this help text and exit\n");
+  printf("                --version  output version information and exit\n");
 }
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 {
   if (argc < 2)
     {
-      printfn ("error: not enough arguments.");
+      printfn("error: not enough arguments.");
       return 1;
     }
-  int status = initialize_main (&argc, &argv);
-  status = parse_standard_options (usage, argc, argv);
+
+  int status = initialize_main(&argc, &argv);
+  status = parse_standard_options(usage, argc, argv);
+
   if (status && status != HELP_REQUESTED)
     {
-      printfn ("error: %s", strerror (status));
+      printfn("error: %s", strerror(status));
       return status;
     }
+
   format_t conf;
   conf.project = argv[0];
-  if (argc > 2)
-    conf.name = argv[1];
-  else
+  conf.name = (argc > 2) ? argv[1] : NULL;
+
+  if (!conf.name)
     {
-      struct passwd *pw = getpwuid (getuid ());
-      if (pw && pw->pw_name)
-        conf.name = pw->pw_name;
-      else
-        conf.name = DEFAULT_USER_NAME;
+      struct passwd *pw = getpwuid(getuid());
+      conf.name = (pw && pw->pw_name) ? pw->pw_name : DEFAULT_USER_NAME;
     }
+
   conf.flag.git = DEFAULT_GIT_INIT;
   conf.flag.clang_format = DEFAULT_CLANG_FORMAT;
-
   conf.licence = DEFAULT_LICENSE;
-
-  int result = create_project (conf);
-  return result;
+  #ifdef DEBUG
+        system(strcat("rm -rf ", conf.project));
+  #endif
+  return create_project(conf);
 }
 
-/**
- * Create a new C project with the specified configuration
- * @param fmt Project configuration structure
- * @return 0 on success, non-zero on failure
- */
 int
-create_project (format_t fmt)
+create_project(format_t fmt)
 {
-  int err = create_and_enter_directory (fmt.project);
+  int err;
+
+  err = create_and_enter_directory(fmt.project);
   if (err)
     {
-      printfn ("failed to create or enter directory: %s", strerror (err));
-      return 1;
+      printfn("failed to create or enter directory: %s", strerror(err));
+      return err;
     }
-  if (fmt.flag.git)
-    err = system ("git init --quiet");
+
+  err = sanitize(&fmt);
   if (err)
     {
-      printfn ("failed on git initialize: %s", strerror (err));
-      return 1;
+      printfn("failed to sanitize format: %s", strerror(err));
+      return err;
     }
-  if (!fmt.name)
-    fmt.name = DEFAULT_USER_NAME;
-  create_file_with_content ("WHATNEXT.md", what_next_template);
-  create_file_with_content ("README", readme_template, fmt.project);
-  create_file_with_content ("configure", configure_template);
-  int status = system ("chmod +x configure");
-  if (status)
+
+  err = create_license_if_needed(fmt);
+  if (err)
     {
-      printfn ("error: %s", strerror (status));
-      return status;
+      printfn("failed to create license: %s", strerror(err));
+      return err;
     }
-  // Create a safe uppercase version of the project name for Makefile variables
-  char *makefile_name = strdup (fmt.project);
-  if (!makefile_name)
+
+  err = create_makefile(fmt);
+  if (err)
     {
-      printfn ("fatal: out of memory");
-      return 1;
+      printfn("failed to create Makefile: %s", strerror(err));
+      return err;
     }
-  // Convert to uppercase safely, only for ASCII characters
-  for (char *p = makefile_name; *p; ++p)
+
+  err = setup_git_and_permissions(fmt);
+  if (err)
     {
-      if (*p >= 'a' && *p <= 'z')
-        *p = *p - 'a' + 'A';
+      printfn("warning: git initialization failed: %s", strerror(err));
+      // continue even if git fails
     }
-  create_file_with_content ("Makefile", makefile_template, makefile_name,
-                            makefile_name, makefile_name, makefile_name,
-                            makefile_name, makefile_name, fmt.project,
-                            makefile_name);
-  free (makefile_name);
-  if (fmt.flag.clang_format)
-    create_file_with_content (".clang-format", clang_format_template);
-  char *license_line = "";
-  switch (fmt.licence)
+
+  err = maybe_apply_clang_format(fmt);
+  if (err)
     {
-    case BSD3:
-      license_line = "License BSD-3-Clause: BSD-3-Clause "
-                     "<https://opensource.org/licence/bsd-3-clause>";
-      create_file_with_content ("COPYING", bsd3_license_template, YEAR,
-                                fmt.name);
-      break;
-    case GPLv3:
-    default:
-      break;
+      printfn("warning: clang-format setup failed: %s", strerror(err));
     }
-  create_file_with_content ("config.h", config_h_template, fmt.project,
-                            license_line, fmt.name, YEAR);
-  create_and_enter_directory (fmt.project);
-  if (!fmt.flag.GNU)
-    {
-      create_file_with_content ("main.c", main_c_template, fmt.project,
-                                fmt.name);
-    }
-  else
-    {
-      create_file_with_content ("main.c", main_c_gnu_template, fmt.project,
-                                fmt.project, fmt.name);
-    }
-  if (fmt.flag.GNU)
-    {
-      create_file_with_content ("standard.c", standard_c_template);
-      create_file_with_content ("standard.h", standard_h_template);
-    }
+
   return 0;
 }
 
-/* yait is yet another init tool.
- * Copyright (C) 2025 vx-clutch
- *
- * This file is part of yait.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions, and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions, and the following disclaimer in the documentation
- * or other materials provided with the distribution.
- * 3. Neither the name of vx-clutch nor the names of its contributors may be
- * used to endorse or promote products derived from this software without
- * specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+int
+sanitize(format_t *fmt)
+{
+  if (!fmt->name)
+    fmt->name = DEFAULT_USER_NAME;
 
-/* yait is yet another init tool.
- * Copyright (C) 2025 vx-clutch
- *
- * This file is part of yait.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions, and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions, and the following disclaimer in the documentation
- * or other materials provided with the distribution.
- * 3. Neither the name of vx-clutch nor the names of its contributors may be
- * used to endorse or promote products derived from this software without
- * specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+  return 0;
+}
 
-/* yait is yet another init tool.
- * Copyright (C) 2025 vx-clutch
- *
- * This file is part of yait.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions, and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions, and the following disclaimer in the documentation
- * or other materials provided with the distribution.
- * 3. Neither the name of vx-clutch nor the names of its contributors may be
- * used to endorse or promote products derived from this software without
- * specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+int
+create_license_if_needed(format_t fmt)
+{
+  char *license_line = NULL;
+  return get_license_line_and_create_license(fmt, &license_line);
+}
 
-/* yait is yet another init tool.
- * Copyright (C) 2025 vx-clutch
- *
- * This file is part of yait.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions, and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions, and the following disclaimer in the documentation
- * or other materials provided with the distribution.
- * 3. Neither the name of vx-clutch nor the names of its contributors may be
- * used to endorse or promote products derived from this software without
- * specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+int
+get_license_line_and_create_license(format_t fmt, char **license_line_buffer)
+{
+  switch (fmt.licence)
+    {
+    case BSD3:
+      *license_line_buffer =
+          "License BSD-3-Clause: BSD-3-Clause <https://opensource.org/licence/bsd-3-clause>";
+      return create_file_with_content("COPYING", bsd3_license_template, YEAR, fmt.name);
 
-/* yait is yet another init tool.
- * Copyright (C) 2025 vx-clutch
- *
- * This file is part of yait.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions, and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions, and the following disclaimer in the documentation
- * or other materials provided with the distribution.
- * 3. Neither the name of vx-clutch nor the names of its contributors may be
- * used to endorse or promote products derived from this software without
- * specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+    case GPLv3:
+    default:
+      *license_line_buffer = "License GPLv3: GNU GPL version 3 <https://www.gnu.org/licenses/gpl-3.0.html>";
+      return create_file_with_content("COPYING", gplv3_license_template, YEAR, fmt.name);
+    }
+}
 
-/* yait is yet another init tool.
- * Copyright (C) 2025 vx-clutch
- *
- * This file is part of yait.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions, and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions, and the following disclaimer in the documentation or
- * other materials provided with the distribution.
- * 3. Neither the name of vx-clutch nor the names of its contributors may be
- * used to endorse or promote products derived from this software without
- * specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+int
+maybe_apply_clang_format(format_t fmt)
+{
+  if (!fmt.flag.clang_format)
+    return 0;
+
+  const char *clang_fmt = "BasedOnStyle: LLVM\nIndentWidth: 2\nUseTab: Never\n";
+  return create_file_with_content(".clang-format", clang_fmt, 0, NULL);
+}
+
+int
+setup_git_and_permissions(format_t fmt)
+{
+  if (!fmt.flag.git)
+    return 0;
+
+  int err = system("git init --quiet");
+  if (err)
+    {
+      printfn("failed on git initialize: %s", strerror(err));
+    }
+  return err;
+}
