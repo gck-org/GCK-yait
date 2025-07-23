@@ -60,7 +60,7 @@
 int create_configure ();
 int create_makefile (format_t);
 int create_project (format_t);
-int generate_source_files (format_t);
+int generate_source_code (format_t);
 int maybe_apply_clang_format (format_t);
 int reset_path_ ();
 int sanitize (format_t *);
@@ -116,6 +116,8 @@ main (int argc, char **argv)
   conf.project = argv[0];
   conf.name = (argc > 1) ? argv[1] : NULL;
 
+  //TODO: Iterate over arguments and if it dosn't start with a '-' treat it as argv[0] and argv[1]
+
   if (!conf.name)
     {
       struct passwd *pw = getpwuid (getuid ());
@@ -127,8 +129,10 @@ main (int argc, char **argv)
   conf.licence = DEFAULT_LICENSE;
 
   err = create_project (conf);
-  if (!err) debug ("project made successfully");
-  else debug ("something when wrong");
+  if (!err)
+    debug ("project made successfully");
+  else
+    debug ("something when wrong");
 
   return err;
 }
@@ -167,6 +171,11 @@ create_project (format_t fmt)
   err = maybe_apply_clang_format (fmt);
   if (err)
     printfn ("warning: clang-format setup failed: %s", strerror (err));
+
+  debugc ("generate source code");
+  err = generate_source_code (fmt);
+  on_error ("failed to generate source code", err);
+  done;
 
   return 0;
 }
@@ -262,6 +271,7 @@ setup_git (format_t fmt)
 int
 create_makefile (format_t fmt)
 {
+  goto debug_skip;
   char *makefile_name = strdup (fmt.project);
   if (!makefile_name)
     {
@@ -281,6 +291,7 @@ create_makefile (format_t fmt)
                             makefile_name);
 
   free (makefile_name);
+debug_skip:
   return 0;
 }
 
@@ -297,7 +308,7 @@ create_configure ()
 }
 
 int
-generate_source_files (format_t fmt)
+generate_source_code (format_t fmt)
 {
   int err;
 
@@ -309,13 +320,13 @@ generate_source_files (format_t fmt)
     {
       debug ("GNU flag source branch");
 
-      create_file_with_content ("main.c", main_c_gnu_template);
+      create_file_with_content ("main.c", main_c_gnu_template, fmt.project, fmt.name);
 
       goto atexit_clean;
     }
 
   debug ("default sourcebranch");
-  create_file_with_content ("main.c", main_c_template);
+  create_file_with_content ("main.c", main_c_template, fmt.project, fmt.name);
 
 atexit_clean:
   reset_path;
