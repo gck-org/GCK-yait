@@ -19,8 +19,10 @@ parse_standard_options (void (*usage) (int), int argc, char **argv)
         }
       else if (strcmp (argv[i], "--version") == 0)
         {
-          printf ("%s %s %d\nCopyright (C) %d %s.\n%s\nThis is free software: "
-                  "you are free to change and redistribute it.\nThere is NO "
+          printf ("%s %s %d\nCopyright (C) %d %s.\n%s\nThis is "
+                  "free software: "
+                  "you are free to change and redistribute "
+                  "it.\nThere is NO "
                   "WARRNTY, to the extent permitted by law.\n",
                   PROGRAM, VERSION, COMMIT, YEAR, AUTHORS, LICENSE_LINE);
           exit (EXIT_SUCCESS);

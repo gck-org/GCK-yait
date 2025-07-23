@@ -24,21 +24,31 @@
 #define print_option(option, description)                                     \
   printf ("        %-20s %-20s\n", option, description)
 
+#ifdef DEBUG
+#define on_error(msg, code)                                                   \
+  if (err)                                                                    \
+    {                                                                         \
+      fprintf (stderr, "\n");                                                 \
+      printfn (msg ": %s", strerror (err));                                   \
+      return code;                                                            \
+    }
+#else
 #define on_error(msg, code)                                                   \
   if (err)                                                                    \
     {                                                                         \
       printfn (msg ": %s", strerror (err));                                   \
       return code;                                                            \
     }
+#endif
 
 #ifdef DEBUG
 #define debug(fmt, ...)                                                       \
   fprintf (stderr, "\e[0;32m[%8d]\e[0;33m " fmt "\e[0m\n", __LINE__,          \
            ##__VA_ARGS__)
-#define debugc(fmt, ...)                                                       \
-  fprintf (stderr, "\e[0;32m[%8d]\e[0;33m " fmt "...\e[0m", __LINE__,          \
+#define debugc(fmt, ...)                                                      \
+  fprintf (stderr, "\e[0;32m[%8d]\e[0;33m " fmt "... \e[0m", __LINE__,        \
            ##__VA_ARGS__)
-#define done fprintf(stderr, "done.\n")
+#define done fprintf (stderr, "done.\n")
 #else
 #define debug(fmt, ...)
 #define debugc(fmt, ...)
@@ -77,32 +87,34 @@ usage (int status)
   print_option ("--use-cpp", "Uses the CPP language instead of C");
   print_option ("--git", "Initialize git repository");
   print_option ("--GNU", "Adds standard GNU argument parsing to your project");
-  printf ("                --help     display this help text and exit\n");
-  printf ("                --version  output version information and exit\n");
+  printf ("    --help     display this help text and exit\n");
+  printf ("    --version  output version information and exit\n");
 }
 
 int
 main (int argc, char **argv)
 {
+  int err;
+
   if (argc < 2)
     {
       printfn ("error: not enough arguments.");
       return 1;
     }
 
-  int status = initialize_main (&argc, &argv);
-  status = parse_standard_options (usage, argc, argv);
+  err = initialize_main (&argc, &argv);
+  err = parse_standard_options (usage, argc, argv);
 
-  if (status && status != HELP_REQUESTED)
+  if (err && err != HELP_REQUESTED)
     {
-      printfn ("error: %s", strerror (status));
-      return status;
+      printfn ("error: %s", strerror (err));
+      return err;
     }
 
   format_t conf = { 0 };
 
-  conf.project = argv[0];                  // fix: project name is argv[1]
-  conf.name = (argc > 1) ? argv[1] : NULL; // fix: name is optional, at argv[2]
+  conf.project = argv[0];
+  conf.name = (argc > 1) ? argv[1] : NULL;
 
   if (!conf.name)
     {
@@ -114,7 +126,11 @@ main (int argc, char **argv)
   conf.flag.clang_format = DEFAULT_CLANG_FORMAT;
   conf.licence = DEFAULT_LICENSE;
 
-  return create_project (conf);
+  err = create_project (conf);
+  if (!err) debug ("project made successfully");
+  else debug ("something when wrong");
+
+  return err;
 }
 
 int
@@ -122,16 +138,16 @@ create_project (format_t fmt)
 {
   int err;
 
-  debugc ("sanitize... ");
+  debugc ("sanitize");
   err = sanitize (&fmt);
   on_error ("failed to sanitize format", err);
   done;
 
   debugc ("take %s", fmt.project);
   err = create_and_enter_directory (fmt.project);
+  depth = 0;
   on_error ("failed to create or enter directory", err);
   done;
-  depth = 0;
 
   // debug ("create licenseing");
   // err = create_license_if_needed (fmt);
@@ -172,8 +188,17 @@ reset_path_ ()
 int
 sanitize (format_t *fmt)
 {
+  if (!fmt->project)
+    fmt->project = DEFAULT_PROJECT_NAME;
   if (!fmt->name)
     fmt->name = DEFAULT_USER_NAME;
+  if (fmt->licence != BSD3 && fmt->licence != GPLv3 && fmt->licence != MIT)
+    fmt->licence = DEFAULT_LICENSE;
+  fmt->flag.git = fmt->flag.git ? true : DEFAULT_GIT_INIT;
+  fmt->flag.clang_format
+      = fmt->flag.clang_format ? true : DEFAULT_CLANG_FORMAT;
+  fmt->flag.GNU = fmt->flag.GNU ? true : false;
+
   return 0;
 }
 
@@ -281,17 +306,17 @@ generate_source_files (format_t fmt)
   on_error ("failed to create or enter directory", err);
 
   if (fmt.flag.GNU)
-  {
-    debug ("GNU flag source branch");
+    {
+      debug ("GNU flag source branch");
 
-    create_file_with_content ("main.c", main_c_gnu_template);
+      create_file_with_content ("main.c", main_c_gnu_template);
 
-    goto atexit_clean;
-  }
+      goto atexit_clean;
+    }
 
   debug ("default sourcebranch");
   create_file_with_content ("main.c", main_c_template);
-  
+
 atexit_clean:
   reset_path;
   return 0;
