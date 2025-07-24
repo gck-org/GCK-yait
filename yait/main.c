@@ -6,7 +6,9 @@
 #include "../core/standard.h"
 #include "contents.h"
 #include "format.h"
+#include <ctype.h>
 #include <errno.h>
+#include <getopt.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,6 +67,7 @@ int maybe_apply_clang_format (format_t);
 int reset_path_ ();
 int sanitize (format_t *);
 int setup_git (format_t);
+int parse_arguments (format_t *, int, char **);
 
 int depth;
 
@@ -113,10 +116,9 @@ main (int argc, char **argv)
 
   format_t conf = { 0 };
 
-  conf.project = argv[0];
-  conf.name = (argc > 1) ? argv[1] : NULL;
-
-  //TODO: Iterate over arguments and if it dosn't start with a '-' treat it as argv[0] and argv[1]
+  // TODO: Argument Parsing
+  conf.project = "sample_project";
+  conf.name = "vx_clutch";
 
   if (!conf.name)
     {
@@ -320,7 +322,8 @@ generate_source_code (format_t fmt)
     {
       debug ("GNU flag source branch");
 
-      create_file_with_content ("main.c", main_c_gnu_template, fmt.project, fmt.name);
+      create_file_with_content ("main.c", main_c_gnu_template, fmt.project,
+                                fmt.name);
 
       goto atexit_clean;
     }
@@ -330,5 +333,58 @@ generate_source_code (format_t fmt)
 
 atexit_clean:
   reset_path;
+  return 0;
+}
+
+int
+parse_arguments (format_t *conf, int argc, char **argv)
+{
+  static struct option long_options[]
+      = { { "GNU", no_argument, 0, 1 },
+          { "use-cpp", no_argument, 0, 2 },
+          { "git", no_argument, 0, 3 },
+          { "license", required_argument, 0, 4 },
+          { 0, 0, 0, 0 } };
+
+  int opt;
+  int long_index = 0;
+
+  while ((opt = getopt_long (argc, argv, "", long_options, &long_index)) != -1)
+    {
+      switch (opt)
+        {
+        case 1:
+          conf->flag.GNU = 1;
+          break;
+        case 2:
+          conf->flag.use_cpp = 1;
+          break;
+        case 3:
+          conf->flag.git = 1;
+          break;
+        case 4:
+          char *lowercase_form = strdup (optarg);
+          for (; *lowercase_form; ++lowercase_form)
+            *lowercase_form = tolower ((unsigned char)*lowercase_form);
+
+          break;
+        case '?':
+          break;
+        }
+    }
+      int positional_count = 0;
+    for (int i = optind; i < argc; ++i) {
+        if (argv[i][0] == '-') {
+            fprintf(stderr, "Unknown flag: %s\n", argv[i]);
+            continue;
+        }
+
+        if (positional_count == 0) {
+            conf->project = argv[i];
+        } else if (positional_count == 1) {
+            conf->name = argv[i];
+        }
+        positional_count++;
+    }
   return 0;
 }

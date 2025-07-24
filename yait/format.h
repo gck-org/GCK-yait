@@ -36,6 +36,7 @@ typedef struct
   bool GNU;
   bool git;
   bool clang_format;
+  bool use_cpp;
 } flags_t;
 
 /* Project configuration structure */
