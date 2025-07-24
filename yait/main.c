@@ -8,14 +8,13 @@
 #include "format.h"
 #include <ctype.h>
 #include <errno.h>
+#include <assert.h>
 #include <getopt.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#define DEBUG
 
 #define DEFAULT_USER_NAME "unknown"
 #define DEFAULT_PROJECT_NAME "Project"
@@ -273,7 +272,6 @@ setup_git (format_t fmt)
 int
 create_makefile (format_t fmt)
 {
-  goto debug_skip;
   char *makefile_name = strdup (fmt.project);
   if (!makefile_name)
     {
@@ -290,10 +288,9 @@ create_makefile (format_t fmt)
   create_file_with_content ("Makefile", makefile_template, makefile_name,
                             makefile_name, makefile_name, makefile_name,
                             makefile_name, makefile_name, fmt.project,
-                            makefile_name);
+                            makefile_name, makefile_name);
 
   free (makefile_name);
-debug_skip:
   return 0;
 }
 
