@@ -6,9 +6,9 @@
 #include "../core/standard.h"
 #include "contents.h"
 #include "format.h"
+#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
-#include <assert.h>
 #include <getopt.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -56,8 +56,7 @@
 #define done
 #endif
 
-// int create_license_if_needed (format_t);
-// int get_license_line_and_create_license (format_t, char **);
+int create_license_and_set_license_line (format_t, char **);
 int create_configure ();
 int create_makefile (format_t);
 int create_project (format_t);
@@ -212,35 +211,42 @@ sanitize (format_t *fmt)
   return 0;
 }
 
-// int
-// create_license_if_needed (format_t fmt)
-// {
-//   char *license_line = NULL;
-//   return get_license_line_and_create_license (fmt, &license_line);
-// }
-//
-// int
-// get_license_line_and_create_license (format_t fmt, char
-// **license_line_buffer)
-// {
-//   switch (fmt.licence)
-//     {
-//     case BSD3:
-//       *license_line_buffer = "License BSD-3-Clause: BSD-3-Clause "
-//                              "<https://opensource.org/license/bsd-3-clause/>";
-//       return create_file_with_content ("COPYING", bsd3_license_template,
-//       YEAR,
-//                                        fmt.name);
-//
-//     case GPLv3:
-//     default:
-//       *license_line_buffer = "License GPLv3: GNU GPL version 3 "
-//                              "<https://www.gnu.org/licenses/gpl-3.0.html>";
-//       return create_file_with_content ("COPYING", gplv3_license_template,
-//       YEAR,
-//                                        fmt.name);
-//     }
-// }
+int
+create_license_and_set_license_line (format_t fmt, char **license_line_buffer)
+{
+  if (fmt.licence == UNLICENCE)
+    return 0;
+
+  reset_path;
+  /* TODO: Run better checks on licence_line_buffer to ensure we have enough space.
+      This could be done through a multitude of ways; that is for you to figure out. */
+  assert (license_line_buffer != NULL);
+
+// TODO: Remove this and actually implement the features.
+#define TODO()                                                                \
+  printfn ("Not impl");                                                       \
+  assert (1 == 2)
+
+  switch (fmt.licence)
+    {
+    case BSD3:
+      TODO ();
+      break;
+    case GPLv3:
+      TODO ();
+      break;
+    case MIT:
+      TODO ();
+      break;
+    // TODO: Replace fallthrough with unreachable macro for performace.
+    case UNLICENCE:
+    default:
+      printfn ("bad logic in create_licence_and_set_licence_line()");
+      return 1;
+    }
+
+  return 0;
+}
 
 int
 maybe_apply_clang_format (format_t fmt)
@@ -369,19 +375,24 @@ parse_arguments (format_t *conf, int argc, char **argv)
           break;
         }
     }
-      int positional_count = 0;
-    for (int i = optind; i < argc; ++i) {
-        if (argv[i][0] == '-') {
-            fprintf(stderr, "Unknown flag: %s\n", argv[i]);
-            continue;
+  int positional_count = 0;
+  for (int i = optind; i < argc; ++i)
+    {
+      if (argv[i][0] == '-')
+        {
+          fprintf (stderr, "Unknown flag: %s\n", argv[i]);
+          continue;
         }
 
-        if (positional_count == 0) {
-            conf->project = argv[i];
-        } else if (positional_count == 1) {
-            conf->name = argv[i];
+      if (positional_count == 0)
+        {
+          conf->project = argv[i];
         }
-        positional_count++;
+      else if (positional_count == 1)
+        {
+          conf->name = argv[i];
+        }
+      positional_count++;
     }
   return 0;
 }
