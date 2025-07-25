@@ -201,7 +201,7 @@ sanitize (format_t *fmt)
     fmt->project = DEFAULT_PROJECT_NAME;
   if (!fmt->name)
     fmt->name = DEFAULT_USER_NAME;
-  if (fmt->license != BSD3 && fmt->licence != GPLv3 && fmt->licence != MIT)
+  if (fmt->license != BSD3 && fmt->license != GPLv3 && fmt->license != MIT)
     fmt->license = DEFAULT_LICENSE;
   fmt->flag.git = fmt->flag.git ? true : DEFAULT_GIT_INIT;
   fmt->flag.clang_format
@@ -212,9 +212,9 @@ sanitize (format_t *fmt)
 }
 
 int
-create_license_and_set_license_line (format_t fmt, char **licence_line_buffer)
+create_license_and_set_license_line (format_t fmt, char **license_line_buffer)
 {
-  if (fmt.license == UNLICENCE)
+  if (fmt.license == UNlICENSE)
     return 0;
 
   reset_path;
@@ -230,6 +230,7 @@ create_license_and_set_license_line (format_t fmt, char **licence_line_buffer)
   switch (fmt.license)
     {
     case BSD3:
+      *license_line_buffer = "Bsd";
       TODO ();
       break;
     case GPLv3:
@@ -239,9 +240,9 @@ create_license_and_set_license_line (format_t fmt, char **licence_line_buffer)
       TODO ();
       break;
     // TODO: Replace fallthrough with unreachable macro for performace.
-    case UNlicense:
+    case UNlICENSE:
     default:
-      printfn ("bad logic in create_license_and_set_licence_line()");
+      printfn ("bad logic in create_license_and_set_license_line()");
       return 1;
     }
 
