@@ -12,8 +12,8 @@ typedef enum
   BSD3,      /* BSD 3-Clause License */
   GPLv3,     /* GNU General Public License v3 */
   MIT,       /* MIT License */
-  UNLICENCE, /* Unlicense */
-} licence_t;
+  UNlicense, /* Unlicense */
+} license_t;
 
 /* Library type enumeration - using bit flags for multiple selection */
 typedef enum
@@ -42,7 +42,7 @@ typedef struct
 /* Project configuration structure */
 typedef struct
 {
-  licence_t licence;     /* License type for the project */
+  license_t licence;     /* License type for the project */
   char *project;         /* Project name */
   char *name;            /* Author/creator name */
   lib_flags_t libraries; /* Selected libraries (bit field) */

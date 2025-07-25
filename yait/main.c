@@ -126,7 +126,7 @@ main (int argc, char **argv)
 
   conf.flag.git = DEFAULT_GIT_INIT;
   conf.flag.clang_format = DEFAULT_CLANG_FORMAT;
-  conf.licence = DEFAULT_LICENSE;
+  conf.license = DEFAULT_LICENSE;
 
   err = create_project (conf);
   if (!err)
@@ -201,8 +201,8 @@ sanitize (format_t *fmt)
     fmt->project = DEFAULT_PROJECT_NAME;
   if (!fmt->name)
     fmt->name = DEFAULT_USER_NAME;
-  if (fmt->licence != BSD3 && fmt->licence != GPLv3 && fmt->licence != MIT)
-    fmt->licence = DEFAULT_LICENSE;
+  if (fmt->license != BSD3 && fmt->licence != GPLv3 && fmt->licence != MIT)
+    fmt->license = DEFAULT_LICENSE;
   fmt->flag.git = fmt->flag.git ? true : DEFAULT_GIT_INIT;
   fmt->flag.clang_format
       = fmt->flag.clang_format ? true : DEFAULT_CLANG_FORMAT;
@@ -212,13 +212,13 @@ sanitize (format_t *fmt)
 }
 
 int
-create_license_and_set_license_line (format_t fmt, char **license_line_buffer)
+create_license_and_set_license_line (format_t fmt, char **licence_line_buffer)
 {
-  if (fmt.licence == UNLICENCE)
+  if (fmt.license == UNLICENCE)
     return 0;
 
   reset_path;
-  /* TODO: Run better checks on licence_line_buffer to ensure we have enough space.
+  /* TODO: Run better checks on license_line_buffer to ensure we have enough space.
       This could be done through a multitude of ways; that is for you to figure out. */
   assert (license_line_buffer != NULL);
 
@@ -227,7 +227,7 @@ create_license_and_set_license_line (format_t fmt, char **license_line_buffer)
   printfn ("Not impl");                                                       \
   assert (1 == 2)
 
-  switch (fmt.licence)
+  switch (fmt.license)
     {
     case BSD3:
       TODO ();
@@ -239,9 +239,9 @@ create_license_and_set_license_line (format_t fmt, char **license_line_buffer)
       TODO ();
       break;
     // TODO: Replace fallthrough with unreachable macro for performace.
-    case UNLICENCE:
+    case UNlicense:
     default:
-      printfn ("bad logic in create_licence_and_set_licence_line()");
+      printfn ("bad logic in create_license_and_set_licence_line()");
       return 1;
     }
 
