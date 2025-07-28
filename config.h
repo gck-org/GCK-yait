@@ -5,7 +5,7 @@
 #define PROGRAM "yait"
 #define LICENSE_LINE "License BSD-3-Clause: BSD-3-Clause <https://opensource.org/license/bsd-3-clause>"
 #define AUTHORS "vx_clutch"
-#define VERSION "pre-alpha"
+#define VERSION "alpha"
 #define YEAR 2025
 
 /* Custom error codes */
