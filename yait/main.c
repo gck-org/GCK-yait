@@ -1,19 +1,13 @@
 /* Copyright (C) vx_clutch
- * 
+ *
  * This file is part of yait
  *
  * This project and file is licenced under the BSD-3-Clause licence.
  * <https://opensource.org/license/bsd-3-clause>
  */
 
-/* Usage: yait [OPTION]... [PROJECT] (NAME) */
+// Usage: yait [OPTION]... [PROJECT] (NAME)
 
-#include "../config.h"
-#include "../core/file.h"
-#include "../core/print.h"
-#include "../core/standard.h"
-#include "contents.h"
-#include "format.h"
 #include <assert.h>
 #include <errno.h>
 #include <getopt.h>
@@ -22,6 +16,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include "../config.h"
+#include "../core/file.h"
+#include "../core/print.h"
+#include "../core/standard.h"
+#include "contents.h"
+#include "format.h"
 
 #define DEFAULT_USER_NAME "unknown"
 #define DEFAULT_PROJECT_NAME "Project"
@@ -228,8 +229,9 @@ create_license_and_set_license_line (format_t fmt, char **license_line_buffer)
     return 0;
 
   reset_path;
-  /* TODO: Run better checks on license_line_buffer to ensure we have enough space.
-      This could be done through a multitude of ways; that is for you to figure out. */
+  /* TODO: Run better checks on license_line_buffer to ensure we have enough
+     space. This could be done through a multitude of ways; that is for you to
+     figure out. */
   assert (license_line_buffer != NULL);
 
 // TODO: Remove this and actually implement the features.
