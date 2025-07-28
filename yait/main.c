@@ -1,4 +1,12 @@
-// Usage: yait [OPTION]... [PROJECT] (NAME)
+/* Copyright (C) vx_clutch
+ * 
+ * This file is part of yait
+ *
+ * This project and file is licenced under the BSD-3-Clause licence.
+ * <https://opensource.org/license/bsd-3-clause>
+ */
+
+/* Usage: yait [OPTION]... [PROJECT] (NAME) */
 
 #include "../config.h"
 #include "../core/file.h"
@@ -7,7 +15,6 @@
 #include "contents.h"
 #include "format.h"
 #include <assert.h>
-#include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
 #include <pwd.h>
@@ -56,7 +63,7 @@
 #define done
 #endif
 
-int create_license_and_set_license_line (format_t, char **);
+int create_license (format_t);
 int create_configure ();
 int create_makefile (format_t);
 int create_project (format_t);
@@ -67,6 +74,8 @@ int sanitize (format_t *);
 int setup_git (format_t);
 int parse_arguments (format_t *, int, char **);
 
+/* This is to keep track of how deep we are within
+  the project tree. This is used in reset_path */
 int depth;
 
 void
@@ -180,6 +189,7 @@ create_project (format_t fmt)
   return 0;
 }
 
+/* This macro exist purely because I like how it looks. */
 #define reset_path reset_path_ ()
 int
 reset_path_ ()
@@ -366,11 +376,7 @@ parse_arguments (format_t *conf, int argc, char **argv)
         case 3:
           conf->flag.git = 1;
           break;
-        case 4:
-          char *lowercase_form = strdup (optarg);
-          for (; *lowercase_form; ++lowercase_form)
-            *lowercase_form = tolower ((unsigned char)*lowercase_form);
-
+        case 4: // TODO: Licence
           break;
         case '?':
           break;
