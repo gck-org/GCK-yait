@@ -6,7 +6,7 @@
  * <https://opensource.org/license/bsd-3-clause>
  */
 
-// Usage: yait [OPTION]... [PROJECT] (NAME)
+// Usage: yait [OPTION]... PROJECT [NAME]
 
 #include <assert.h>
 #include <errno.h>
@@ -38,7 +38,7 @@ int depth;
 #define print_option(option, description)                                     \
   printf ("        %-20s %-20s\n", option, description)
 
-void
+static void
 usage (int status)
 {
   if (status != 0)
@@ -47,7 +47,7 @@ usage (int status)
       return;
     }
 
-  printf ("Usage: yait [OPTION]... [PROJECT] (NAME)\n");
+  printf ("Usage: yait [OPTION]... PROJECT [NAME]\n");
   printf ("Creates a C project with opinionated defaults.\n");
   printf ("When only given the first argument it will detect your name.\n\n");
   printf ("Mandatory arguments to long options are mandatory for short "
@@ -63,7 +63,7 @@ usage (int status)
 
 /* This macro exist purely because I like how it looks. */
 #define reset_path reset_path_ ()
-int
+static int
 reset_path_ ()
 {
   while (depth != 0)
@@ -71,12 +71,12 @@ reset_path_ ()
       if (chdir ("..") != 0)
         return errno;
       else
-        depth--;
+        --depth;
     }
   return 0;
 }
 
-int
+static int
 sanitize (format_t *fmt)
 {
   if (!fmt->project)
@@ -93,8 +93,8 @@ sanitize (format_t *fmt)
   return 0;
 }
 
-int
-create_license_and_set_license_line (format_t fmt, char **license_line_buffer)
+static int
+create_license (format_t fmt, char **license_line_buffer)
 {
   if (fmt.license == UNlICENSE)
     return 0;
@@ -122,7 +122,6 @@ create_license_and_set_license_line (format_t fmt, char **license_line_buffer)
     case MIT:
       TODO ();
       break;
-    // TODO: Replace fallthrough with unreachable macro for performace.
     case UNlICENSE:
     default:
       printfn ("bad logic in create_license_and_set_license_line()");
@@ -132,7 +131,7 @@ create_license_and_set_license_line (format_t fmt, char **license_line_buffer)
   return 0;
 }
 
-int
+static int
 maybe_apply_clang_format (format_t fmt)
 {
   if (!fmt.flag.clang_format)
@@ -144,7 +143,7 @@ maybe_apply_clang_format (format_t fmt)
   return create_file_with_content (".clang-format", clang_fmt, 0, NULL);
 }
 
-int
+static int
 setup_git (format_t fmt)
 {
   if (!fmt.flag.git)
@@ -159,7 +158,7 @@ setup_git (format_t fmt)
   return err;
 }
 
-int
+static int
 create_makefile (format_t fmt)
 {
   char *makefile_name = strdup (fmt.project);
@@ -184,7 +183,7 @@ create_makefile (format_t fmt)
   return 0;
 }
 
-int
+static int
 create_configure ()
 {
   reset_path;
@@ -196,7 +195,7 @@ create_configure ()
   return err;
 }
 
-int
+static int
 generate_source_code (format_t fmt)
 {
   int err;
@@ -223,7 +222,7 @@ atexit_clean:
   return 0;
 }
 
-int
+static int
 parse_arguments (format_t *conf, int argc, char **argv)
 {
   static struct option long_options[]
@@ -272,12 +271,12 @@ parse_arguments (format_t *conf, int argc, char **argv)
         {
           conf->name = argv[i];
         }
-      positional_count++;
+      ++positional_count;
     }
   return 0;
 }
 
-int
+static int
 create_project (format_t fmt)
 {
   int err;
@@ -323,7 +322,7 @@ create_project (format_t fmt)
 int
 main (int argc, char **argv)
 {
-  int err;
+  int status;
 
   if (argc < 2)
     {
@@ -331,13 +330,13 @@ main (int argc, char **argv)
       return 1;
     }
 
-  err = initialize_main (&argc, &argv);
-  err = parse_standard_options (usage, argc, argv);
+  status = initialize_main (&argc, &argv);
+  status = parse_standard_options (usage, argc, argv);
 
-  if (err && err != HELP_REQUESTED)
+  if (status && status != HELP_REQUESTED)
     {
-      printfn ("error: %s", strerror (err));
-      return err;
+      printfn ("error: %s", strerror (status));
+      return status;
     }
 
   format_t conf = { 0 };
@@ -356,11 +355,11 @@ main (int argc, char **argv)
   conf.flag.clang_format = DEFAULT_CLANG_FORMAT;
   conf.license = DEFAULT_LICENSE;
 
-  err = create_project (conf);
-  if (!err)
+  status = create_project (conf);
+  if (!status)
     debug ("project made successfully");
   else
     debug ("something when wrong");
 
-  return err;
+  exit (status);
 }
