@@ -23,6 +23,7 @@
 #include "../core/standard.h"
 #include "contents.h"
 #include "format.h"
+#include "debug.h"
 
 #define DEFAULT_USER_NAME "unknown"
 #define DEFAULT_PROJECT_NAME "Project"
@@ -30,54 +31,12 @@
 #define DEFAULT_GIT_INIT true
 #define DEFAULT_CLANG_FORMAT true
 
-#define print_option(option, description)                                     \
-  printf ("        %-20s %-20s\n", option, description)
-
-#ifdef DEBUG
-#define on_error(msg, code)                                                   \
-  if (err)                                                                    \
-    {                                                                         \
-      fprintf (stderr, "\n");                                                 \
-      printfn (msg ": %s", strerror (err));                                   \
-      return code;                                                            \
-    }
-#else
-#define on_error(msg, code)                                                   \
-  if (err)                                                                    \
-    {                                                                         \
-      printfn (msg ": %s", strerror (err));                                   \
-      return code;                                                            \
-    }
-#endif
-
-#ifdef DEBUG
-#define debug(fmt, ...)                                                       \
-  fprintf (stderr, "\e[0;32m[%8d]\e[0;33m " fmt "\e[0m\n", __LINE__,          \
-           ##__VA_ARGS__)
-#define debugc(fmt, ...)                                                      \
-  fprintf (stderr, "\e[0;32m[%8d]\e[0;33m " fmt "... \e[0m", __LINE__,        \
-           ##__VA_ARGS__)
-#define done fprintf (stderr, "done.\n")
-#else
-#define debug(fmt, ...)
-#define debugc(fmt, ...)
-#define done
-#endif
-
-int create_license (format_t);
-int create_configure ();
-int create_makefile (format_t);
-int create_project (format_t);
-int generate_source_code (format_t);
-int maybe_apply_clang_format (format_t);
-int reset_path_ ();
-int sanitize (format_t *);
-int setup_git (format_t);
-int parse_arguments (format_t *, int, char **);
-
 /* This is to keep track of how deep we are within
   the project tree. This is used in reset_path */
 int depth;
+
+#define print_option(option, description)                                     \
+  printf ("        %-20s %-20s\n", option, description)
 
 void
 usage (int status)
@@ -100,94 +59,6 @@ usage (int status)
   print_option ("--GNU", "Adds standard GNU argument parsing to your project");
   printf ("    --help     display this help text and exit\n");
   printf ("    --version  output version information and exit\n");
-}
-
-int
-main (int argc, char **argv)
-{
-  int err;
-
-  if (argc < 2)
-    {
-      printfn ("error: not enough arguments.");
-      return 1;
-    }
-
-  err = initialize_main (&argc, &argv);
-  err = parse_standard_options (usage, argc, argv);
-
-  if (err && err != HELP_REQUESTED)
-    {
-      printfn ("error: %s", strerror (err));
-      return err;
-    }
-
-  format_t conf = { 0 };
-
-  // TODO: Argument Parsing
-  conf.project = "sample_project";
-  conf.name = "vx_clutch";
-
-  if (!conf.name)
-    {
-      struct passwd *pw = getpwuid (getuid ());
-      conf.name = (pw && pw->pw_name) ? pw->pw_name : DEFAULT_USER_NAME;
-    }
-
-  conf.flag.git = DEFAULT_GIT_INIT;
-  conf.flag.clang_format = DEFAULT_CLANG_FORMAT;
-  conf.license = DEFAULT_LICENSE;
-
-  err = create_project (conf);
-  if (!err)
-    debug ("project made successfully");
-  else
-    debug ("something when wrong");
-
-  return err;
-}
-
-int
-create_project (format_t fmt)
-{
-  int err;
-
-  debugc ("sanitize");
-  err = sanitize (&fmt);
-  on_error ("failed to sanitize format", err);
-  done;
-
-  debugc ("take %s", fmt.project);
-  err = create_and_enter_directory (fmt.project);
-  depth = 0;
-  on_error ("failed to create or enter directory", err);
-  done;
-
-  // debug ("create licenseing");
-  // err = create_license_if_needed (fmt);
-  // on_error ("failed to create license", err);
-
-  debugc ("create makefile");
-  err = create_makefile (fmt);
-  on_error ("failed to create Makefile", err);
-  done;
-
-  debug ("setup git");
-  err = setup_git (fmt);
-  if (err)
-    printfn ("warning: git initialization failed: %s", strerror (err));
-
-  debug ("create .clang-format");
-  err = maybe_apply_clang_format (fmt);
-  if (err)
-    printfn ("warning: clang-format setup failed: %s", strerror (err));
-
-  debugc ("generate source code");
-  err = generate_source_code (fmt);
-  on_error ("failed to generate source code", err);
-  done;
-
-  return 0;
 }
 
 /* This macro exist purely because I like how it looks. */
@@ -404,4 +275,92 @@ parse_arguments (format_t *conf, int argc, char **argv)
       positional_count++;
     }
   return 0;
+}
+
+int
+create_project (format_t fmt)
+{
+  int err;
+
+  debugc ("sanitize");
+  err = sanitize (&fmt);
+  on_error ("failed to sanitize format", err);
+  done;
+
+  debugc ("take %s", fmt.project);
+  err = create_and_enter_directory (fmt.project);
+  depth = 0;
+  on_error ("failed to create or enter directory", err);
+  done;
+
+  // debug ("create licenseing");
+  // err = create_license_if_needed (fmt);
+  // on_error ("failed to create license", err);
+
+  debugc ("create makefile");
+  err = create_makefile (fmt);
+  on_error ("failed to create Makefile", err);
+  done;
+
+  debug ("setup git");
+  err = setup_git (fmt);
+  if (err)
+    printfn ("warning: git initialization failed: %s", strerror (err));
+
+  debug ("create .clang-format");
+  err = maybe_apply_clang_format (fmt);
+  if (err)
+    printfn ("warning: clang-format setup failed: %s", strerror (err));
+
+  debugc ("generate source code");
+  err = generate_source_code (fmt);
+  on_error ("failed to generate source code", err);
+  done;
+
+  return 0;
+}
+
+int
+main (int argc, char **argv)
+{
+  int err;
+
+  if (argc < 2)
+    {
+      printfn ("error: not enough arguments.");
+      return 1;
+    }
+
+  err = initialize_main (&argc, &argv);
+  err = parse_standard_options (usage, argc, argv);
+
+  if (err && err != HELP_REQUESTED)
+    {
+      printfn ("error: %s", strerror (err));
+      return err;
+    }
+
+  format_t conf = { 0 };
+
+  // TODO: Argument Parsing
+  conf.project = "sample_project";
+  conf.name = "vx_clutch";
+
+  if (!conf.name)
+    {
+      struct passwd *pw = getpwuid (getuid ());
+      conf.name = (pw && pw->pw_name) ? pw->pw_name : DEFAULT_USER_NAME;
+    }
+
+  conf.flag.git = DEFAULT_GIT_INIT;
+  conf.flag.clang_format = DEFAULT_CLANG_FORMAT;
+  conf.license = DEFAULT_LICENSE;
+
+  err = create_project (conf);
+  if (!err)
+    debug ("project made successfully");
+  else
+    debug ("something when wrong");
+
+  return err;
 }
