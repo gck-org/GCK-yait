@@ -1,41 +1,39 @@
 /* Copyright (C) vx_clutch
- * 
+ *
  * This file is part of yait
  *
  * This project and file is licenced under the BSD-3-Clause licence.
- * <https://opensource.org/license/bsd-3-clause>
+ * <https://opensource.org/licence/bsd-3-clause>
  */
 
 #ifndef FORMAT_H
 #define FORMAT_H
 
 #include <stdbool.h>
+#include <string.h>
 
-/* License type enumeration */
 typedef enum
 {
-  BSD3,      /* BSD 3-Clause License */
-  GPLv3,     /* GNU General Public License v3 */
-  MIT,       /* MIT License */
-  UNlICENSE, /* Unlicense */
-} license_t;
+  BSD3,         /* BSD 3-Clause Licence */
+  GPLv3,        /* GNU General Public Licence v3 */
+  MIT,          /* MIT Licence */
+  UNLICENCE,    /* Unlicence */
+  LICENCE_HELP, /* Help case */
+} licence_t;
 
-/* Library type enumeration - using bit flags for multiple selection */
+/* A bit field is used so that we can accomplish two things. (a) store lots of
+   libraries without taxing memory; and (b) a dynamic array is not neccescary.
+ */
 typedef enum
 {
-  LIB_NONE = 0,        /* No libraries selected */
-  LIB_RAYLIB = 1 << 0, /* Raylib game library */
-  LIB_WINAPI = 1 << 1, /* Windows API */
-  LIB_CURL = 1 << 2,   /* cURL library */
-  /* Future libraries can be added here:
-   * LIB_OPENGL   = 1 << 3,
-   * LIB_SDL2     = 1 << 4,
-   * LIB_GTK      = 1 << 5,
-   * etc.
-   */
+  LIB_NONE = 0,         /* No libraries selected */
+  LIB_RAYLIB = 1 << 0,  /* Raylib game library */
+  LIB_NCURSES = 1 << 1, /* Windows API */
+  LIB_CURL = 1 << 2,    /* cURL library */
+  LIB_COUNT_,           /* Number of Libraries */
+  LIB_HELP,             /* Help case */
 } lib_flags_t;
 
-/* Flag option type struct */
 typedef struct
 {
   bool GNU;
@@ -44,26 +42,39 @@ typedef struct
   bool use_cpp;
 } flags_t;
 
-/* Project configuration structure */
 typedef struct
 {
-  license_t license;     /* License type for the project */
-  char *project;         /* Project name */
-  char *name;            /* Author/creator name */
+  licence_t licence; /* Licence type for the project */
+  char *project;     /* Project name */
+  char *name; /* Author/creator name ( if not provided infered on sanitize ) */
   lib_flags_t libraries; /* Selected libraries (bit field) */
   flags_t flag;          /* Flags */
-} format_t;
+} manifest_t;
 
-/* Default values */
-#define DEFAULT_LICENSE BSD3
-#define DEFAULT_GIT_INIT true
 #define DEFAULT_CLANG_FORMAT true
+#define DEFAULT_GIT_INIT true
+#define DEFAULT_GNU false
 #define DEFAULT_LIBRARIES LIB_NONE
+#define DEFAULT_LICENCE BSD3
 
-/* Helper macros for library operations */
 #define HAS_LIBRARY(libs, lib) ((libs) & (lib))
 #define ADD_LIBRARY(libs, lib) ((libs) |= (lib))
 #define REMOVE_LIBRARY(libs, lib) ((libs) &= ~(lib))
-#define CLEAR_LIBRARIES(libs) ((libs) = LIB_NONE)
+
+static lib_flags_t
+TOlibrary (char *src)
+{
+  if (strcmp (src, "raylib"))
+    return LIB_RAYLIB;
+  if (strcmp (src, "ncurse"))
+    return LIB_NCURSES;
+  if (strcmp (src, "ncurses"))
+    return LIB_NCURSES;
+  if (strcmp (src, "curl"))
+    return LIB_CURL;
+  if (strcmp (src, "help"))
+    return LIB_HELP;
+  return LIB_COUNT_; /* bad case */
+}
 
 #endif

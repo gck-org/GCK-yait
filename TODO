@@ -1,0 +1,6 @@
+1 Fix arg parseing
+2 Fix generated Makefile
+3 Add Licence
+
+Ideas
+1 Add --is-lib

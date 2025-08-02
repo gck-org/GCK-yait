@@ -59,9 +59,7 @@ char *configure_template =
   line ("done")
   line ()
   line ("printf \"checking for C compiler... \"")
-  line ("trycc gcc")
-  line ("trycc cc")
-  line ("trycc clang")
+  line ("%s")
   line ("printf \"%s\\n\" \"$CC\"")
   line ()
   line ("printf \"checking weather C compiler works... \"")
@@ -87,7 +85,7 @@ char *makefile_template =
   line ("prefix = /usr/bin")
   line ()
   line ("%s_SRCS := $(shell find . -name '%s/*.c')")
-  line ("%s_OBJS := $(patsubst ./%.c,c-out/obj/%%.o,$(%s_SRCS))")
+  line ("%s_OBJS := $(patsubst ./%%.c,c-out/obj/%%.o,$(%s_SRCS))")
   line ()
   line ("%s := c-out/bin/%s")
   line ()
@@ -127,7 +125,7 @@ char *makefile_template =
   line ("dist-clean: clean")
   line ("\trm -f config.mak")
   line ()
-  line (".PHONY: all clean dist-clean install uninstall build format");
+  line (".PHONY: all clean dist-clean install uninstall");
 
 /* .clang-format template */
 char *clang_format_template =

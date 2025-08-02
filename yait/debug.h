@@ -11,9 +11,9 @@
     }
 #else
 #define on_error(msg, code)                                                   \
-  if (err)                                                                    \
+  if (code)                                                                   \
     {                                                                         \
-      printfn (msg ": %s", strerror (err));                                   \
+      printfn (msg ": %s", strerror (code));                                  \
       return code;                                                            \
     }
 #endif
