@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 int
-print_error_with_prefix (char *format, ...)
+printfn (char *format, ...)
 {
   int len;
   va_list args;

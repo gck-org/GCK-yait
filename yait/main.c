@@ -385,7 +385,6 @@ main (int argc, char **argv)
       return 1;
     }
 
-  status = initialize_main (&argc, &argv);
   status = parse_standard_options (usage, argc, argv);
 
   if (status && status != HELP_REQUESTED)

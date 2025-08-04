@@ -38,11 +38,3 @@ parse_standard_options (void (*usage) (int), int argc, char **argv)
     }
   return HELP_REQUESTED;
 }
-
-int
-initialize_main (int *argc, char ***argv)
-{
-  (*argc)--;
-  (*argv)++;
-  return 0;
-}
