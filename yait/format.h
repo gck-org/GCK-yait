@@ -76,7 +76,7 @@ TOLibrary (char *src)
     return LIB_CURL;
   if (strcmp (src, "help"))
     return LIB_HELP;
-  printfn("could not find library");
+  printfn("could not find library %s", src);
   return LIB_COUNT_; /* bad case */
 }
 
