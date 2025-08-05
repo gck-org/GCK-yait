@@ -12,6 +12,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "../core/print.h"
+
 typedef enum
 {
   BSD3,         /* BSD 3-Clause Licence */
@@ -62,7 +64,7 @@ typedef struct
 #define REMOVE_LIBRARY(libs, lib) ((libs) &= ~(lib))
 
 static lib_flags_t
-TOlibrary (char *src)
+TOLibrary (char *src)
 {
   if (strcmp (src, "raylib"))
     return LIB_RAYLIB;
@@ -74,6 +76,7 @@ TOlibrary (char *src)
     return LIB_CURL;
   if (strcmp (src, "help"))
     return LIB_HELP;
+  printfn("could not find library");
   return LIB_COUNT_; /* bad case */
 }
 

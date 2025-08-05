@@ -260,56 +260,53 @@ atexit_clean:
 static int parse_arguments(manifest_t *conf, int argc, char **argv)
 {
 	static struct option long_options[] = {
-		{ "GNU", no_argument, 0, 1 },
-		{ "use-cpp", no_argument, 0, 2 },
-		{ "git", no_argument, 0, 3 },
-		{ "licence", required_argument, 0, 4 },
-		{ "lib", required_argument, 0, 5 },
+		{ "GNU", no_argument, 0, 'g' },
+		{ "use-cpp", no_argument, 0, 'c' },
+		{ "git", no_argument, 0, 'i' },
+		{ "licence", required_argument, 0, 'l' },
+		{ "lib", required_argument, 0, 'L' },
+		{ "help", no_argument, 0, 'h' },
 		{ 0, 0, 0, 0 }
 	};
 
 	int opt;
-	int long_index = 0;
-
-	while ((opt = getopt_long(argc, argv, "", long_options, &long_index)) !=
-	       -1) {
+	while ((opt = getopt_long(argc, argv, "gcil:L:h", long_options,
+				  NULL)) != -1) {
 		switch (opt) {
-		case 1:
-			conf->flag.GNU = 1;
+		case 'g':
+			conf->flag.GNU = true;
 			break;
-		case 2:
-			conf->flag.use_cpp = 1;
+		case 'c':
+			conf->flag.use_cpp = true;
 			break;
-		case 3:
-			conf->flag.git = 1;
+		case 'i':
+			conf->flag.git = true;
 			break;
-		case 4: // TODO(vx-clutch): implement the licence options, and make it lowercase.
+		case 'l':
+			if (strcmp(optarg, "bsd") == 0)
+				conf->licence = BSD3;
+			else if (strcmp(optarg, "gpl") == 0)
+				conf->licence = GPLv3;
+			else if (strcmp(optarg, "mit") == 0)
+				conf->licence = MIT;
 			break;
-		case 5:
-			ADD_LIBRARY(
-				conf->libraries,
-				TOlibrary(
-					optarg)); // TODO(vx-clutch): Get this working
+		case 'L':
+			ADD_LIBRARY(conf->libraries, TOLibrary(optarg));
 			break;
-		case '?':
-			break;
+		case 'h':
+			usage(0);
+			exit(0);
+		default:
+			usage(1);
+			exit(1);
 		}
 	}
 
-	int positional_count = 0;
-	for (int i = optind; i < argc; ++i) {
-		if (argv[i][0] == '-') {
-			fprintf(stderr, "Unknown flag: %s\n", argv[i]);
-			continue;
-		}
-
-		if (positional_count == 0)
-			conf->name = argv[i];
-		else if (positional_count == 1)
-			conf->project = argv[i];
-		++positional_count;
-	}
-
+	/* now handle positional args */
+	if (optind < argc)
+		conf->project = argv[optind++];
+	if (optind < argc)
+		conf->name = argv[optind++];
 	return 0;
 }
 
@@ -360,16 +357,35 @@ static int create_project(manifest_t manifest)
 	return 0;
 }
 
+int program_exists(const char *prog)
+{
+	char *path = getenv("PATH");
+	if (!path)
+		return 1;
+
+	char *copy = strdup(path);
+	if (!copy)
+		return 1;
+
+	char *dir = strtok(copy, ":");
+	while (dir) {
+		char buf[4096];
+		snprintf(buf, sizeof(buf), "%s/%s", dir, prog);
+		if (access(buf, X_OK) == 0) {
+			free(copy);
+			return 0;
+		}
+		dir = strtok(NULL, ":");
+	}
+
+	free(copy);
+	return 1;
+}
+
 int main(int argc, char **argv)
 {
 	int status;
 	manifest_t manifest = { 0 };
-
-	if (argc == 0) {
-		status = 1; // emit suggestion
-		usage(status);
-		return 1;
-	}
 
 	status = parse_standard_options(usage, argc, argv);
 	if (status && status != HELP_REQUESTED) {
@@ -377,7 +393,8 @@ int main(int argc, char **argv)
 		return status;
 	}
 
-	// TODO(vx-clutch): runtime git bin check
+	status = program_exists("git");
+	on_error("git bin not present", status);
 
 	parse_arguments(&manifest, argc, argv);
 	status = create_project(manifest);
