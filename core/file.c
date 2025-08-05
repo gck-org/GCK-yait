@@ -14,58 +14,50 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-int
-create_file_with_content (char *path, char *format, ...)
+int create_file_with_content(char *path, char *format, ...)
 {
-  FILE *fp = fopen (path, "w");
-  if (!fp)
-    {
-      return -1;
-    }
-  va_list args;
-  va_start (args, format);
-  vfprintf (fp, format, args);
-  va_end (args);
+	FILE *fp = fopen(path, "w");
+	if (!fp) {
+		return -1;
+	}
+	va_list args;
+	va_start(args, format);
+	vfprintf(fp, format, args);
+	va_end(args);
 
-  fclose (fp);
-  return 0;
+	fclose(fp);
+	return 0;
 }
 
-int
-create_directory (char *format, ...)
+int create_directory(char *format, ...)
 {
-  va_list args;
-  va_start (args, format);
+	va_list args;
+	va_start(args, format);
 
-  char path[MAX_PATH_LENGTH];
-  int result = vsnprintf (path, sizeof (path), format, args);
-  va_end (args);
+	char path[MAX_PATH_LENGTH];
+	int result = vsnprintf(path, sizeof(path), format, args);
+	va_end(args);
 
-  /* Check if the path was truncated */
-  if (result >= (int)sizeof (path))
-    {
-      return ENAMETOOLONG;
-    }
+	/* Check if the path was truncated */
+	if (result >= (int)sizeof(path)) {
+		return ENAMETOOLONG;
+	}
 
-  if (mkdir (path, DEFAULT_DIR_PERMISSIONS) < 0)
-    {
-      return errno;
-    }
+	if (mkdir(path, DEFAULT_DIR_PERMISSIONS) < 0) {
+		return errno;
+	}
 
-  return 0;
+	return 0;
 }
 
-int
-create_and_enter_directory (const char *dirname)
+int create_and_enter_directory(const char *dirname)
 {
-  int err = create_directory ("%s", dirname);
-  if (err)
-    {
-      return err;
-    }
-  if (chdir (dirname) != 0)
-    {
-      return errno;
-    }
-  return 0;
+	int err = create_directory("%s", dirname);
+	if (err) {
+		return err;
+	}
+	if (chdir(dirname) != 0) {
+		return errno;
+	}
+	return 0;
 }

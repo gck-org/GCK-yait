@@ -246,13 +246,6 @@ char *standard_h_template =
   line ("#ifndef STANDARD_H")
   line ("#define STANDARD_H")
   line ()
-  line ("/**")
-  line (" * Parse standard command line  options (--help, --version)")
-  line (" * @param usage_func Function pointer to usage display function")
-  line (" * @param argc Argument count")
-  line (" * @param argv Argument vector")
-  line (" * @return 0 on success, 1 if help/version requested, errno on error")
-  line (" */")
   line ("int parse_standard_options(void (*usage_func)(), int argc, char **argv);")
   line ()
   line ("#endif");
