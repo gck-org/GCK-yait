@@ -22,8 +22,7 @@
 #include "../core/print.h"
 #include "../core/standard.h"
 #include "contents.h"
-#include "debug.h"
-#include "format.h"
+#include "manifest.h"
 
 #define DEFAULT_USER_NAME "unknown"
 #define DEFAULT_PROJECT_NAME "Project"
@@ -61,201 +60,6 @@ usage (int status)
   printf ("    --version  output version information and exit\n");
 }
 // clang-format on
-
-/* This macro exist purely because I like how it looks. This should be called
-   in every function that creates file to ensure they are being created in
-   right place.  */
-#define reset_path reset_path_()
-static int reset_path_()
-{
-	while (depth != 0) {
-		if (chdir("..") != 0)
-			return errno;
-		else
-			--depth;
-	}
-	return 0;
-}
-
-// TODO(vx-clutch): sanitize the alpha-numeric range
-static int sanitize(manifest_t *m)
-{
-	if (!m->project)
-		m->project = DEFAULT_PROJECT_NAME;
-	if (!m->name)
-		m->name = DEFAULT_USER_NAME;
-	if (!(m->licence == UNLICENCE))
-		m->licence = DEFAULT_LICENCE;
-	m->flag.git = m->flag.git ? true : DEFAULT_GIT_INIT;
-	m->flag.clang_format = m->flag.clang_format ? true :
-						      DEFAULT_CLANG_FORMAT;
-	m->flag.GNU = m->flag.GNU ? true : DEFAULT_GNU;
-
-	if (!m->name) {
-		struct passwd *pw = getpwuid(getuid());
-		m->name = (pw && pw->pw_name) ? pw->pw_name : DEFAULT_USER_NAME;
-	}
-
-	return 0;
-}
-
-#define get(url) status = system("git submodule add -q " url)
-static int create_libraries(manifest_t manifest)
-{
-	int status = 0;
-
-	if (!manifest.libraries) {
-		return status;
-	}
-	reset_path;
-
-	for (int i = 0; i < LIB_COUNT_; ++i) {
-		if HAS_LIBRARY (manifest.libraries, LIB_RAYLIB) {
-			REMOVE_LIBRARY(manifest.libraries, LIB_RAYLIB);
-			get("https://github.com/raysan5/raylib");
-		} else if HAS_LIBRARY (manifest.libraries, LIB_NCURSES) {
-			REMOVE_LIBRARY(manifest.libraries, LIB_NCURSES);
-			get("https://github.com/mirror/ncurses");
-		} else if HAS_LIBRARY (manifest.libraries, LIB_CURL) {
-			REMOVE_LIBRARY(manifest.libraries, LIB_CURL);
-			get("https://github.com/raysan5/raylib");
-		}
-	}
-	return status;
-}
-
-static int create_licence(manifest_t manifest, char **licence_line_buffer)
-{
-	if (manifest.licence == UNLICENCE)
-		return 0;
-
-	reset_path;
-	/* TODO(vx-clutch): Run better checks on licence_line_buffer to ensure we have enough
-     space. This could be done through a multitude of ways; that is for you to
-     figure out.  */
-	assert(licence_line_buffer != NULL);
-
-// TODO(vx-clutch): Remove this and actually implement the features.
-#define TODO()               \
-	printfn("Not impl"); \
-	assert(1 == 2)
-
-	switch (manifest.licence) {
-	case BSD3:
-		*licence_line_buffer = "Bsd";
-		TODO();
-		break;
-	case GPLv3:
-		TODO();
-		break;
-	case MIT:
-		TODO();
-		break;
-	case UNLICENCE:
-	default:
-		printfn("bad logic in create_licence ()");
-		return 1;
-	}
-	return 0;
-}
-
-static int maybe_create_clang_format(manifest_t manifest)
-{
-	int status;
-	if (!manifest.flag.clang_format)
-		return 0;
-
-	reset_path;
-
-	status = create_file_with_content(".clang-format",
-					  clang_format_template);
-
-	return status;
-}
-
-static int setup_git(manifest_t manifest)
-{
-	if (!manifest.flag.git) {
-		return 0;
-	}
-	reset_path;
-
-	int status = system("git init --quiet");
-	if (status) {
-		printfn("failed on git initialize: %s", strerror(status));
-	}
-
-	return status;
-}
-
-static int create_makefile(manifest_t manifest)
-{
-	char *makefile_name = strdup(manifest.project);
-	if (!makefile_name) {
-		printfn("fatal: out of memory");
-		return 1;
-	}
-
-	for (char *p = makefile_name; *p; ++p)
-		if (*p >= 'a' && *p <= 'z')
-			*p -= 32;
-
-	reset_path;
-
-	create_file_with_content("Makefile", makefile_template, makefile_name,
-				 makefile_name, makefile_name, makefile_name,
-				 makefile_name, makefile_name, manifest.project,
-				 makefile_name, makefile_name);
-
-	free(makefile_name);
-	return 0;
-}
-
-static int create_configure(manifest_t manifest)
-{
-	int status = 0;
-	reset_path;
-
-	char *cc;
-	if (manifest.flag.use_cpp) {
-		cc = "trycc g++\ntrycc CC\ntrycc clang++\n";
-	} else {
-		cc = "trycc gcc\ntrycc cc\ntrycc clang\n";
-	}
-
-	create_file_with_content("configure", configure_template, cc);
-	status = system("chmod +x configure");
-	if (status)
-		printfn("error: %s", strerror(status));
-	return status;
-}
-
-static int generate_source_code(manifest_t manifest)
-{
-	int status;
-
-	debug("take %s/%s", manifest.project, manifest.project);
-	status = create_and_enter_directory(manifest.project);
-	on_error("failed to create or enter directory", status);
-	++depth;
-
-	if (manifest.flag.GNU) {
-		debug("GNU flag source branch");
-
-		create_file_with_content("main.c", main_c_gnu_template,
-					 manifest.project, manifest.name);
-
-		goto atexit_clean;
-	}
-
-	debug("default sourcebranch");
-	create_file_with_content("main.c", main_c_template, manifest.project,
-				 manifest.name);
-
-atexit_clean:
-	reset_path;
-	return 0;
-}
 
 static int parse_arguments(manifest_t *conf, int argc, char **argv)
 {
@@ -310,50 +114,18 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 	return 0;
 }
 
-static int create_project(manifest_t manifest)
+/* This macro exist purely because I like how it looks. This should be called
+   in every function that creates file to ensure they are being created in
+   right place.  */
+#define reset_path reset_path_()
+static int reset_path_()
 {
-	int status;
-
-	debugc("sanitize");
-	status = sanitize(&manifest);
-	on_error("failed to sanitize format", status);
-	done;
-
-	debugc("take %s", manifest.project);
-	status = create_and_enter_directory(manifest.project);
-	depth = 0;
-	on_error("failed to create or enter directory", status);
-	done;
-
-	debugc("create makefile");
-	status = create_makefile(manifest);
-	on_error("failed to create Makefile", status);
-	done;
-
-	debug("setup git");
-	status = setup_git(manifest);
-	if (status) {
-		printfn("warning: git initialization failed: %s",
-			strerror(status));
+	while (depth != 0) {
+		if (chdir("..") != 0)
+			return errno;
+		else
+			--depth;
 	}
-
-	debug("create .clang-format");
-	status = maybe_create_clang_format(manifest);
-	if (status) {
-		printfn("warning: clang-format setup failed: %s",
-			strerror(status));
-	}
-
-	debugc("generate source code");
-	status = generate_source_code(manifest);
-	on_error("failed to generate source code", status);
-	done;
-
-	debugc("get libraries");
-	status = create_libraries(manifest);
-	on_error("failed to get libraries", status);
-	done;
-
 	return 0;
 }
 
@@ -382,29 +154,299 @@ int program_exists(const char *prog)
 	return 1;
 }
 
+// TODO(vx-clutch): sanitize the alpha-numeric range
+// clang-format off
+static int sanitize(manifest_t *m)
+{
+	if (!m->project) m->project                = DEFAULT_PROJECT_NAME;
+	if (!m->name) m->name 			   = DEFAULT_USER_NAME;
+	if (!(m->licence == UNLICENCE)) m->licence = DEFAULT_LICENCE;
+
+	m->flag.git = m->flag.git ? true : DEFAULT_GIT_INIT;
+	m->flag.clang_format = m->flag.clang_format ? true : DEFAULT_CLANG_FORMAT;
+	m->flag.GNU = m->flag.GNU ? true : DEFAULT_GNU;
+
+	if (!m->name) {
+		struct passwd *pw = getpwuid(getuid());
+		m->name = (pw && pw->pw_name) ? pw->pw_name : DEFAULT_USER_NAME;
+	}
+
+	return 0;
+}
+// clang-format on
+
+static int create_libraries(manifest_t manifest)
+{
+	int status = 0;
+
+	if (!manifest.libraries) {
+		return status;
+	}
+
+	/* reset_path; */
+	while (depth != 0) {
+		if (chdir("..") != 0)
+			return errno;
+		else
+			--depth;
+	}
+
+	for (int i = 0; i < LIB_COUNT_; ++i) {
+		if (HAS_LIBRARY(manifest.libraries, LIB_RAYLIB)) {
+			REMOVE_LIBRARY(manifest.libraries, LIB_RAYLIB);
+			status = system(
+				"git submodule add -q https://github.com/raysan5/raylib");
+		} else if (HAS_LIBRARY(manifest.libraries, LIB_NCURSES)) {
+			REMOVE_LIBRARY(manifest.libraries, LIB_NCURSES);
+			status = system(
+				"git submodule add -q https://github.com/mirror/ncurses");
+		} else if (HAS_LIBRARY(manifest.libraries, LIB_CURL)) {
+			REMOVE_LIBRARY(manifest.libraries, LIB_CURL);
+			status = system(
+				"git submodule add -q https://github.com/raysan5/raylib");
+		}
+	}
+	return status;
+}
+
+static int create_licence(manifest_t manifest, char **licence_line_buffer)
+{
+	if (manifest.licence == UNLICENCE)
+		return 0;
+
+	/* reset_path; */
+	while (depth != 0) {
+		if (chdir("..") != 0)
+			return errno;
+		else
+			--depth;
+	}
+
+	assert(licence_line_buffer != NULL);
+
+	switch (manifest.licence) {
+	case BSD3:
+		*licence_line_buffer = "Bsd";
+		printfn("Not impl");
+		assert(1 == 2);
+		break;
+	case GPLv3:
+		printfn("Not impl");
+		assert(1 == 2);
+		break;
+	case MIT:
+		printfn("Not impl");
+		assert(1 == 2);
+		break;
+	case UNLICENCE:
+	default:
+		printfn("bad logic in create_licence ()");
+		return 1;
+	}
+	return 0;
+}
+
+static int maybe_create_clang_format(manifest_t manifest)
+{
+	int status;
+	if (!manifest.flag.clang_format)
+		return 0;
+
+	/* reset_path; */
+	while (depth != 0) {
+		if (chdir("..") != 0)
+			return errno;
+		else
+			--depth;
+	}
+
+	status = create_file_with_content(".clang-format",
+					  clang_format_template);
+
+	return status;
+}
+
+static int setup_git(manifest_t manifest)
+{
+	if (!manifest.flag.git) {
+		return 0;
+	}
+
+	/* reset_path; */
+	while (depth != 0) {
+		if (chdir("..") != 0)
+			return errno;
+		else
+			--depth;
+	}
+
+	int status = system("git init --quiet");
+	if (status) {
+		printfn("failed on git initialize: %s", strerror(status));
+	}
+	return status;
+}
+
+static int create_makefile(manifest_t manifest)
+{
+	char *makefile_name = strdup(manifest.project);
+	if (!makefile_name) {
+		printfn("fatal: out of memory");
+		return 1;
+	}
+
+	for (char *p = makefile_name; *p; ++p)
+		if (*p >= 'a' && *p <= 'z')
+			*p -= 32;
+
+	reset_path;
+
+	create_file_with_content("Makefile", makefile_template, makefile_name,
+				 makefile_name, makefile_name, makefile_name,
+				 makefile_name, makefile_name, manifest.project,
+				 makefile_name, makefile_name);
+
+	free(makefile_name);
+	return 0;
+}
+
+static int create_configure(manifest_t manifest)
+{
+	int status = 0;
+	reset_path;
+
+	char *cc;
+	if (manifest.flag.use_cpp) {
+		cc = "trycc g++\ntrycc CC\ntrycc clang++\n";
+	} else {
+		cc = "trycc gcc\ntrycc cc\ntrycc clang\n";
+	}
+
+	create_file_with_content("configure", configure_template, cc);
+	status = system("chmod +x configure");
+	if (status)
+		printfn("error: %s", strerror(status));
+	return status;
+}
+
+static int generate_source_code(manifest_t manifest)
+{
+	int status;
+
+	status = create_and_enter_directory(manifest.project);
+	if (status) {
+		printfn("failed to create or enter directory: %s",
+			strerror(status));
+		return status;
+	}
+	++depth;
+
+	if (manifest.flag.GNU) {
+		create_file_with_content("main.c", main_c_gnu_template,
+					 manifest.project, manifest.name);
+
+		goto atexit_clean;
+	}
+
+	create_file_with_content("main.c", main_c_template, manifest.project,
+				 manifest.name);
+
+atexit_clean:
+	reset_path;
+	return 0;
+}
+
+static int create_project(manifest_t manifest)
+{
+	int status;
+
+	status = sanitize(&manifest);
+	if (status) {
+		printfn("failed to sanitize format: %s", strerror(status));
+		return status;
+	}
+
+	status = create_and_enter_directory(manifest.project);
+	depth = 0;
+	if (status) {
+		printfn("failed to create or enter directory: %s",
+			strerror(status));
+		return status;
+	}
+
+	status = create_makefile(manifest);
+	if (status) {
+		printfn("failed to create Makefile: %s", strerror(status));
+		return status;
+	}
+
+	status = create_configure(manifest);
+	if (status) {
+		printfn("failed to create configure: %s", strerror(status));
+		return status;
+	}
+
+	status = setup_git(manifest);
+	if (status) {
+		printfn("warning: git initialization failed: %s",
+			strerror(status));
+	}
+
+	status = maybe_create_clang_format(manifest);
+	if (status) {
+		printfn("warning: clang-format setup failed: %s",
+			strerror(status));
+	}
+
+	// TODO(vx-clutch): make this smarter--or not ( macro ).
+	char *licence = malloc(sizeof(char) * 1024);
+	if (!licence) {
+		printfn("failed to create memory for licence line: %s",
+			strerror(status));
+		return status;
+	}
+	status = create_licence(manifest, &licence);
+	if (status) {
+		printfn("failed to get libraries: %s", strerror(status));
+		return status;
+	}
+
+	// TODO(vx-clutch): Take in licence line and put it into standard.c
+	status = generate_source_code(manifest);
+	if (status) {
+		printfn("failed to generate source code: %s", strerror(status));
+		return status;
+	}
+	free(licence);
+
+	status = create_libraries(manifest);
+	if (status) {
+		printfn("failed to get libraries: %s", strerror(status));
+		return status;
+	}
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	int status;
 	manifest_t manifest = { 0 };
 
 	status = parse_standard_options(usage, argc, argv);
-	if (status && status != HELP_REQUESTED) {
-		printfn("error: %s", strerror(status));
-		return status;
+	if (status != 0 && status != HELP_REQUESTED) {
+		fprintf(stderr, "error: %s\n", strerror(status));
+		return EXIT_FAILURE;
 	}
 
 	status = program_exists("git");
-	on_error("git bin not present", status);
+	if (status != 0) {
+		fprintf(stderr, "git binary not present\n");
+		return EXIT_FAILURE;
+	}
 
 	parse_arguments(&manifest, argc, argv);
 	status = create_project(manifest);
 
-#ifdef DEBUG
-	if (!status)
-		debug("project made successfully");
-	else
-		debug("something when wrong");
-#endif
-
-	return status;
+	return status == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
