@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "../config.h"
@@ -329,31 +330,39 @@ static int create_configure(manifest_t manifest)
 	return status;
 }
 
-static int generate_source_code(manifest_t manifest)
+static int generate_source_code(manifest_t manifest, char *licence_line)
 {
-	int status;
+	int status, year;
+
+	time_t t = time(NULL);
+	struct tm tm = *localtime(&t);
+	year = tm.tm_year + 1900;
+
+	// XXX(vx-clutch): this segfaults, but why?
+	// status = create_file_with_content("config.h", manifest.project, licence_line, year);
+	if (status) {
+		printfn("failed to create config.h: %s", strerror(status));
+		return status;
+	}
 
 	status = create_and_enter_directory(manifest.project);
+	++depth;
 	if (status) {
 		printfn("failed to create or enter directory: %s",
 			strerror(status));
 		return status;
 	}
-	++depth;
 
 	if (manifest.flag.GNU) {
-		create_file_with_content("main.c", main_c_gnu_template,
-					 manifest.project, manifest.name);
-
-		goto atexit_clean;
+		status = create_file_with_content("main.c", main_c_gnu_template,
+						  manifest.project,
+						  manifest.name);
+	} else {
+		status = create_file_with_content("main.c", main_c_template,
+						  manifest.project,
+						  manifest.name);
 	}
-
-	create_file_with_content("main.c", main_c_template, manifest.project,
-				 manifest.name);
-
-atexit_clean:
-	reset_path;
-	return 0;
+	return status;
 }
 
 static int create_project(manifest_t manifest)
@@ -399,25 +408,25 @@ static int create_project(manifest_t manifest)
 	}
 
 	// TODO(vx-clutch): make this smarter--or not ( macro ).
-	char *licence = malloc(sizeof(char) * 1024);
-	if (!licence) {
+	char *licence_line = malloc(sizeof(char) * 1024);
+	if (!licence_line) {
 		printfn("failed to create memory for licence line: %s",
 			strerror(status));
 		return status;
 	}
-	status = create_licence(manifest, &licence);
+	status = create_licence(manifest, &licence_line);
 	if (status) {
 		printfn("failed to get libraries: %s", strerror(status));
 		return status;
 	}
 
 	// TODO(vx-clutch): Take in licence line and put it into standard.c
-	status = generate_source_code(manifest);
+	status = generate_source_code(manifest, licence_line);
 	if (status) {
 		printfn("failed to generate source code: %s", strerror(status));
 		return status;
 	}
-	free(licence);
+	free(licence_line);
 
 	status = create_libraries(manifest);
 	if (status) {
@@ -445,7 +454,12 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	parse_arguments(&manifest, argc, argv);
+	// TODO(vx-clutch): enable argument parsing
+	// parse_arguments(&manifest, argc, argv);
+	manifest.project = "sample_project";
+	manifest.name = "vx_clutch";
+	manifest.licence = BSD3;
+	manifest.libraries = ADD_LIBRARY(manifest.libraries, LIB_NONE);
 	status = create_project(manifest);
 
 	return status == 0 ? EXIT_SUCCESS : EXIT_FAILURE;

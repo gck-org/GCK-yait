@@ -177,7 +177,7 @@ char *config_h_template =
   line ()
   line ("/* Program information */")
   line ("#define PROGRAM \"%s\"")
-  line ("#define LICENSE_line  \"%s\"")
+  line ("#define LICENSE_LINE  \"%s\"")
   line ("#define AUTHORS \"%s\"")
   line ("#define VERSION \"pre-alpha\"")
   line ("#define YEAR 2025")
