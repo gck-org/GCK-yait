@@ -6,7 +6,7 @@
  * <https://opensource.org/license/bsd-3-clause>
  */
 
-#include "print.h"
+#include "yait.h"
 #include <stdarg.h>
 #include <stdio.h>
 

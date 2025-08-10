@@ -6,13 +6,14 @@
  * <https://opensource.org/license/bsd-3-clause>
  */
 
-#include "file.h"
-#include "../config.h"
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
+
+#include "yait.h"
 
 int create_file_with_content(char *path, char *format, ...)
 {

@@ -9,7 +9,8 @@
 #ifndef COMMIT
 #define COMMIT 0
 #endif
-#include "standard.h"
+
+#include "yait.h"
 #include "../config.h"
 #include <stdio.h>
 #include <stdlib.h>
