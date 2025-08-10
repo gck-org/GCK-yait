@@ -191,6 +191,7 @@ int setup_git(manifest_t manifest)
 	if (status) {
 		printfn("failed on git initialize: %s", strerror(status));
 	}
+
 	return status;
 }
 
@@ -238,7 +239,7 @@ int create_configure(manifest_t manifest)
 
 int generate_source_code(manifest_t manifest, char *licence_line)
 {
-	int status, year;
+	int status, year = 0;
 
 	time_t t = time(NULL);
 	struct tm tm = *localtime(&t);

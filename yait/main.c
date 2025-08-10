@@ -32,7 +32,7 @@ usage (int status)
       return;
     }
 
-  printf ("Usage: yait [OPTION]... PROJECT [NAME]\n");
+  printf ("Usage: yait [OPTION]... <PATH>\n");
   printf ("Creates a C project with opinionated defaults.\n");
   printf ("When only given the first argument it will detect your name.\n\n");
   printf ("Mandatory arguments to long options are mandatory for short options too\n");
@@ -78,6 +78,11 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 				conf->licence = GPLv3;
 			else if (strcmp(optarg, "mit") == 0)
 				conf->licence = MIT;
+			else {
+				fprintf(stderr, "Unknown licence: %s\n",
+					optarg);
+				exit(EXIT_FAILURE);
+			}
 			break;
 		case 'L':
 			ADD_LIBRARY(conf->libraries, TOLibrary(optarg));
@@ -91,11 +96,17 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 		}
 	}
 
-	/* now handle positional args */
-	if (optind < argc)
-		conf->project = argv[optind++];
+	if (optind >= argc) {
+		fprintf(stderr, "Missing required <PATH> argument\n");
+		usage(1);
+		exit(EXIT_FAILURE);
+	}
+
+	conf->project = argv[optind++];
+
 	if (optind < argc)
 		conf->name = argv[optind++];
+
 	return 0;
 }
 
@@ -105,22 +116,24 @@ int get_name(char **output)
 	char buffer[128];
 	size_t output_len = 0;
 
-	pipe = popen("ls -l", "r");
+	*output = NULL; // make sure it's NULL before realloc
+
+	pipe = popen("git config user.name", "r");
 	if (!pipe)
 		exit(EXIT_FAILURE);
 
 	while (fgets(buffer, sizeof(buffer), pipe) != NULL) {
 		size_t chunk_len = strlen(buffer);
-		char *new_output = realloc(output, output_len + chunk_len + 1);
+		char *new_output = realloc(*output, output_len + chunk_len + 1);
 		if (!new_output) {
-			free(output);
+			free(*output);
 			pclose(pipe);
 			exit(EXIT_FAILURE);
 		}
 		*output = new_output;
-		memcpy(output + output_len, buffer, chunk_len);
+		memcpy((*output) + output_len, buffer, chunk_len);
 		output_len += chunk_len;
-		*output[output_len] = '\0';
+		(*output)[output_len] = '\0';
 	}
 	pclose(pipe);
 	return 0;
@@ -143,10 +156,18 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	status = get_name(&manifest.name);
-	manifest.path = ".";
+	parse_arguments(&manifest, argc, argv);
+
+	if (!manifest.name) {
+		status = get_name(&manifest.name);
+		if (status != 0 || !manifest.name || manifest.name[0] == '\0') {
+			fprintf(stderr, "Could not determine user name\n");
+			return EXIT_FAILURE;
+		}
+	}
+
+	manifest.path = manifest.project;
 
 	status = create_project(manifest);
-
 	return status == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
