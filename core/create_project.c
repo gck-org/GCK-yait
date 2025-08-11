@@ -10,6 +10,8 @@
 #include "contents.h"
 #include "yait.h"
 
+#error "TODO: make path project root"
+
 #define DEFAULT_USER_NAME "unknown"
 #define DEFAULT_PROJECT_NAME "Project"
 #define DEFAULT_LICENCE BSD3
@@ -92,21 +94,24 @@ int create_libraries(manifest_t manifest)
 
 	if (HAS_LIBRARY(manifest.libraries, LIB_RAYLIB)) {
 		REMOVE_LIBRARY(manifest.libraries, LIB_RAYLIB);
-		status = system("git submodule add -q https://github.com/raysan5/raylib");
+		status = system(
+			"git submodule add -q https://github.com/raysan5/raylib");
 		if (status != 0)
 			return status;
 	}
 
 	if (HAS_LIBRARY(manifest.libraries, LIB_NCURSES)) {
 		REMOVE_LIBRARY(manifest.libraries, LIB_NCURSES);
-		status = system("git submodule add -q https://github.com/mirror/ncurses");
+		status = system(
+			"git submodule add -q https://github.com/mirror/ncurses");
 		if (status != 0)
 			return status;
 	}
 
 	if (HAS_LIBRARY(manifest.libraries, LIB_CURL)) {
 		REMOVE_LIBRARY(manifest.libraries, LIB_CURL);
-		status = system("git submodule add -q https://github.com/curl/curl");
+		status = system(
+			"git submodule add -q https://github.com/curl/curl");
 		if (status != 0)
 			return status;
 	}
@@ -129,13 +134,16 @@ int create_licence(manifest_t manifest, char **licence_line_buffer)
 	switch (manifest.licence) {
 	case BSD3:
 		*licence_line_buffer = "Bsd";
-		fprintf(stderr, "create_licence: BSD3 license generation not implemented\n");
+		fprintf(stderr,
+			"create_licence: BSD3 license generation not implemented\n");
 		return ENOSYS;
 	case GPLv3:
-		fprintf(stderr, "create_licence: GPLv3 license generation not implemented\n");
+		fprintf(stderr,
+			"create_licence: GPLv3 license generation not implemented\n");
 		return ENOSYS;
 	case MIT:
-		fprintf(stderr, "create_licence: MIT license generation not implemented\n");
+		fprintf(stderr,
+			"create_licence: MIT license generation not implemented\n");
 		return ENOSYS;
 	default:
 		fprintf(stderr, "create_licence: unknown license type\n");
@@ -152,7 +160,8 @@ int maybe_create_clang_format(manifest_t manifest)
 	if (!manifest.flag.clang_format)
 		return 0;
 
-	int status = create_file_with_content(".clang-format", clang_format_template);
+	int status = create_file_with_content(".clang-format",
+					      clang_format_template);
 	return status;
 }
 
@@ -167,35 +176,35 @@ int setup_git(manifest_t manifest)
 
 	int status = system("git init --quiet");
 	if (status != 0)
-		fprintf(stderr, "setup_git: failed to initialize git: %s\n", strerror(status));
+		fprintf(stderr, "setup_git: failed to initialize git: %s\n",
+			strerror(status));
 
 	return status;
 }
 
 int create_makefile(manifest_t manifest)
 {
-	char *makefile_name = strdup(manifest.project);
-	if (!makefile_name) {
+	char *m = strdup(manifest.project);
+	char *M = strdup(manifest.project);
+	if (!M) {
 		fprintf(stderr, "create_makefile: fatal: out of memory\n");
 		return ENOMEM;
 	}
 
-	for (char *p = makefile_name; *p; ++p)
+	for (char *p = M; *p; ++p)
 		if (*p >= 'a' && *p <= 'z')
 			*p -= 'a' - 'A';
 
 	int ret = reset_path();
 	if (ret != 0) {
-		free(makefile_name);
+		free(M);
 		return ret;
 	}
 
-	int status = create_file_with_content("Makefile", makefile_template, makefile_name,
-					     makefile_name, makefile_name, makefile_name,
-					     makefile_name, makefile_name, manifest.project,
-					     makefile_name, makefile_name);
+	int status = create_file_with_content("Makefile", makefile_template, M, m, M, m, M, M, m, M, m, M, m);
 
-	free(makefile_name);
+	free(m);
+	free(M);
 	return status;
 }
 
@@ -212,13 +221,15 @@ int create_configure(manifest_t manifest)
 		cc = "trycc gcc\ntrycc cc\ntrycc clang\n";
 	}
 
-	int status = create_file_with_content("configure", configure_template, cc);
+	int status =
+		create_file_with_content("configure", configure_template, cc);
 	if (status != 0)
 		return status;
 
 	status = system("chmod +x configure");
 	if (status != 0)
-		fprintf(stderr, "create_configure: chmod failed: %s\n", strerror(status));
+		fprintf(stderr, "create_configure: chmod failed: %s\n",
+			strerror(status));
 
 	return status;
 }
@@ -240,7 +251,9 @@ int generate_source_code(manifest_t manifest, char *licence_line)
 
 	status = create_and_enter_directory(manifest.project);
 	if (status != 0) {
-		fprintf(stderr, "generate_source_code: failed to create or enter directory: %s\n", strerror(status));
+		fprintf(stderr,
+			"generate_source_code: failed to create or enter directory: %s\n",
+			strerror(status));
 		return status;
 	}
 	depth++;
@@ -268,7 +281,8 @@ int create_project(manifest_t manifest)
 	if (strcmp(manifest.path, ".") != 0) {
 		status = create_and_enter_directory(manifest.project);
 		if (status != 0) {
-			fprintf(stderr, "create_project: failed to create or enter directory: %s\n",
+			fprintf(stderr,
+				"create_project: failed to create or enter directory: %s\n",
 				strerror(status));
 			return status;
 		}
@@ -277,44 +291,55 @@ int create_project(manifest_t manifest)
 
 	status = create_makefile(manifest);
 	if (status != 0) {
-		fprintf(stderr, "create_project: failed to create Makefile: %s\n", strerror(status));
+		fprintf(stderr,
+			"create_project: failed to create Makefile: %s\n",
+			strerror(status));
 		return status;
 	}
 
 	status = create_configure(manifest);
 	if (status != 0) {
-		fprintf(stderr, "create_project: failed to create configure: %s\n", strerror(status));
+		fprintf(stderr,
+			"create_project: failed to create configure: %s\n",
+			strerror(status));
 		return status;
 	}
 
 	status = setup_git(manifest);
 	if (status != 0) {
-		fprintf(stderr, "create_project: warning: git initialization failed: %s\n",
+		fprintf(stderr,
+			"create_project: warning: git initialization failed: %s\n",
 			strerror(status));
 	}
 
 	status = maybe_create_clang_format(manifest);
 	if (status != 0) {
-		fprintf(stderr, "create_project: warning: clang-format setup failed: %s\n",
+		fprintf(stderr,
+			"create_project: warning: clang-format setup failed: %s\n",
 			strerror(status));
 	}
 
 	char *licence_line = malloc(1024);
 	if (!licence_line) {
-		fprintf(stderr, "create_project: failed to allocate memory for licence line\n");
+		fprintf(stderr,
+			"create_project: failed to allocate memory for licence line\n");
 		return ENOMEM;
 	}
 
 	status = create_licence(manifest, &licence_line);
 	if (status != 0) {
-		fprintf(stderr, "create_project: failed to create licence: %s\n", strerror(status));
+		fprintf(stderr,
+			"create_project: failed to create licence: %s\n",
+			strerror(status));
 		free(licence_line);
 		return status;
 	}
 
 	status = generate_source_code(manifest, licence_line);
 	if (status != 0) {
-		fprintf(stderr, "create_project: failed to generate source code: %s\n", strerror(status));
+		fprintf(stderr,
+			"create_project: failed to generate source code: %s\n",
+			strerror(status));
 		free(licence_line);
 		return status;
 	}
@@ -323,7 +348,8 @@ int create_project(manifest_t manifest)
 
 	status = create_libraries(manifest);
 	if (status != 0) {
-		fprintf(stderr, "create_project: failed to get libraries: %s\n", strerror(status));
+		fprintf(stderr, "create_project: failed to get libraries: %s\n",
+			strerror(status));
 		return status;
 	}
 

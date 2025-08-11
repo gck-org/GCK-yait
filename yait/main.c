@@ -97,7 +97,7 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 	}
 
 	if (optind >= argc) {
-		fprintf(stderr, "Missing required <PATH> argument\n");
+		fprintf(stderr, "Missing required path argument\n");
 		usage(1);
 		exit(EXIT_FAILURE);
 	}
@@ -167,6 +167,7 @@ int main(int argc, char **argv)
 	}
 
 	manifest.path = manifest.project;
+	// TODO(vx-clutch): get name from path.
 
 	status = create_project(manifest);
 	return status == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
