@@ -9,56 +9,80 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "yait.h"
 
-int create_file_with_content(char *path, char *format, ...)
+int files_made = 0;
+
+static int mkdir_p(const char *path)
 {
+	char *copypath = strdup(path);
+	char *p = copypath;
+	int status = 0;
+
+	if (!copypath)
+		return -1;
+
+	if (copypath[0] == '/')
+		p++;
+
+	for (; *p; p++) {
+		if (*p == '/') {
+			*p = '\0';
+			if (mkdir(copypath, 0777) && errno != EEXIST) {
+				status = -1;
+				break;
+			}
+			*p = '/';
+		}
+	}
+
+	if (!status && mkdir(copypath, 0777) && errno != EEXIST)
+		status = -1;
+
+	free(copypath);
+	return status;
+}
+
+int create_file_with_content(const char *path, const char *format, ...)
+{
+	char *dirpath;
+	const char *slash = strrchr(path, '/');
+	if (slash) {
+		size_t len = slash - path;
+		dirpath = malloc(len + 1);
+		if (!dirpath)
+			return -1;
+		memcpy(dirpath, path, len);
+		dirpath[len] = '\0';
+		if (mkdir_p(dirpath)) {
+			free(dirpath);
+			return -1;
+		}
+		free(dirpath);
+	}
+
 	FILE *fp = fopen(path, "w");
-	if (!fp) {
+	if (!fp)
+		return -1;
+
+	va_list args;
+	va_start(args, format);
+	if (vfprintf(fp, format, args) < 0) {
+		va_end(args);
+		fclose(fp);
 		return -1;
 	}
-	va_list args;
-	va_start(args, format);
-	vfprintf(fp, format, args);
 	va_end(args);
+
+	++files_made;
+	emit_progress("Creating files", files_made);
 
 	fclose(fp);
-	return 0;
-}
-
-int create_directory(char *format, ...)
-{
-	va_list args;
-	va_start(args, format);
-
-	char path[MAX_PATH_LENGTH];
-	int result = vsnprintf(path, sizeof(path), format, args);
-	va_end(args);
-
-	/* Check if the path was truncated */
-	if (result >= (int)sizeof(path)) {
-		return ENAMETOOLONG;
-	}
-
-	if (mkdir(path, DEFAULT_DIR_PERMISSIONS) < 0) {
-		return errno;
-	}
-
-	return 0;
-}
-
-int create_and_enter_directory(const char *dirname)
-{
-	int err = create_directory("%s", dirname);
-	if (err) {
-		return err;
-	}
-	if (chdir(dirname) != 0) {
-		return errno;
-	}
 	return 0;
 }

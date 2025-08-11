@@ -15,11 +15,7 @@
 
 int printfn(char *format, ...);
 
-int create_and_enter_directory(const char *dirname);
-
-int create_file_with_content(char *path, char *format, ...);
-
-int create_directory(char *format, ...);
+int create_file_with_content(const char *path, const char *format, ...);
 
 int parse_standard_options(void (*usage_func)(), int argc, char **argv);
 
@@ -27,5 +23,7 @@ int program_exists(const char *prog);
 
 #include "manifest.h"
 int create_project(manifest_t manifest);
+
+void emit_progress(const char *action, int count);
 
 #endif // YAIT_H

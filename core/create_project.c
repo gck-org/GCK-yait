@@ -1,3 +1,11 @@
+/* Copyright (C) vx_clutch
+ *
+ * This file is part of yait
+ *
+ * This project and file is licenced under the BSD-3-Clause licence.
+ * <https://opensource.org/licence/bsd-3-clause>
+ */
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,15 +18,14 @@
 #include "contents.h"
 #include "yait.h"
 
-#error "TODO: make path project root"
-
 #define DEFAULT_USER_NAME "unknown"
 #define DEFAULT_PROJECT_NAME "Project"
 #define DEFAULT_LICENCE BSD3
 #define DEFAULT_GIT_INIT true
 #define DEFAULT_CLANG_FORMAT true
+#define DEFAULT_GNU false
 
-int depth;
+int depth = 0;
 
 static int reset_path(void)
 {
@@ -175,9 +182,12 @@ int setup_git(manifest_t manifest)
 		return ret;
 
 	int status = system("git init --quiet");
-	if (status != 0)
-		fprintf(stderr, "setup_git: failed to initialize git: %s\n",
-			strerror(status));
+	if (status == -1) {
+		fprintf(stderr, "...: %s\n", strerror(errno));
+	} else if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+		fprintf(stderr, "...: exited with status %d\n",
+			WEXITSTATUS(status));
+	}
 
 	return status;
 }
@@ -201,7 +211,8 @@ int create_makefile(manifest_t manifest)
 		return ret;
 	}
 
-	int status = create_file_with_content("Makefile", makefile_template, M, m, M, m, M, M, m, M, m, M, m);
+	int status = create_file_with_content("Makefile", makefile_template, M,
+					      m, M, m, M, M, m, M, m, M, m);
 
 	free(m);
 	free(M);
@@ -242,14 +253,15 @@ int generate_source_code(manifest_t manifest, char *licence_line)
 	struct tm tm = *localtime(&t);
 	int year = tm.tm_year + 1900;
 
-	// Uncomment or fix when create_file_with_content supports this
-	// status = create_file_with_content("config.h", manifest.project, licence_line, year);
-	// if (status != 0) {
-	//	fprintf(stderr, "generate_source_code: failed to create config.h: %s\n", strerror(status));
-	//	return status;
-	// }
+	status = create_file_with_content("config.h", config_h_template,
+					  manifest.project, licence_line, year);
+	if (status != 0) {
+		fprintf(stderr,
+			"generate_source_code: failed to create config.h: %s\n",
+			strerror(status));
+		return status;
+	}
 
-	status = create_and_enter_directory(manifest.project);
 	if (status != 0) {
 		fprintf(stderr,
 			"generate_source_code: failed to create or enter directory: %s\n",
@@ -259,13 +271,13 @@ int generate_source_code(manifest_t manifest, char *licence_line)
 	depth++;
 
 	if (manifest.flag.GNU) {
-		status = create_file_with_content("main.c", main_c_gnu_template,
-						  manifest.project,
-						  manifest.name);
+		status = create_file_with_content(
+			strcat(manifest.project, "main.c"), main_c_gnu_template,
+			manifest.project, manifest.name);
 	} else {
-		status = create_file_with_content("main.c", main_c_template,
-						  manifest.project,
-						  manifest.name);
+		status = create_file_with_content(
+			strcat(manifest.project, "main.c"), main_c_template,
+			manifest.project, manifest.name);
 	}
 
 	return status;
@@ -277,9 +289,8 @@ int create_project(manifest_t manifest)
 
 	sanitize(&manifest);
 
-	depth = 0;
+	// TODO(vx-clutch): make the path the project root.
 	if (strcmp(manifest.path, ".") != 0) {
-		status = create_and_enter_directory(manifest.project);
 		if (status != 0) {
 			fprintf(stderr,
 				"create_project: failed to create or enter directory: %s\n",
@@ -303,13 +314,6 @@ int create_project(manifest_t manifest)
 			"create_project: failed to create configure: %s\n",
 			strerror(status));
 		return status;
-	}
-
-	status = setup_git(manifest);
-	if (status != 0) {
-		fprintf(stderr,
-			"create_project: warning: git initialization failed: %s\n",
-			strerror(status));
 	}
 
 	status = maybe_create_clang_format(manifest);
@@ -352,6 +356,16 @@ int create_project(manifest_t manifest)
 			strerror(status));
 		return status;
 	}
+
+	status = setup_git(manifest);
+	if (status != 0) {
+		fprintf(stderr,
+			"create_project: warning: git initialization failed: %s\n",
+			strerror(status));
+	}
+
+	// TODO(vx-clutch): Make path absolute.
+	fprintf(stderr, "Created %s at\n %s", manifest.project, manifest.path);
 
 	return 0;
 }
