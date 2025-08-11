@@ -1,0 +1,8 @@
+./yait .
+Creating files 12, done.
+Changing permissions 2, done.
+Pulling ncurses, done.
+Pulling ux, done.
+Initializing git repository, done.
+Created yait at
+ /home/vx-clutch/projects/yait

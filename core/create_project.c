@@ -13,6 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <sys/stat.h>
 
 #include "manifest.h"
 #include "contents.h"
@@ -24,18 +25,6 @@
 #define DEFAULT_GIT_INIT true
 #define DEFAULT_CLANG_FORMAT true
 #define DEFAULT_GNU false
-
-int depth = 0;
-
-static int reset_path(void)
-{
-	while (depth > 0) {
-		if (chdir("..") != 0)
-			return errno;
-		depth--;
-	}
-	return 0;
-}
 
 int program_exists(const char *prog)
 {
@@ -95,10 +84,6 @@ int create_libraries(manifest_t manifest)
 		return status;
 	}
 
-	int ret = reset_path();
-	if (ret != 0)
-		return ret;
-
 	if (HAS_LIBRARY(manifest.libraries, LIB_RAYLIB)) {
 		REMOVE_LIBRARY(manifest.libraries, LIB_RAYLIB);
 		status = system(
@@ -131,10 +116,6 @@ int create_licence(manifest_t manifest, char **licence_line_buffer)
 	if (manifest.licence == UNLICENCE)
 		return 0;
 
-	int ret = reset_path();
-	if (ret != 0)
-		return ret;
-
 	if (!licence_line_buffer)
 		return EINVAL;
 
@@ -160,10 +141,6 @@ int create_licence(manifest_t manifest, char **licence_line_buffer)
 
 int maybe_create_clang_format(manifest_t manifest)
 {
-	int ret = reset_path();
-	if (ret != 0)
-		return ret;
-
 	if (!manifest.flag.clang_format)
 		return 0;
 
@@ -176,10 +153,6 @@ int setup_git(manifest_t manifest)
 {
 	if (!manifest.flag.git)
 		return 0;
-
-	int ret = reset_path();
-	if (ret != 0)
-		return ret;
 
 	int status = system("git init --quiet");
 	if (status == -1) {
@@ -205,14 +178,9 @@ int create_makefile(manifest_t manifest)
 		if (*p >= 'a' && *p <= 'z')
 			*p -= 'a' - 'A';
 
-	int ret = reset_path();
-	if (ret != 0) {
-		free(M);
-		return ret;
-	}
-
-	int status = create_file_with_content("Makefile", makefile_template, M,
-					      m, M, m, M, M, m, M, m, M, m);
+	int status = create_file_with_content(strcat(m, "Makefile"),
+					      makefile_template, M, m, M, m, M,
+					      M, m, M, m, M, m);
 
 	free(m);
 	free(M);
@@ -221,10 +189,6 @@ int create_makefile(manifest_t manifest)
 
 int create_configure(manifest_t manifest)
 {
-	int ret = reset_path();
-	if (ret != 0)
-		return ret;
-
 	const char *cc;
 	if (manifest.flag.use_cpp) {
 		cc = "trycc g++\ntrycc CC\ntrycc clang++\n";
@@ -268,7 +232,6 @@ int generate_source_code(manifest_t manifest, char *licence_line)
 			strerror(status));
 		return status;
 	}
-	depth++;
 
 	if (manifest.flag.GNU) {
 		status = create_file_with_content(
@@ -289,15 +252,24 @@ int create_project(manifest_t manifest)
 
 	sanitize(&manifest);
 
-	// TODO(vx-clutch): make the path the project root.
 	if (strcmp(manifest.path, ".") != 0) {
+		status = mkdir(manifest.path, 0755);
+		if (status != 0 && errno != EEXIST) {
+			fprintf(stderr,
+				"create_project: failed to create directory '%s': %s\n",
+				manifest.path, strerror(errno));
+			return errno;
+		}
+
+		status = chdir(manifest.path);
 		if (status != 0) {
 			fprintf(stderr,
-				"create_project: failed to create or enter directory: %s\n",
-				strerror(status));
-			return status;
+				"create_project: failed to enter directory '%s': %s\n",
+				manifest.path, strerror(errno));
+			return errno;
 		}
-		depth++;
+	} else {
+		manifest.path = "";
 	}
 
 	status = create_makefile(manifest);
@@ -365,7 +337,8 @@ int create_project(manifest_t manifest)
 	}
 
 	// TODO(vx-clutch): Make path absolute.
-	fprintf(stderr, "Created %s at\n %s", manifest.project, manifest.path);
+	fprintf(stderr, "Created %s at\n %s", manifest.project,
+		realpath(manifest.path, NULL));
 
 	return 0;
 }

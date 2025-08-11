@@ -59,7 +59,7 @@ typedef struct {
 #define ADD_LIBRARY(libs, lib) ((libs) |= (lib))
 #define REMOVE_LIBRARY(libs, lib) ((libs) &= ~(lib))
 
-static lib_flags_t TOLibrary(char *src)
+[[maybe_unused]] static lib_flags_t TOLibrary(char *src)
 {
 	if (strcmp(src, "raylib"))
 		return LIB_RAYLIB;

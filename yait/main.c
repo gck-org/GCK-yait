@@ -85,7 +85,10 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 			}
 			break;
 		case 'L':
-			ADD_LIBRARY(conf->libraries, TOLibrary(optarg));
+			if (strcmp(optarg, "help"))
+				fprintf(stderr, "raylib\nncurses\ncurl\n");
+			else
+				ADD_LIBRARY(conf->libraries, TOLibrary(optarg));
 			break;
 		case 'h':
 			usage(0);
