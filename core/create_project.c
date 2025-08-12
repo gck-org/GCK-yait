@@ -8,6 +8,7 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
@@ -272,73 +273,80 @@ int create_project(manifest_t manifest)
 		manifest.path = "";
 	}
 
-	status = create_makefile(manifest);
-	if (status != 0) {
-		fprintf(stderr,
-			"create_project: failed to create Makefile: %s\n",
-			strerror(status));
-		return status;
+	// status = create_makefile(manifest);
+	// if (status != 0) {
+	// 	fprintf(stderr,
+	// 		"create_project: failed to create Makefile: %s\n",
+	// 		strerror(status));
+	// 	return status;
+	// }
+	//
+	// status = create_configure(manifest);
+	// if (status != 0) {
+	// 	fprintf(stderr,
+	// 		"create_project: failed to create configure: %s\n",
+	// 		strerror(status));
+	// 	return status;
+	// }
+	//
+	// status = maybe_create_clang_format(manifest);
+	// if (status != 0) {
+	// 	fprintf(stderr,
+	// 		"create_project: warning: clang-format setup failed: %s\n",
+	// 		strerror(status));
+	// }
+	//
+	// char *licence_line = malloc(1024);
+	// if (!licence_line) {
+	// 	fprintf(stderr,
+	// 		"create_project: failed to allocate memory for licence line\n");
+	// 	return ENOMEM;
+	// }
+	//
+	// status = create_licence(manifest, &licence_line);
+	// if (status != 0) {
+	// 	fprintf(stderr,
+	// 		"create_project: failed to create licence: %s\n",
+	// 		strerror(status));
+	// 	free(licence_line);
+	// 	return status;
+	// }
+	//
+	// status = generate_source_code(manifest, licence_line);
+	// if (status != 0) {
+	// 	fprintf(stderr,
+	// 		"create_project: failed to generate source code: %s\n",
+	// 		strerror(status));
+	// 	free(licence_line);
+	// 	return status;
+	// }
+	//
+	// free(licence_line);
+	//
+	// status = create_libraries(manifest);
+	// if (status != 0) {
+	// 	printfn("failed to get libraries: %s", strerror(status));
+	// 	return status;
+	// }
+	//
+	// status = setup_git(manifest);
+	// if (status != 0) {
+	// 	printfn("warning: git initialization failed: %s",
+	// 		strerror(status));
+	// }
+
+	char *resolved;
+	resolved = malloc(PATH_MAX);
+	if (!resolved) {
+		printfn("Failed to alloc");
+		return 2;
 	}
-
-	status = create_configure(manifest);
-	if (status != 0) {
-		fprintf(stderr,
-			"create_project: failed to create configure: %s\n",
-			strerror(status));
-		return status;
+	if (!realpath(manifest.path, resolved)) {
+		printfn("Failed to get realpath");
+		free(resolved);
+		return 2;
 	}
-
-	status = maybe_create_clang_format(manifest);
-	if (status != 0) {
-		fprintf(stderr,
-			"create_project: warning: clang-format setup failed: %s\n",
-			strerror(status));
-	}
-
-	char *licence_line = malloc(1024);
-	if (!licence_line) {
-		fprintf(stderr,
-			"create_project: failed to allocate memory for licence line\n");
-		return ENOMEM;
-	}
-
-	status = create_licence(manifest, &licence_line);
-	if (status != 0) {
-		fprintf(stderr,
-			"create_project: failed to create licence: %s\n",
-			strerror(status));
-		free(licence_line);
-		return status;
-	}
-
-	status = generate_source_code(manifest, licence_line);
-	if (status != 0) {
-		fprintf(stderr,
-			"create_project: failed to generate source code: %s\n",
-			strerror(status));
-		free(licence_line);
-		return status;
-	}
-
-	free(licence_line);
-
-	status = create_libraries(manifest);
-	if (status != 0) {
-		fprintf(stderr, "create_project: failed to get libraries: %s\n",
-			strerror(status));
-		return status;
-	}
-
-	status = setup_git(manifest);
-	if (status != 0) {
-		fprintf(stderr,
-			"create_project: warning: git initialization failed: %s\n",
-			strerror(status));
-	}
-
-	// TODO(vx-clutch): Make path absolute.
-	fprintf(stderr, "Created %s at\n %s", manifest.project,
-		realpath(manifest.path, NULL));
+	fprintf(stderr, "Created %s at\n %s\n", manifest.project, resolved);
 
 	return 0;
 }
