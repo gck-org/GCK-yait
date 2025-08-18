@@ -148,16 +148,9 @@ int main(int argc, char **argv)
 	manifest_t manifest = { 0 };
 
 	status = parse_standard_options(usage, argc, argv);
-	if (status != 0 && status != HELP_REQUESTED) {
-		fprintf(stderr, "error: %s\n", strerror(status));
-		return EXIT_FAILURE;
-	}
-
-	status = program_exists("git");
-	if (status != 0) {
-		fprintf(stderr, "git binary not present\n");
-		return EXIT_FAILURE;
-	}
+	if (status != 0 && status != HELP_REQUESTED)
+		return fprintf(stderr, "error: %s\n", strerror(status)),
+		       EXIT_FAILURE;
 
 	parse_arguments(&manifest, argc, argv);
 
@@ -168,9 +161,6 @@ int main(int argc, char **argv)
 			return EXIT_FAILURE;
 		}
 	}
-
-	manifest.path = manifest.project;
-	// TODO(vx-clutch): get name from path.
 
 	status = create_project(manifest);
 	return status == 0 ? EXIT_SUCCESS : EXIT_FAILURE;

@@ -1,36 +1,34 @@
 /* Copyright (C) vx_clutch
- *
+ * 
  * This file is part of yait
  *
  * This project and file is licenced under the BSD-3-Clause licence.
- * <https://opensource.org/licence/bsd-3-clause>
+ * <https://opensource.org/license/bsd-3-clause>
  */
 
-#ifndef FORMAT_H
-#define FORMAT_H
+#ifndef YAIT_H
+#define YAIT_H
 
-#include <stdbool.h>
 #include <string.h>
-#include <stdio.h>
 
 typedef enum {
-	BSD3, /* BSD 3-Clause Licence */
-	GPLv3, /* GNU General Public Licence v3 */
-	MIT, /* MIT Licence */
-	UNLICENCE, /* Unlicence */
-	LICENCE_HELP, /* Help case */
+	BSD3, 
+	GPLv3, 
+	MIT, 
+	UNLICENCE, 
+	LICENCE_HELP, 
 } licence_t;
 
 /* A bit field is used so that we can accomplish two things. (a) store lots of
    libraries without taxing memory; and (b) a dynamic array is not neccescary.
  */
 typedef enum {
-	LIB_NONE = 0, /* No libraries selected */
-	LIB_RAYLIB = 1 << 0, /* Raylib game library */
-	LIB_NCURSES = 1 << 1, /* Windows API */
-	LIB_CURL = 1 << 2, /* cURL library */
-	LIB_COUNT_, /* Number of Libraries */
-	LIB_HELP, /* Help case */
+	LIB_NONE = 0,
+	LIB_RAYLIB = 1 << 0,
+	LIB_NCURSES = 1 << 1,
+	LIB_CURL = 1 << 2,
+	LIB_COUNT_,
+	LIB_HELP,
 } lib_flags_t;
 
 typedef struct {
@@ -41,12 +39,11 @@ typedef struct {
 } flags_t;
 
 typedef struct {
-	licence_t licence; /* Licence type for the project */
-	char *project; /* Project name */
-	char *path; /* Path */
-	char *name; /* Author/creator name ( if not provided infered on sanitize ) */
-	lib_flags_t libraries; /* Selected libraries (bit field) */
-	flags_t flag; /* Flags */
+	licence_t licence;
+	char *project;
+	char *name;
+	lib_flags_t libraries;
+	flags_t flag;
 } manifest_t;
 
 #define DEFAULT_CLANG_FORMAT true
@@ -71,8 +68,7 @@ typedef struct {
 		return LIB_CURL;
 	if (strcmp(src, "help"))
 		return LIB_HELP;
-	fprintf(stderr, "could not find library %s", src);
 	return LIB_COUNT_; /* bad case */
 }
 
-#endif
+#endif // YAIT_H

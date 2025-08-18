@@ -8,7 +8,6 @@
 
 #include <errno.h>
 #include <stdio.h>
-#include <limits.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
@@ -54,13 +53,19 @@ int program_exists(const char *prog)
 
 int sanitize(manifest_t *m)
 {
+	int status;
+	struct passwd *pw = getpwuid(getuid());
+
+	status = program_exists("git");
+	if (status != 0)
+		return fprintf(stderr, "git binary not present\n"),
+		       EXIT_FAILURE;
+
 	if (!m->project)
 		m->project = DEFAULT_PROJECT_NAME;
 
-	if (!m->name) {
-		struct passwd *pw = getpwuid(getuid());
+	if (!m->name)
 		m->name = (pw && pw->pw_name) ? pw->pw_name : DEFAULT_USER_NAME;
-	}
 
 	if (m->licence == UNLICENCE)
 		m->licence = DEFAULT_LICENCE;
@@ -73,10 +78,6 @@ int sanitize(manifest_t *m)
 
 	if (!m->flag.GNU)
 		m->flag.GNU = DEFAULT_GNU;
-
-	if (strcmp(".", m->project) == 0) {
-		
-	}
 
 	return 0;
 }
@@ -263,96 +264,77 @@ int create_project(manifest_t manifest)
 
 	sanitize(&manifest);
 
-	if (strcmp(manifest.path, ".") != 0) {
-		status = mkdir(manifest.path, 0755);
-		if (status != 0 && errno != EEXIST) {
-			fprintf(stderr,
-				"create_project: failed to create directory '%s': %s\n",
-				manifest.path, strerror(errno));
-			return errno;
-		}
+	// TODO(vx-clutch): take dir.
 
-		status = chdir(manifest.path);
-		if (status != 0) {
-			fprintf(stderr,
-				"create_project: failed to enter directory '%s': %s\n",
-				manifest.path, strerror(errno));
-			return errno;
-		}
-	} else {
-		manifest.path = "";
+	// status = create_makefile(manifest);
+	// if (status != 0) {
+	// 	fprintf(stderr,
+	// 		"create_project: failed to create Makefile: %s\n",
+	// 		strerror(status));
+	// 	return status;
+	// }
+	//
+	// status = create_configure(manifest);
+	// if (status != 0) {
+	// 	fprintf(stderr,
+	// 		"create_project: failed to create configure: %s\n",
+	// 		strerror(status));
+	// 	return status;
+	// }
+	//
+	// status = maybe_create_clang_format(manifest);
+	// if (status != 0) {
+	// 	fprintf(stderr,
+	// 		"create_project: warning: clang-format setup failed: %s\n",
+	// 		strerror(status));
+	// }
+	//
+	// char *licence_line = malloc(1024);
+	// if (!licence_line) {
+	// 	fputs("create_project: failed to allocate memory for licence line\n",
+	// 	      stderr);
+	// 	return ENOMEM;
+	// }
+	//
+	// status = create_licence(manifest, &licence_line);
+	// if (status != 0) {
+	// 	fprintf(stderr,
+	// 		"create_project: failed to create licence: %s\n",
+	// 		strerror(status));
+	// 	free(licence_line);
+	// 	return status;
+	// }
+	//
+	// status = generate_source_code(manifest, licence_line);
+	// if (status != 0) {
+	// 	fprintf(stderr,
+	// 		"create_project: failed to generate source code: %s\n",
+	// 		strerror(status));
+	// 	free(licence_line);
+	// 	return status;
+	// }
+	//
+	// free(licence_line);
+	//
+	// status = create_libraries(manifest);
+	// if (status != 0) {
+	// 	printfn("failed to get libraries: %s", strerror(status));
+	// 	return status;
+	// }
+	//
+	// status = setup_git(manifest);
+	// if (status != 0) {
+	// 	printfn("warning: git initialization failed: %s",
+	// 		strerror(status));
+	// }
+
+	char *cwd = getcwd(NULL, 0);
+	if (!cwd) {
+		printfn("could not get current working directory");
+		return 1;
 	}
-
-	status = create_makefile(manifest);
-	if (status != 0) {
-		fprintf(stderr,
-			"create_project: failed to create Makefile: %s\n",
-			strerror(status));
-		return status;
-	}
-
-	status = create_configure(manifest);
-	if (status != 0) {
-		fprintf(stderr,
-			"create_project: failed to create configure: %s\n",
-			strerror(status));
-		return status;
-	}
-
-	status = maybe_create_clang_format(manifest);
-	if (status != 0) {
-		fprintf(stderr,
-			"create_project: warning: clang-format setup failed: %s\n",
-			strerror(status));
-	}
-
-	char *licence_line = malloc(1024);
-	if (!licence_line) {
-		fputs("create_project: failed to allocate memory for licence line\n",
-		      stderr);
-		return ENOMEM;
-	}
-
-	status = create_licence(manifest, &licence_line);
-	if (status != 0) {
-		fprintf(stderr,
-			"create_project: failed to create licence: %s\n",
-			strerror(status));
-		free(licence_line);
-		return status;
-	}
-
-	status = generate_source_code(manifest, licence_line);
-	if (status != 0) {
-		fprintf(stderr,
-			"create_project: failed to generate source code: %s\n",
-			strerror(status));
-		free(licence_line);
-		return status;
-	}
-
-	free(licence_line);
-
-	status = create_libraries(manifest);
-	if (status != 0) {
-		printfn("failed to get libraries: %s", strerror(status));
-		return status;
-	}
-
-	status = setup_git(manifest);
-	if (status != 0) {
-		printfn("warning: git initialization failed: %s",
-			strerror(status));
-	}
-
-	char *resolved = realpath(manifest.path, NULL);
-	if (!resolved) {
-		fprintf(stderr, "Failed to get realpath for '%s': %s\n",
-			manifest.path, strerror(errno));
-		return 2;
-	}
-	fprintf(stderr, "Created %s at\n %s\n", manifest.project, resolved);
-	free(resolved);
+	fprintf(stderr, "Created %s at\n %s\n", manifest.project, cwd);
+	free(cwd);
 
 	return 0;
 }

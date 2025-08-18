@@ -1,9 +1,8 @@
 prefix = /usr/bin
 
-YAIT_SRCS := $(wildcard yait/*.c) $(wildcard core/*.c)
-YAIT_OBJS := $(patsubst yait/%.c,c-out/obj/%.o,$(YAIT_SRCS))
+YAIT_SRCS := $(wildcard src/*.c)
 
-YAIT := c-out/bin/yait
+YAIT := bin/yait
 
 -include config.mak
 
@@ -16,14 +15,10 @@ else
 all: build $(YAIT) $(YAIT_DOC)
 
 build:
-	mkdir -p c-out/bin
-	mkdir -p c-out/obj
+	mkdir bin
 
-c-out/obj/%.o: yait/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(YAIT): $(YAIT_OBJS) $(EMBED_HEADER)
-	$(CC) $(CFLAGS) -DCOMMIT=$(shell git rev-list --count --all) $^ -o $@
+$(YAIT): $(YAIT_SRCS)
+	$(CC) $(CFLAGS) -Iinclude -DCOMMIT=$(shell git rev-list --count --all) $^ -o $@
 
 endif
 
@@ -36,11 +31,9 @@ uninstall:
 	exit 1
 
 clean:
-	rm -rf c-out
-	rm -f $(EMBED_HEADER)
-	rm -f $(EMBED_HEADERS)
+	$(RM) -rf bin
 
 dist-clean: clean
-	rm -f config.mak
+	$(RM) -f config.mak
 
 .PHONY: all clean dist-clean install uninstall build
