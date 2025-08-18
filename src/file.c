@@ -15,11 +15,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "yait.h"
+#include "../include/yait.h"
 
-int files_made = 0;
-
-static int mkdir_p(const char *path)
+int mkdir_p(const char *path)
 {
 	char *copypath = strdup(path);
 	char *p = copypath;
@@ -79,9 +77,6 @@ int create_file_with_content(const char *path, const char *format, ...)
 		return -1;
 	}
 	va_end(args);
-
-	++files_made;
-	emit_progress("Creating files", files_made);
 
 	fclose(fp);
 	return 0;

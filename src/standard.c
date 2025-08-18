@@ -10,7 +10,6 @@
 #define COMMIT 0
 #endif
 
-#include "yait.h"
 #include "../config.h"
 #include <stdio.h>
 #include <stdlib.h>

@@ -15,7 +15,7 @@ else
 all: build $(YAIT) $(YAIT_DOC)
 
 build:
-	mkdir bin
+	mkdir -p bin
 
 $(YAIT): $(YAIT_SRCS)
 	$(CC) $(CFLAGS) -Iinclude -DCOMMIT=$(shell git rev-list --count --all) $^ -o $@

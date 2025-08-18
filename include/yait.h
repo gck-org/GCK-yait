@@ -9,14 +9,12 @@
 #ifndef YAIT_H
 #define YAIT_H
 
-#include <string.h>
-
 typedef enum {
-	BSD3, 
-	GPLv3, 
-	MIT, 
-	UNLICENCE, 
-	LICENCE_HELP, 
+	BSD3,
+	GPLv3,
+	MIT,
+	UNLICENCE,
+	LICENCE_HELP,
 } licence_t;
 
 /* A bit field is used so that we can accomplish two things. (a) store lots of
@@ -46,29 +44,12 @@ typedef struct {
 	flags_t flag;
 } manifest_t;
 
-#define DEFAULT_CLANG_FORMAT true
-#define DEFAULT_GIT_INIT true
-#define DEFAULT_GNU false
-#define DEFAULT_LIBRARIES LIB_NONE
-#define DEFAULT_LICENCE BSD3
-
 #define HAS_LIBRARY(libs, lib) ((libs) & (lib))
 #define ADD_LIBRARY(libs, lib) ((libs) |= (lib))
 #define REMOVE_LIBRARY(libs, lib) ((libs) &= ~(lib))
 
-[[maybe_unused]] static lib_flags_t TOLibrary(char *src)
-{
-	if (strcmp(src, "raylib"))
-		return LIB_RAYLIB;
-	if (strcmp(src, "ncurse"))
-		return LIB_NCURSES;
-	if (strcmp(src, "ncurses"))
-		return LIB_NCURSES;
-	if (strcmp(src, "curl"))
-		return LIB_CURL;
-	if (strcmp(src, "help"))
-		return LIB_HELP;
-	return LIB_COUNT_; /* bad case */
-}
+int create_project(manifest_t manifest);
+int mkdir_p(const char *path);
+int create_file_with_content(const char *path, const char *format, ...);
 
 #endif // YAIT_H

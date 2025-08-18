@@ -6,7 +6,7 @@
  * <https://opensource.org/licence/bsd-3-clause>
  */
 
-// Usage: yait [OPTION]... <PATH>
+// Usage: yait [OPTION]... <PROJECT>
 
 #include <getopt.h>
 #include <pwd.h>
@@ -16,8 +16,8 @@
 #include <unistd.h>
 
 #include "../config.h"
-#include "../core/yait.h"
-#include "../core/manifest.h"
+#include "../include/yait.h"
+#include "standard.c"
 
 #define print_option(option, description) \
 	printf("        %-20s %-20s\n", option, description)
@@ -84,12 +84,12 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 				exit(EXIT_FAILURE);
 			}
 			break;
-		case 'L':
-			if (strcmp(optarg, "help"))
-				fprintf(stderr, "raylib\nncurses\ncurl\n");
-			else
-				ADD_LIBRARY(conf->libraries, TOLibrary(optarg));
-			break;
+		// case 'L':
+		// 	if (strcmp(optarg, "help"))
+		// 		fprintf(stderr, "raylib\nncurses\ncurl\n");
+		// 	else
+		// 		ADD_LIBRARY(conf->libraries, TOLibrary(optarg));
+		// 	break;
 		case 'h':
 			usage(0);
 			exit(0);
