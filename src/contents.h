@@ -10,10 +10,9 @@
 #ifndef CONTENTS_H
 #define CONTENTS_H
 
-#define line(l) l "\n"
+#define line(ln) ln "\n"
 
-/* README template */
-char *readme_template =
+char *readme =
   line ("%s ( concise description )")
   line ()
   line ("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor")
@@ -23,8 +22,7 @@ char *readme_template =
   line ("fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in")
   line ("culpa qui officia deserunt mollit anim id est laborum.");
 
-/* configure script template */
-char *configure_template =
+char *configure =
   line ("#!/bin/sh")
   line ()
   line ("usage() {")
@@ -41,7 +39,7 @@ char *configure_template =
   line ("exit 0")
   line ("}")
   line ()
-  line ("echo () { printf \"%s\\n\" \"$*\" ; }")
+  line ("echo () { printf \"%%s\\n\" \"$*\" ; }")
   line ("cmdexists () { type \"$1\" >/dev/null 2>&1 ; }")
   line ("trycc () { test -z \"$CC\" && cmdexists \"$1\" && CC=$1 ; }")
   line ()
@@ -59,8 +57,8 @@ char *configure_template =
   line ("done")
   line ()
   line ("printf \"checking for C compiler... \"")
-  line ("%s")
-  line ("printf \"%s\\n\" \"$CC\"")
+  line ("%%s")
+  line ("printf \"%%s\\n\" \"$CC\"")
   line ()
   line ("printf \"checking weather C compiler works... \"")
   line ("status=\"fail\"")
@@ -69,19 +67,18 @@ char *configure_template =
   line ("if output=$($CC $CFLAGS -c -o /dev/null \"$tmpc\" 2>&1) ; then")
   line ("printf \"yes\\n\"")
   line ("else")
-  line ("printf \"no; %s\\n\" \"$output\"")
+  line ("printf \"no; %%s\\n\" \"$output\"")
   line ("exit 1")
   line ("fi")
   line ()
   line ("printf \"creating config.mak... \"")
-  line ("printf \"PREFIX=%s\\n\" \"$prefix\" > config.mak")
-  line ("printf \"CFLAGS=%s\\n\" \"$CFLAGS\" >> config.mak")
-  line ("printf \"LDFLAGS=%s\\n\" \"$LDFLAGS\" >> config.mak")
-  line ("printf \"CC=%s\\n\" \"$CC\" >> config.mak")
+  line ("printf \"PREFIX=%%s\\n\" \"$prefix\" > config.mak")
+  line ("printf \"CFLAGS=%%s\\n\" \"$CFLAGS\" >> config.mak")
+  line ("printf \"LDFLAGS=%%s\\n\" \"$LDFLAGS\" >> config.mak")
+  line ("printf \"CC=%%s\\n\" \"$CC\" >> config.mak")
   line ("printf \"done\\n\"");
 
-/* Makefile template */
-char *makefile_template =
+char *makefile =
   line ("prefix = /usr/bin")
   line ()
   line ("%s_SRCS := $(wildcard %s/*.c)")
@@ -127,12 +124,10 @@ char *makefile_template =
   line ()
   line (".PHONY: all clean dist-clean install uninstall");
 
-/* .clang-format template */
-char *clang_format_template =
+char *clang_format =
   line ("BasedOnStyle: GNU");
 
-/* BSD 3-Clause License template */
-char *bsd3_license_template =
+char *bsd3_license =
   line ("BSD 3-Clause License")
   line ()
   line ("Copyright (c) %d, %s")
@@ -162,16 +157,13 @@ char *bsd3_license_template =
   line ("OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE")
   line ("OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.");
 
-/* MIT License template */
-char *mit_license_template =
+char *mit_license =
   line ("THIS IS THE MIT LICENSE");
 
-/* GPLv3 License template */
-char *gplv3_license_template =
+char *gplv3_license =
   line ("THIS IS THE GPLv3 LICENSE");
 
-/* config.h template */
-char *config_h_template =
+char *config_h =
   line ("#ifndef CONFIG_H")
   line ("#define CONFIG_H")
   line ()
@@ -188,8 +180,7 @@ char *config_h_template =
   line ()
   line ("#endif");
 
-/* main.c (non-GNU) template */
-char *main_c_template =
+char *main_c =
   line ("#include <stdio.h>")
   line ()
   line ("int main(void) {")
@@ -197,8 +188,7 @@ char *main_c_template =
   line ("  return 0;")
   line ("}");
 
-/* main.c (GNU) template */
-char *main_c_gnu_template =
+char *main_c_gnu =
   line ("#include <stdio.h>")
   line ("#include \"standard.h\"")
   line ()
@@ -214,8 +204,7 @@ char *main_c_gnu_template =
   line ("  return 0;")
   line ("}");
 
-/* standard.c template */
-char *standard_c_template =
+char *standard_c =
   line ("#include \"standard.h\"")
   line ("#include \"../config.h\"")
   line ("#include <stdio.h>")
@@ -241,8 +230,7 @@ char *standard_c_template =
   line ("  return HELP_REQUESTED;")
   line ("}");
 
-/* standard.h template */
-char *standard_h_template =
+char *standard_h =
   line ("#ifndef STANDARD_H")
   line ("#define STANDARD_H")
   line ()
@@ -250,8 +238,7 @@ char *standard_h_template =
   line ()
   line ("#endif");
 
-/* WHATNEXT.md template */
-char *what_next_template =
+char *what_next =
   line ("# What next?")
   line ("")
   line ("## Steps")

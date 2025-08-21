@@ -9,9 +9,4 @@
 #define VERSION "alpha"
 #define YEAR 2025
 
-/* Custom error codes */
-#define HELP_REQUESTED 2
-#define ERROR_MEMORY_ALLOCATION 3
-#define ERROR_DIRECTORY_CREATION 4
-
 #endif

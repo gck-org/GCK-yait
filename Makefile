@@ -12,7 +12,7 @@ all:
 	@exit 1
 else
 
-all: build $(YAIT) $(YAIT_DOC)
+all: build $(YAIT)
 
 build:
 	mkdir -p bin

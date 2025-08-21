@@ -10,105 +10,67 @@
 
 #include <getopt.h>
 #include <pwd.h>
+#define _POSIX_C_SOURCE 200809L // popen extention
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "../config.h"
 #include "../include/yait.h"
-#include "standard.c"
+#include "standard.h"
+#include "util.h"
 
 #define print_option(option, description) \
-	printf("        %-20s %-20s\n", option, description)
+	fprintf(stderr, "        %-20s %-20s\n", option, description)
 
-// clang-format off
-static void
-usage (int status)
+static void usage(int status)
 {
-  if (status != 0)
-    {
-      fprintf (stderr, "Try 'yait --help' for more information.\n");
-      return;
-    }
+	if (status != 0) {
+		fputs("Try 'yait --help' for more information.\n", stderr);
+		return;
+	}
 
-  printf ("Usage: yait [OPTION]... <PATH>\n");
-  printf ("Creates a C project with opinionated defaults.\n");
-  printf ("When only given the first argument it will detect your name.\n\n");
-  printf ("Mandatory arguments to long options are mandatory for short options too\n");
-  print_option ("-l, --licence=NAME", "Set licence (gpl, mit, bsd) [default: bsd]");
-  print_option ("--lib=LIB", "Add a library to the project. You can list libraries with --lib=help.");
-  print_option ("--use-cpp", "Uses the CPP language instead of C");
-  print_option ("--git", "Initialize git repository");
-  print_option ("--GNU", "Adds standard GNU argument parsing to your project");
-  printf ("    --help     display this help text and exit\n");
-  printf ("    --version  output version information and exit\n");
+	fputs("Usage: yait [OPTION]... <PATH>", stderr);
+	fputs("Creates a C project with opinionated defaults.", stderr);
+	fputs("When only given the first argument it will detect your name.\n",
+	      stderr);
+	fputs("Mandatory arguments to long options are mandatory for short options too",
+	      stderr);
+	print_option("--posix", "Enable POSIX compliance");
+	print_option("--git", "Do not inititize git reposity");
+	print_option("--clang", "Add clang-format files and tooling");
+	print_option("-L <licence>", "Set licence");
+	print_option("-l <library>", "Add a library");
+	print_option("-C", "Use C++");
+	print_option("--GNU",
+		     "Add GNU argument parsing: --version, and --help");
+	print_option("-S, --simple", "Enable simple mode");
+	fputs("    --help     display this help text and exit", stderr);
+	fputs("    --version  output version information and exit", stderr);
 }
-// clang-format on
 
 static int parse_arguments(manifest_t *conf, int argc, char **argv)
 {
-	static struct option long_options[] = {
-		{ "GNU", no_argument, 0, 'g' },
-		{ "use-cpp", no_argument, 0, 'c' },
-		{ "git", no_argument, 0, 'i' },
-		{ "licence", required_argument, 0, 'l' },
-		{ "lib", required_argument, 0, 'L' },
-		{ "help", no_argument, 0, 'h' },
-		{ 0, 0, 0, 0 }
-	};
-
 	int opt;
-	while ((opt = getopt_long(argc, argv, "gcil:L:h", long_options,
-				  NULL)) != -1) {
+
+	while ((opt = getopt(argc, argv, "L:l:CS")) != -1) {
 		switch (opt) {
-		case 'g':
-			conf->flag.GNU = true;
-			break;
-		case 'c':
-			conf->flag.use_cpp = true;
-			break;
-		case 'i':
-			conf->flag.git = true;
+		case 'L':
+			conf->licence = TOlicence(optarg);
 			break;
 		case 'l':
-			if (strcmp(optarg, "bsd") == 0)
-				conf->licence = BSD3;
-			else if (strcmp(optarg, "gpl") == 0)
-				conf->licence = GPLv3;
-			else if (strcmp(optarg, "mit") == 0)
-				conf->licence = MIT;
-			else {
-				fprintf(stderr, "Unknown licence: %s\n",
-					optarg);
-				exit(EXIT_FAILURE);
-			}
 			break;
-		// case 'L':
-		// 	if (strcmp(optarg, "help"))
-		// 		fprintf(stderr, "raylib\nncurses\ncurl\n");
-		// 	else
-		// 		ADD_LIBRARY(conf->libraries, TOLibrary(optarg));
-		// 	break;
-		case 'h':
-			usage(0);
-			exit(0);
+		case 'C':
+			conf->flags.cc = true;
+			break;
+		case 'S':
+			conf->flags.simple = true;
+			break;
 		default:
-			usage(1);
-			exit(1);
+			fprintf(stderr, "Usage: %s [--help]\n", argv[0]);
+			return 1;
 		}
 	}
-
-	if (optind >= argc) {
-		fprintf(stderr, "Missing required path argument\n");
-		usage(1);
-		exit(EXIT_FAILURE);
-	}
-
-	conf->project = argv[optind++];
-
-	if (optind < argc)
-		conf->name = argv[optind++];
 
 	return 0;
 }
@@ -145,7 +107,24 @@ int get_name(char **output)
 int main(int argc, char **argv)
 {
 	int status;
-	manifest_t manifest = { 0 };
+	manifest_t manifest = {
+		.project = "Project",
+		.name = "author",
+		.licence = UNL,
+		.libraries.ncurses = false,
+		.libraries.raylib = false,
+		.libraries.stb = false,
+		.libraries.uthash = false,
+		.libraries.linenoise = false,
+
+		.flags.posix = false,
+		.flags.git = true,
+		.flags.clang = false,
+		.flags.lib = false,
+		.flags.cc = false,
+		.flags.gnu = true,
+		.flags.simple = false,
+	};
 
 	status = parse_standard_options(usage, argc, argv);
 	if (status != 0 && status != HELP_REQUESTED)
@@ -154,14 +133,8 @@ int main(int argc, char **argv)
 
 	parse_arguments(&manifest, argc, argv);
 
-	if (!manifest.name) {
-		status = get_name(&manifest.name);
-		if (status != 0 || !manifest.name || manifest.name[0] == '\0') {
-			fprintf(stderr, "Could not determine user name\n");
-			return EXIT_FAILURE;
-		}
-	}
-
+	get_name(&manifest.name);
 	status = create_project(manifest);
-	return status == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+
+	return EXIT_SUCCESS;
 }

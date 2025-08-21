@@ -1,2 +1,2 @@
 CompileFlags:
-  Add: ["-std=c2x"]
+  Add: ["--std=c2x", "-xc"]

@@ -47,7 +47,7 @@ int mkdir_p(const char *path)
 	return status;
 }
 
-int create_file_with_content(const char *path, const char *format, ...)
+int cfprintf(const char *path, const char *format, ...)
 {
 	char *dirpath;
 	const char *slash = strrchr(path, '/');

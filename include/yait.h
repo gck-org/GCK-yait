@@ -9,47 +9,43 @@
 #ifndef YAIT_H
 #define YAIT_H
 
+typedef struct {
+	bool posix;
+	bool git;
+	bool clang;
+	bool lib;
+	bool cc;
+	bool gnu;
+	/* If this flag is set it will ignore: GNU, and enforce POSIX. */
+	bool simple;
+} flag_t;
+
+typedef struct {
+	bool ncurses;
+	bool raylib;
+	bool stb;
+	bool uthash;
+	bool linenoise;
+} libmap_t;
+
 typedef enum {
-	BSD3,
-	GPLv3,
 	MIT,
-	UNLICENCE,
-	LICENCE_HELP,
+	GPL,
+	BSD,
+	UNL,
 } licence_t;
 
-/* A bit field is used so that we can accomplish two things. (a) store lots of
-   libraries without taxing memory; and (b) a dynamic array is not neccescary.
- */
-typedef enum {
-	LIB_NONE = 0,
-	LIB_RAYLIB = 1 << 0,
-	LIB_NCURSES = 1 << 1,
-	LIB_CURL = 1 << 2,
-	LIB_COUNT_,
-	LIB_HELP,
-} lib_flags_t;
-
 typedef struct {
-	bool GNU;
-	bool git;
-	bool clang_format;
-	bool use_cpp;
-} flags_t;
-
-typedef struct {
+	libmap_t libraries;
 	licence_t licence;
+	flag_t flags;
+
 	char *project;
 	char *name;
-	lib_flags_t libraries;
-	flags_t flag;
 } manifest_t;
-
-#define HAS_LIBRARY(libs, lib) ((libs) & (lib))
-#define ADD_LIBRARY(libs, lib) ((libs) |= (lib))
-#define REMOVE_LIBRARY(libs, lib) ((libs) &= ~(lib))
 
 int create_project(manifest_t manifest);
 int mkdir_p(const char *path);
-int create_file_with_content(const char *path, const char *format, ...);
+int cfprintf(const char *path, const char *format, ...);
 
 #endif // YAIT_H

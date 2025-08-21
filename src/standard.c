@@ -10,10 +10,12 @@
 #define COMMIT 0
 #endif
 
-#include "../config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "../config.h"
+#include "standard.h"
 
 int parse_standard_options(void (*usage)(int), int argc, char **argv)
 {
