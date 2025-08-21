@@ -1,4 +1,4 @@
 PREFIX=/usr/bin/
-CFLAGS=-ggdb -std=c23
+CFLAGS=-Wall -Wextra -O2 --std=c23 -Wpedantic
 LDFLAGS=
 CC=gcc

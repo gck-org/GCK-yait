@@ -8,9 +8,9 @@
 
 // Usage: yait [OPTION]... <PROJECT>
 
+#define _POSIX_C_SOURCE 200809L // popen extention
 #include <getopt.h>
 #include <pwd.h>
-#define _POSIX_C_SOURCE 200809L // popen extention
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,35 +21,33 @@
 #include "util.h"
 
 #define print_option(option, description) \
-	fprintf(stderr, "        %-20s %-20s\n", option, description)
+	printf("        %-20s %-20s\n", option, description)
 
 static void usage(int status)
 {
 	if (status != 0) {
-		fputs("Try 'yait --help' for more information.\n", stderr);
+		puts("Try 'yait --help' for more information.\n");
 		return;
 	}
 
-	fputs("Usage: yait [OPTION]... <PATH>", stderr);
-	fputs("Creates a C project with opinionated defaults.", stderr);
-	fputs("When only given the first argument it will detect your name.\n",
-	      stderr);
-	fputs("Mandatory arguments to long options are mandatory for short options too",
-	      stderr);
+	puts("Usage: yait [OPTION]... <PATH>");
+	puts("Creates a C project with opinionated defaults");
+	puts("When only given the first argument it will detect your name\n");
+	puts("Mandatory arguments to long options are mandatory for short options too");
 	print_option("--posix", "Enable POSIX compliance");
 	print_option("--git", "Do not inititize git reposity");
 	print_option("--clang", "Add clang-format files and tooling");
 	print_option("-L <licence>", "Set licence");
 	print_option("-l <library>", "Add a library");
 	print_option("-C", "Use C++");
-	print_option("--GNU",
-		     "Add GNU argument parsing: --version, and --help");
+	print_option("--GNU", "Add version and help parsing");
 	print_option("-S, --simple", "Enable simple mode");
-	fputs("    --help     display this help text and exit", stderr);
-	fputs("    --version  output version information and exit", stderr);
+	puts("    --help     display this help text and exit\n");
+	puts("    --version  output version information and exit\n");
 }
 
-static int parse_arguments(manifest_t *conf, int argc, char **argv)
+[[maybe_unused]] static int parse_arguments(manifest_t *conf, int argc,
+					    char **argv)
 {
 	int opt;
 
@@ -131,7 +129,8 @@ int main(int argc, char **argv)
 		return fprintf(stderr, "error: %s\n", strerror(status)),
 		       EXIT_FAILURE;
 
-	parse_arguments(&manifest, argc, argv);
+	// parse_arguments(&manifest, argc, argv);
+	manifest.flags.simple = true;
 
 	get_name(&manifest.name);
 	status = create_project(manifest);

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# Usage: ./Cleanup
+
+fatal() {
+	echo "$@"
+	echo fail.
+	exit 1
+}
+
+if [ ! -d "./tools" ]; then
+    echo "error: must be run from parent directory"
+    exit 1
+fi
+
+sh ./tools/format || fatal Could not run './tools/format'
+rm -rf .cache || fatal Could not run 'rm -rf .cache'
+make dist-clean || fatal Could not run 'make dist-clean'
+
+echo done.
