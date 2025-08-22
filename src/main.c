@@ -24,6 +24,15 @@
 #define print_option(option, description) \
 	printf("        %-20s %-20s\n", option, description)
 
+char *str_dup(char *s)
+{
+	char *new = malloc(strlen(s) + 1);
+	if (!new)
+		return NULL;
+	strcpy(new, s);
+	return new;
+}
+
 static void usage(int status)
 {
 	if (status != 0) {
@@ -35,41 +44,58 @@ static void usage(int status)
 	puts("Creates a C project with opinionated defaults");
 	puts("When only given the first argument it will detect your name\n");
 	puts("Mandatory arguments to long options are mandatory for short options too");
-	print_option("--posix", "Enable POSIX compliance");
-	print_option("--git", "Do not inititize git reposity");
+	print_option("--no-git", "Do not inititize git reposity");
 	print_option("--clang", "Add clang-format files and tooling");
 	print_option("-L <licence>", "Set licence");
 	print_option("-l <library>", "Add a library");
-	print_option("-C", "Use C++");
-	print_option("--GNU", "Add version and help parsing");
-	print_option("-S, --simple", "Enable simple mode");
+	print_option("-n <name>", "Set the name of the project");
+	print_option(
+		"--style=<style>",
+		"Pick from a list of built in styles. This list can be found by passing 'list'");
 	puts("    --help     display this help text and exit\n");
 	puts("    --version  output version information and exit\n");
 }
 
-[[maybe_unused]] static int parse_arguments(manifest_t *conf, int argc,
-					    char **argv)
+static int parse_arguments(manifest_t *conf, int argc, char **argv)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "L:l:CS")) != -1) {
+	// clang-format off
+	static struct option long_opts[] = {
+		{ "style", required_argument, 0, 's' },
+		{ "no-git", no_argument, 0, 'g' },
+		{ "clang", no_argument, 0, 'c' },
+		{ 0, 0, 0, 0 } };
+	// clang-format on
+
+	// TODO(vx-clutch): lL
+	while ((opt = getopt_long(argc, argv, "s:gcn", long_opts, NULL)) !=
+	       -1) {
 		switch (opt) {
-		case 'L':
-			conf->licence = TOlicence(optarg);
+		case 's':
+			if (strcmp(optarg, "list") == 0) {
+				fputs("", stderr);
+			}
 			break;
-		case 'l':
+		case 'g':
+			conf->flags.git = false;
 			break;
-		case 'C':
-			conf->flags.cc = true;
+		case 'c':
+			conf->flags.clang = true;
 			break;
-		case 'S':
-			conf->flags.simple = true;
+		case 'n':
+			conf->name = str_dup(optarg);
 			break;
 		default:
-			fprintf(stderr, "Usage: %s [--help]\n", argv[0]);
 			return 1;
 		}
 	}
+
+	if (optind >= argc) {
+		fputs("error: missing required positional argument", stderr);
+		return 1;
+	}
+	conf->project = str_dup(argv[optind]);
 
 	return 0;
 }
@@ -110,19 +136,16 @@ int main(int argc, char **argv)
 		.project = "Project",
 		.name = "author",
 		.licence = UNL,
+		.style = SIMPLE,
+
 		.libraries.ncurses = false,
 		.libraries.raylib = false,
 		.libraries.stb = false,
 		.libraries.uthash = false,
 		.libraries.linenoise = false,
 
-		.flags.posix = false,
 		.flags.git = true,
 		.flags.clang = false,
-		.flags.lib = false,
-		.flags.cc = false,
-		.flags.gnu = true,
-		.flags.simple = false,
 	};
 
 	status = parse_standard_options(usage, argc, argv);
@@ -130,8 +153,10 @@ int main(int argc, char **argv)
 		return fprintf(stderr, "error: %s\n", strerror(status)),
 		       EXIT_FAILURE;
 
-	// parse_arguments(&manifest, argc, argv);
-	manifest.flags.simple = true;
+	status = parse_arguments(&manifest, argc, argv);
+	if (status) {
+		return EXIT_FAILURE;
+	}
 
 	get_name(&manifest.name);
 	status = create_project(manifest);

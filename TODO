@@ -1,8 +1,10 @@
 VX yait --- TODO
 
 Todo:
-
-	* Argument Parsing
-	* Project creation
+	* Project formats
+		* GNU
+		* FASM
+		* POSIX
+		* LIBRARY
 
 end of file TODO

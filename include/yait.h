@@ -10,14 +10,8 @@
 #define YAIT_H
 
 typedef struct {
-	bool posix;
 	bool git;
 	bool clang;
-	bool lib;
-	bool cc;
-	bool gnu;
-	/* If this flag is set it will ignore: GNU, and enforce POSIX. */
-	bool simple;
 } flag_t;
 
 typedef struct {
@@ -35,10 +29,19 @@ typedef enum {
 	UNL,
 } licence_t;
 
+typedef enum {
+	POSIX,
+	SIMPLE,
+	GNU,
+	LIBRARY,
+	FASM,
+} style_t;
+
 typedef struct {
 	libmap_t libraries;
 	licence_t licence;
 	flag_t flags;
+	style_t style;
 
 	char *project;
 	char *name;

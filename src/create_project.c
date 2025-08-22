@@ -20,7 +20,7 @@ int create_project(manifest_t manifest)
 	mkdir_p(manifest.project);
 	chdir(manifest.project);
 
-	if (manifest.flags.simple) {
+	if (manifest.style == SIMPLE) {
 		/* This only works if the source
 			files's root name is the same as the target on all of the Makefile becuase of how it checks for files. */
 		cfprintf(
