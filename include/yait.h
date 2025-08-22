@@ -45,7 +45,5 @@ typedef struct {
 } manifest_t;
 
 int create_project(manifest_t manifest);
-int mkdir_p(const char *path);
-int cfprintf(const char *path, const char *format, ...);
 
 #endif // YAIT_H

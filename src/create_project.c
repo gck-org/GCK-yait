@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 #include "../include/yait.h"
+#include "util.h"
 #include "contents.h"
 
 char buffer[BUFSIZ];
@@ -20,14 +21,20 @@ int create_project(manifest_t manifest)
 	chdir(manifest.project);
 
 	if (manifest.flags.simple) {
+		/* This only works if the source
+			files's root name is the same as the target on all of the Makefile becuase of how it checks for files. */
 		cfprintf(
 			"Makefile",
 			".POSIX:\nCC ::= gcc\nCFLAGS ::= -Wall --std=c23 -Wpedantic\n\nall: %s",
 			manifest.project);
+		fprintf(stderr, "Created files 1\r");
 		cfprintf("README", "%s", manifest.project);
+		fprintf(stderr, "Created files 2\r");
 
 		snprintf(buffer, BUFSIZ, "%s.c", manifest.project);
 		cfprintf(buffer, "");
+		fputs("Created files 3, done.\n", stderr);
+		/* We exit early because the simple flag is an overridding flag. */
 		return 0;
 	}
 

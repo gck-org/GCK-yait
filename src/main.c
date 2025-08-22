@@ -13,6 +13,7 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -134,6 +135,10 @@ int main(int argc, char **argv)
 
 	get_name(&manifest.name);
 	status = create_project(manifest);
+
+	char buffer[PATH_MAX];
+	getcwd(buffer, PATH_MAX);
+	fprintf(stderr, "Created %s at\n %s\n", manifest.project, buffer);
 
 	return EXIT_SUCCESS;
 }
