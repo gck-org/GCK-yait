@@ -22,20 +22,9 @@ typedef struct {
 	bool linenoise;
 } libmap_t;
 
-typedef enum {
-	MIT,
-	GPL,
-	BSD,
-	UNL,
-} licence_t;
+typedef enum { MIT, GPL, BSD, UNL, _LICENCE_COUNT_ } licence_t;
 
-typedef enum {
-	POSIX,
-	SIMPLE,
-	GNU,
-	LIBRARY,
-	FASM,
-} style_t;
+typedef enum { POSIX, SIMPLE, GNU, LIBRARY, FASM, _STYLE_COUNT_ } style_t;
 
 typedef struct {
 	libmap_t libraries;

@@ -1,19 +1,44 @@
 #include <string.h>
 #include <stdio.h>
 #include <getopt.h>
+#include <stdlib.h>
 
 #include "util.h"
 #include "../include/yait.h"
 
-licence_t TOlicence(const char *s)
+licence_t TOlicence(char *s)
 {
-	if (strcmp(s, "mit"))
+	if (!strcmp(s, "mit"))
 		return MIT;
-	if (strcmp(s, "gpl"))
+	if (!strcmp(s, "gpl"))
 		return GPL;
-	if (strcmp(s, "bsd"))
+	if (!strcmp(s, "bsd"))
 		return BSD;
 	return UNL;
+}
+
+style_t TOstyle(char *s)
+{
+	if (!strcmp(s, "posix"))
+		return POSIX;
+	if (!strcmp(s, "simple"))
+		return SIMPLE;
+	if (!strcmp(s, "GNU"))
+		return GNU;
+	if (!strcmp(s, "lib"))
+		return LIBRARY;
+	if (!strcmp(s, "fasm"))
+		return FASM;
+	return SIMPLE;
+}
+
+char *str_dup(char *s)
+{
+	char *new = malloc(strlen(s) + 1);
+	if (!new)
+		return NULL;
+	strcpy(new, s);
+	return new;
 }
 
 static char *nextchar;

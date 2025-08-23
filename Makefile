@@ -17,8 +17,8 @@ all: build $(YAIT)
 build:
 	mkdir -p bin
 
-$(YAIT): $(YAIT_SRCS)
-	$(CC) $(CFLAGS) -Iinclude -DCOMMIT=$(shell git rev-list --count --all) $^ -o $@
+$(YAIT): $(YAIT_SRCS) config.mak
+	$(CC) $(CFLAGS) -Iinclude -DCOMMIT=$(shell git rev-list --count --all) $(YAIT_SRCS) -o $@
 
 endif
 

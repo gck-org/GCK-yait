@@ -24,15 +24,6 @@
 #define print_option(option, description) \
 	printf("        %-20s %-20s\n", option, description)
 
-char *str_dup(char *s)
-{
-	char *new = malloc(strlen(s) + 1);
-	if (!new)
-		return NULL;
-	strcpy(new, s);
-	return new;
-}
-
 static void usage(int status)
 {
 	if (status != 0) {
@@ -46,8 +37,10 @@ static void usage(int status)
 	puts("Mandatory arguments to long options are mandatory for short options too");
 	print_option("--no-git", "Do not inititize git reposity");
 	print_option("--clang", "Add clang-format files and tooling");
-	print_option("-L <licence>", "Set licence");
-	print_option("-l <library>", "Add a library");
+	print_option("-L <licence>",
+		     "Set licence. This list can be found by passing 'list'");
+	print_option("-l <library>",
+		     "Add a library. This list can be found by passing 'list'");
 	print_option("-n <name>", "Set the name of the project");
 	print_option(
 		"--style=<style>",
@@ -68,14 +61,16 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 		{ 0, 0, 0, 0 } };
 	// clang-format on
 
-	// TODO(vx-clutch): lL
-	while ((opt = getopt_long(argc, argv, "s:gcn", long_opts, NULL)) !=
+	// TODO(vx-clutch): libraries
+	while ((opt = getopt_long(argc, argv, "s:gcn:L:", long_opts, NULL)) !=
 	       -1) {
 		switch (opt) {
 		case 's':
 			if (strcmp(optarg, "list") == 0) {
-				fputs("", stderr);
+				puts("posix\nsimple\nGNU\nlib\nfasm");
+				exit(EXIT_SUCCESS);
 			}
+			conf->style = TOstyle(optarg);
 			break;
 		case 'g':
 			conf->flags.git = false;
@@ -85,6 +80,9 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 			break;
 		case 'n':
 			conf->name = str_dup(optarg);
+			break;
+		case 'L':
+			conf->licence = TOlicence(optarg);
 			break;
 		default:
 			return 1;
@@ -160,6 +158,11 @@ int main(int argc, char **argv)
 
 	get_name(&manifest.name);
 	status = create_project(manifest);
+
+	if (status) {
+		fprintf(stderr, "%s\n", strerror(status));
+		return EXIT_FAILURE;
+	}
 
 	char buffer[PATH_MAX];
 	getcwd(buffer, PATH_MAX);
