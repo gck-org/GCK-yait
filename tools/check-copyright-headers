@@ -1,4 +1,0 @@
-#!/bin/sh
-
-find . -name "*.c" -exec add-copyright-header {} \;
-find . -name "*.h" -exec add-copyright-header {} \;
