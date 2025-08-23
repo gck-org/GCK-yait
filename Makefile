@@ -35,10 +35,10 @@ uninstall:
 	$(RM) $(DESTDIR)$(PREFIX)/bin/yait
 
 clean:
-	$(RM) -rf bin
-	$(RM) -rf build
+	$(RM) -r bin
+	$(RM) -r build
 
 dist-clean: clean
-	$(RM) -f config.mak
+	$(RM) config.mak
 
 .PHONY: all clean dist-clean install uninstall build
