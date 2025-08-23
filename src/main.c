@@ -1,4 +1,4 @@
-/* Copyright (C) vx_clutch
+/* Copyright (C) vx-clutch
  *
  * This file is part of yait
  *
