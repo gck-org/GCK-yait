@@ -1,6 +1,10 @@
 VX yait --- TODO
 
 Todo:
+	* -E to open editor
+	* --extra
+		* --extra-build
+			* --extra-build=nob
 	* Project formats
 		* LIBRARY
 
