@@ -11,6 +11,9 @@ int getopt_long(int argc, char *const argv[], const char *optstring,
 
 char *str_dup(char *s);
 
+extern int fno;
+extern bool flast;
+
 int mkdir_p(const char *path);
 int cfprintf(const char *path, const char *format, ...);
 

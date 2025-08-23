@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../include/yait.h"
+#include "util.h"
 
 int mkdir_p(const char *path)
 {
@@ -79,5 +79,12 @@ int cfprintf(const char *path, const char *format, ...)
 	va_end(args);
 
 	fclose(fp);
+
+	if (flast)
+		fprintf(stderr, "Created files %d, done.\n", fno);
+	else
+		fprintf(stderr, "Created files %d\r", fno);
+	fno++;
+
 	return 0;
 }

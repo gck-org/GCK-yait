@@ -6,6 +6,9 @@
 #include "util.h"
 #include "../include/yait.h"
 
+int fno = 0;
+bool flast = false;
+
 licence_t TOlicence(char *s)
 {
 	if (!strcmp(s, "mit"))

@@ -61,8 +61,7 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 		{ 0, 0, 0, 0 } };
 	// clang-format on
 
-	// TODO(vx-clutch): libraries
-	while ((opt = getopt_long(argc, argv, "s:gcn:L:", long_opts, NULL)) !=
+	while ((opt = getopt_long(argc, argv, "s:gcn:L:l:", long_opts, NULL)) !=
 	       -1) {
 		switch (opt) {
 		case 's':
@@ -84,6 +83,9 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 		case 'L':
 			conf->licence = TOlicence(optarg);
 			break;
+		case 'l':
+#warning "Implement -l <lib>"
+			break;
 		default:
 			return 1;
 		}
@@ -104,7 +106,7 @@ int get_name(char **output)
 	char buffer[128];
 	size_t output_len = 0;
 
-	*output = NULL; // make sure it's NULL before realloc
+	*output = NULL;
 
 	pipe = popen("git config user.name", "r");
 	if (!pipe)
@@ -123,7 +125,12 @@ int get_name(char **output)
 		output_len += chunk_len;
 		(*output)[output_len] = '\0';
 	}
+
 	pclose(pipe);
+
+	if (output_len > 0 && (*output)[output_len - 1] == '\n')
+		(*output)[output_len - 1] = '\0';
+
 	return 0;
 }
 
