@@ -1,9 +1,9 @@
 yait ( yet another init tool )
 
 yait is designed to allow you to create more side projects; that you will
-definitely complete. This tool will create a new directory containing all
-project files needed for your new C ( maybe C++ ) project. It provides you with
-a build system and some basic source files to give you a kick start on your new
-project--with optional libraries!
+definitely finish. This tool will create a new directory containing all
+project files needed for your new and shinny C project--all for the
+price of a hat. This includes a build system and some basic source files
+to give you a kick start on your new project--with optional libraries!
 
-For more detailed documentation vist: <https://vx-clutch.github.io/vxserver.dev/docs/yait.html>
+For more detailed documentation see doc/
