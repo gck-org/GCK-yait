@@ -41,10 +41,12 @@ static void usage(int status)
 		     "Set licence. This list can be found by passing 'list'");
 	print_option("-l <library>",
 		     "Add a library. This list can be found by passing 'list'");
-	print_option("-n <name>", "Set the name of the project");
+	print_option("-n <name>",
+		     "Set the name of the author ( default git username )");
 	print_option(
 		"--style=<style>",
 		"Pick from a list of built in styles. This list can be found by passing 'list'");
+	print_option("-E", "Open editor after project creation");
 	puts("    --help     display this help text and exit\n");
 	puts("    --version  output version information and exit\n");
 }
@@ -61,7 +63,7 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 		{ 0, 0, 0, 0 } };
 	// clang-format on
 
-	while ((opt = getopt_long(argc, argv, "s:gcn:L:l:E", long_opts,
+	while ((opt = getopt_long(argc, argv, "s:gcn:L:l:En:", long_opts,
 				  NULL)) != -1) {
 		switch (opt) {
 		case 's':
