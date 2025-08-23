@@ -84,7 +84,24 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 			conf->licence = TOlicence(optarg);
 			break;
 		case 'l':
-#warning "Implement -l <lib>"
+			if (strcmp(optarg, "list") == 0) {
+				puts("ncurses\nraylib\nstb\nuthash\nlinenoise");
+				exit(EXIT_SUCCESS);
+			}
+			if (strcmp(optarg, "ncurses") == 0)
+				conf->libraries.ncurses = true;
+			else if (strcmp(optarg, "raylib") == 0)
+				conf->libraries.raylib = true;
+			else if (strcmp(optarg, "stb") == 0)
+				conf->libraries.stb = true;
+			else if (strcmp(optarg, "uthash") == 0)
+				conf->libraries.uthash = true;
+			else if (strcmp(optarg, "linenoise") == 0)
+				conf->libraries.linenoise = true;
+			else
+				fprintf(stderr,
+					"warning: %s is not a support library",
+					optarg);
 			break;
 		default:
 			return 1;

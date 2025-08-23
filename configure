@@ -7,8 +7,11 @@ Usage: $0 [OPTION]... [VAR=VALUE]...
 To assign environment variables (e.g., CC, CFLAGS...), specify them as
 VAR=VALUE.
 
-  CC      C compiler command [detected]
-  CFLAGS  C compiler flags [-g, ...]
+  CC              C compiler command [detected]
+  CFLAGS          C compiler flags [-g, ...]
+  LDFLAGS         C linker flags
+
+  --prefix=<path> Set the install path
 
 EOF
 exit 0
@@ -32,6 +35,7 @@ printf "%s\n" "$CC"
 for arg ; do
 case "$arg" in
 --help|h) usage ;;
+--prefix=*) prefix=${arg#*=} ;;
 CFLAGS=*) CFLAGS=${arg#*=} ;;
 LDFLAGS=*) LDFLAGS=${arg#*=} ;;
 CC=*) CC=${arg#*=} ;;

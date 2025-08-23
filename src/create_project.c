@@ -113,5 +113,16 @@ int create_project(manifest_t manifest)
 		abort();
 	}
 
+	if (manifest.libraries.ncurses)
+		system("git submodule add --quiet https://github.com/mirror/ncurses");
+	if (manifest.libraries.raylib)
+		system("git submodule add --quiet https://github.com/raysan5/raylib");
+	if (manifest.libraries.stb)
+		system("git submodule add --quiet https://github.com/nothings/stb");
+	if (manifest.libraries.uthash)
+		system("git submodule add --quiet https://github.com/troydhanson/uthash");
+	if (manifest.libraries.linenoise)
+		system("git submodule add --quiet https://github.com/antirez/linenoise");
+
 	return 0;
 }
