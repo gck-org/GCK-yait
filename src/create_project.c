@@ -13,7 +13,7 @@
 #include <ctype.h>
 
 #include "../include/yait.h"
-#include "contents.h"
+#include "posix_contents.h"
 #include "util.h"
 
 int create_project(manifest_t manifest)
