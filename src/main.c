@@ -61,8 +61,8 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 		{ 0, 0, 0, 0 } };
 	// clang-format on
 
-	while ((opt = getopt_long(argc, argv, "s:gcn:L:l:", long_opts, NULL)) !=
-	       -1) {
+	while ((opt = getopt_long(argc, argv, "s:gcn:L:l:E", long_opts,
+				  NULL)) != -1) {
 		switch (opt) {
 		case 's':
 			if (strcmp(optarg, "list") == 0) {
@@ -102,6 +102,10 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 				fprintf(stderr,
 					"warning: %s is not a support library",
 					optarg);
+			break;
+		case 'E':
+			conf->flags.editor = true;
+			conf->editor = getenv("EDITOR");
 			break;
 		default:
 			return 1;
@@ -157,6 +161,7 @@ int main(int argc, char **argv)
 	manifest_t manifest = {
 		.project = "Project",
 		.name = "author",
+		.editor = "nano",
 		.licence = UNL,
 		.style = SIMPLE,
 
@@ -168,6 +173,7 @@ int main(int argc, char **argv)
 
 		.flags.git = true,
 		.flags.clang = false,
+		.flags.editor = false,
 	};
 
 	status = parse_standard_options(usage, argc, argv);

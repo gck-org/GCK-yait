@@ -19,7 +19,7 @@
 int create_project(manifest_t manifest)
 {
 	int status;
-	char buffer[BUFSIZ];
+	char buffer[BUFSIZ], *main_source;
 
 	status = mkdir_p(manifest.project);
 	if (status)
@@ -41,6 +41,9 @@ int create_project(manifest_t manifest)
 
 		flast = true;
 		cfprintf(buffer, "");
+
+		snprintf(buffer, BUFSIZ, "%s.c", manifest.project);
+		main_source = str_dup(buffer);
 		break;
 
 	case POSIX:
@@ -59,6 +62,8 @@ int create_project(manifest_t manifest)
 
 		flast = true;
 		cfprintf("doc/WHATNEXT", what_next);
+
+		main_source = "src/main.c";
 		break;
 	case FASM:
 		snprintf(buffer, BUFSIZ, "%s.txt", manifest.project);
@@ -74,6 +79,8 @@ int create_project(manifest_t manifest)
 		cfprintf("TOOLS/build.sh",
 			 "#!/bin/sh\n\ncc SOURCE/main.c -o %s",
 			 manifest.project);
+
+		main_source = "SOURCE/main.c";
 		break;
 	case GNU:
 		cfprintf("AUTHORS", "%s", manifest.name);
@@ -108,6 +115,8 @@ int create_project(manifest_t manifest)
 			".TH %s 1 \"%s\" \"0.1\" \"User Commands\"\n.SH NAME\n%s \\- a program that does a thing\n.SH SYNOPSIS\n.B %s\n.SH DESCRIPTION\nThis is a program that does a thing.\n.SH AUTHOR\nWritten by %s.",
 			manifest.project, date, manifest.project,
 			manifest.project, manifest.name);
+
+		main_source = "src/main.c";
 		break;
 	default:
 		abort();
@@ -123,6 +132,11 @@ int create_project(manifest_t manifest)
 		system("git submodule add --quiet https://github.com/troydhanson/uthash");
 	if (manifest.libraries.linenoise)
 		system("git submodule add --quiet https://github.com/antirez/linenoise");
+
+	if (manifest.flags.editor) {
+		snprintf(buffer, BUFSIZ, "nvim %s", main_source);
+		system(buffer);
+	}
 
 	return 0;
 }

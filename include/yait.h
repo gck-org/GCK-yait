@@ -12,6 +12,7 @@
 typedef struct {
 	bool git;
 	bool clang;
+	bool editor;
 } flag_t;
 
 typedef struct {
@@ -34,6 +35,7 @@ typedef struct {
 
 	char *project;
 	char *name;
+	char *editor;
 } manifest_t;
 
 int create_project(manifest_t manifest);
