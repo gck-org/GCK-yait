@@ -1,4 +1,4 @@
-PREFIX = /usr/bin
+PREFIX = /usr/bin/
 
 YAIT_SRCS := $(wildcard src/*.c)
 YAIT_OBJS := $(patsubst src/%.c,build/obj/%.o,$(YAIT_SRCS))
@@ -28,8 +28,7 @@ $(YAIT): $(YAIT_OBJS)
 endif
 
 install: $(YAIT)
-	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp $(YAIT) $(DESTDIR)$(PREFIX)/bin/
+	cp $(YAIT) $(PREFIX)
 
 uninstall:
 	$(RM) $(DESTDIR)$(PREFIX)/bin/yait

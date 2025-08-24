@@ -7,8 +7,8 @@
  */
 
 // clang-format off
-#ifndef CONTENTS_H
-#define CONTENTS_H
+#ifndef POSIX_CONTENTS_H
+#define POSIX_CONTENTS_H
 
 #define line(ln) ln "\n"
 
@@ -126,42 +126,6 @@ char *makefile =
 
 char *clang_format =
   line ("BasedOnStyle: GNU");
-
-char *bsd3_license =
-  line ("BSD 3-Clause License")
-  line ()
-  line ("Copyright (c) %d, %s")
-  line ()
-  line ("Redistribution and use in source and binary forms, with or without")
-  line ("modification, are permitted provided that the following conditions are met:")
-  line ()
-  line ("1. Redistributions of source code must retain the above copyright notice, this")
-  line ("   list of conditions and the following disclaimer.")
-  line ()
-  line ("2. Redistributions in binary form must reproduce the above copyright notice,")
-  line ("   this list of conditions and the following disclaimer in the documentation")
-  line ("   and/or other materials provided with the distribution.")
-  line ()
-  line ("3. Neither the name of the copyright holder nor the names of its")
-  line ("   contributors may be used to endorse or promote products derived from")
-  line ("   this software without specific prior written permission.")
-  line ()
-  line ("THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"")
-  line ("AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE")
-  line ("IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE")
-  line ("DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE")
-  line ("FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL")
-  line ("DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR")
-  line ("SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER")
-  line ("CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,")
-  line ("OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE")
-  line ("OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.");
-
-char *mit_license =
-  line ("THIS IS THE MIT LICENSE");
-
-char *gplv3_license =
-  line ("THIS IS THE GPLv3 LICENSE");
 
 char *config_h =
   line ("#ifndef CONFIG_H")

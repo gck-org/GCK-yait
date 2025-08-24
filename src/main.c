@@ -68,7 +68,7 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 		switch (opt) {
 		case 's':
 			if (strcmp(optarg, "list") == 0) {
-				puts("posix\nsimple\nGNU\nlib\nfasm");
+				puts("posix\nsimple\nGNU\nlib\nfasm\nlib");
 				exit(EXIT_SUCCESS);
 			}
 			conf->style = TOstyle(optarg);

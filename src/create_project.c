@@ -6,6 +6,7 @@
  * <https://opensource.org/licence/bsd-3-clause>
  */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
@@ -14,6 +15,8 @@
 
 #include "../include/yait.h"
 #include "posix_contents.h"
+#include "library_contents.h"
+#include "licences/licences.h"
 #include "util.h"
 
 int create_project(manifest_t manifest)
@@ -118,6 +121,27 @@ int create_project(manifest_t manifest)
 
 		main_source = "src/main.c";
 		break;
+	case LIBRARY:
+		snprintf(buffer, BUFSIZ, "include/%s.h", manifest.project);
+		char *file_name_buffer = str_dup(buffer);
+
+		snprintf(buffer, BUFSIZ, "%s", manifest.project);
+		for (int i = 0; buffer[i] != '\0'; ++i)
+			buffer[i] = toupper((unsigned char)buffer[i]);
+
+		cfprintf(file_name_buffer, "#ifndef %s\n#define %s\n#endif",
+			 buffer, buffer);
+
+		snprintf(buffer, BUFSIZ, "src/%s.c", manifest.project);
+		main_source = str_dup(buffer);
+		cfprintf(buffer, "");
+
+		cfprintf("Makefile", makefile_lib, manifest.project,
+			 manifest.project);
+
+		cfprintf("README", "%s", manifest.project);
+
+		break;
 	default:
 		abort();
 	}
@@ -132,6 +156,23 @@ int create_project(manifest_t manifest)
 		system("git submodule add --quiet https://github.com/troydhanson/uthash");
 	if (manifest.libraries.linenoise)
 		system("git submodule add --quiet https://github.com/antirez/linenoise");
+
+	switch (manifest.licence) {
+	case MIT:
+		cfprintf("COPYING", "%s", MIT_txt);
+		break;
+	case GPL:
+		cfprintf("COPYING", "%s", GPL_3_0_txt);
+		break;
+	case BSD:
+		cfprintf("COPYING", "%s", BSD_3_Clause_txt);
+		break;
+	case UNL:
+		cfprintf("COPYING", "%s", UNLICENSE_txt);
+		break;
+	default:
+		abort();
+	}
 
 	if (manifest.flags.editor) {
 		snprintf(buffer, BUFSIZ, "nvim %s", main_source);
