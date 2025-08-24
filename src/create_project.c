@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <ctype.h>
 
@@ -66,10 +67,18 @@ int create_project(manifest_t manifest)
 		flast = true;
 		cfprintf("doc/WHATNEXT", what_next);
 
+		fprintf(stderr, "Changing permissions 1");
+		if (chmod("configure", 0755) == -1) {
+			fprintf(stderr, "\n");
+			perror("chmod");
+			return 1;
+		}
+		fprintf(stderr, ", done.\n");
+
 		main_source = "src/main.c";
 		break;
 	case FASM:
-		snprintf(buffer, BUFSIZ, "%s.txt", manifest.project);
+		snprintf(buffer, BUFSIZ, "%s.TXT", manifest.project);
 		for (int i = 0; buffer[i] != '\0'; ++i)
 			buffer[i] = toupper((unsigned char)buffer[i]);
 		cfprintf(
@@ -82,6 +91,14 @@ int create_project(manifest_t manifest)
 		cfprintf("TOOLS/build.sh",
 			 "#!/bin/sh\n\ncc SOURCE/main.c -o %s",
 			 manifest.project);
+
+		fprintf(stderr, "Changing permissions 1");
+		if (chmod("TOOLS/build.sh", 0755) == -1) {
+			fprintf(stderr, "\n");
+			perror("chmod");
+			return 1;
+		}
+		fprintf(stderr, ", done.\n");
 
 		main_source = "SOURCE/main.c";
 		break;
@@ -146,16 +163,31 @@ int create_project(manifest_t manifest)
 		abort();
 	}
 
-	if (manifest.libraries.ncurses)
+	if (manifest.libraries.ncurses) {
+		fprintf(stderr, "Pulling ncurses");
 		system("git submodule add --quiet https://github.com/mirror/ncurses");
-	if (manifest.libraries.raylib)
+		fprintf(stderr, ", done.\n");
+	}
+	if (manifest.libraries.raylib) {
+		fprintf(stderr, "Pulling raylib");
 		system("git submodule add --quiet https://github.com/raysan5/raylib");
-	if (manifest.libraries.stb)
+		fprintf(stderr, ", done.\n");
+	}
+	if (manifest.libraries.stb) {
+		fprintf(stderr, "Pulling stb");
 		system("git submodule add --quiet https://github.com/nothings/stb");
-	if (manifest.libraries.uthash)
+		fprintf(stderr, ", done.\n");
+	}
+	if (manifest.libraries.uthash) {
+		fprintf(stderr, "Pulling uthash");
 		system("git submodule add --quiet https://github.com/troydhanson/uthash");
-	if (manifest.libraries.linenoise)
+		fprintf(stderr, ", done.\n");
+	}
+	if (manifest.libraries.linenoise) {
+		fprintf(stderr, "Pulling linenoise");
 		system("git submodule add --quiet https://github.com/antirez/linenoise");
+		fprintf(stderr, ", done.\n");
+	}
 
 	switch (manifest.licence) {
 	case MIT:
@@ -172,6 +204,12 @@ int create_project(manifest_t manifest)
 		break;
 	default:
 		abort();
+	}
+
+	if (!manifest.flags.git) {
+		fprintf(stderr, "Initializing git reposity");
+		system("git init --quiet");
+		fprintf(stderr, ", done.\n");
 	}
 
 	if (manifest.flags.editor) {

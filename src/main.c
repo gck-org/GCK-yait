@@ -115,7 +115,7 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 	}
 
 	if (optind >= argc) {
-		fputs("error: missing required positional argument", stderr);
+		fputs("error: missing required positional argument\n", stderr);
 		return 1;
 	}
 	conf->project = str_dup(argv[optind]);
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
 		.name = "author",
 		.editor = "nano",
 		.licence = UNL,
-		.style = SIMPLE,
+		.style = POSIX,
 
 		.libraries.ncurses = false,
 		.libraries.raylib = false,

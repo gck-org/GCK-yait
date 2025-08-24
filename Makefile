@@ -31,7 +31,7 @@ install: $(YAIT)
 	cp $(YAIT) $(PREFIX)
 
 uninstall:
-	$(RM) $(DESTDIR)$(PREFIX)/bin/yait
+	$(RM) $(PREFIX)yait
 
 clean:
 	$(RM) -r bin
