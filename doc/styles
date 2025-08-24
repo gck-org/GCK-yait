@@ -1,0 +1,71 @@
+                           Yb  dP    db    88 888888 
+                            YbdP    dPYb   88   88   
+                             8P    dP__Yb  88   88   
+                            dP    dP""""Yb 88   88   
+
+				  yait manual
+
+styles
+######
+
+In yait there are a few pre-made styles you can choose from. Those styles being
+the following.
+	* posix (default)
+	* gnu
+	* simple
+	* lib
+	* fasm
+These can be selected through setting the --style=<STYLE> flag.
+
+The POSIX style is the default style of yait and is the format used for the
+project. The POSIX style is structured as the following:
+	project/
+		bin/
+		build/
+		doc/
+		include/
+			project.h
+		man/
+			project.1
+		src/
+			main.c
+		COPYING
+		Makefile
+		README
+
+The GNU style is based on the GNU project layout guide; however, it is minified.
+	project/
+		man/
+			project.1
+		src/
+			main.c
+		AUTHORS
+		COPYING
+		INSTALL
+		NEWS
+		README
+		configure.ac
+
+The Simple style is a minimal layout for short and sweet projects.
+	project/
+		project.c
+		Makefile
+		README
+
+The Lib style is a layout for created libraries that compile to a .a and .so file.
+	project/
+		include/
+			project.h
+		src/
+			project.c
+		Makefile
+		README
+
+The Fasm style is a layout based on the flat assembler.
+	project/
+		SOURCE/
+			main.c
+		TOOLS/
+			build.sh
+		PROJECT.TXT
+
