@@ -22,7 +22,7 @@ cmdexists () { type "$1" >/dev/null 2>&1 ; }
 trycc () { test -z "$CC" && cmdexists "$1" && CC=$1 ; }
 
 prefix=/usr/bin/
-CFLAGS="-Wall -Wextra -O2 --std=c23 -Wpedantic"
+CFLAGS="-Wall -Wextra -O2 --std=c23 -Wpedantic -Wformat=2"
 LDFLAGS=
 CC=
 

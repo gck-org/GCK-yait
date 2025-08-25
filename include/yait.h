@@ -16,6 +16,12 @@ typedef struct {
 } flag_t;
 
 typedef struct {
+	bool nob;
+	bool format;
+	bool cleanup;
+} extras_t;
+
+typedef struct {
 	bool ncurses;
 	bool raylib;
 	bool stb;
@@ -31,6 +37,7 @@ typedef struct {
 	libmap_t libraries;
 	licence_t licence;
 	flag_t flags;
+	extras_t extras;
 	style_t style;
 
 	char *project;
