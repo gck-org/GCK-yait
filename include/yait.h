@@ -9,39 +9,30 @@
 #ifndef YAIT_H
 #define YAIT_H
 
-typedef struct {
-	bool git;
-	bool clang;
-	bool editor;
-} flag_t;
-
-typedef struct {
-	bool nob;
-	bool format;
-	bool cleanup;
-} extras_t;
-
-typedef struct {
-	bool ncurses;
-	bool raylib;
-	bool stb;
-	bool uthash;
-	bool linenoise;
-} libmap_t;
-
 typedef enum { MIT, GPL, BSD, UNL, _LICENCE_COUNT_ } licence_t;
 
-typedef enum { POSIX, SIMPLE, GNU, LIBRARY, FASM, _STYLE_COUNT_ } style_t;
-
 typedef struct {
-	libmap_t libraries;
 	licence_t licence;
-	flag_t flags;
-	extras_t extras;
-	style_t style;
+
+	bool lib;
+	bool exe;
+
+	bool git;
+	bool autotools;
+	bool cmake;
+	bool make;
+	bool bare;
+	bool flat;
+	bool open_editor;
+
+	struct {
+		bool nob;
+		bool clang_format;
+		bool Cleanup;
+	} extra;
 
 	char *project;
-	char *name;
+	char *author;
 	char *editor;
 } manifest_t;
 

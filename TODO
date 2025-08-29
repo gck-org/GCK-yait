@@ -1,26 +1,6 @@
 VX yait - TODO
 
 Todo:
-	* Rework interface
-		> git (default)
-		> no-git
-		> lib
-			# create AS library
-		> both
-		> autotools
-		> cmake
-		> make (default)
-		> bare
-		> flat
-			# everything in root
-		> licence|l
-		> author
-	* extra
-		> extra-build
-			# extra-build=nob
-		> extra-tools
-			# extra-tools=format
-			# extra-tools=Cleanup
-	* write touprstr()
+	Vi er Ferdig!
 
 end of file TODO

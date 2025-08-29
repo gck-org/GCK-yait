@@ -6,41 +6,29 @@
  * <https://opensource.org/licence/bsd-3-clause>
  */
 
-#include <string.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <getopt.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "util.h"
 #include "../include/yait.h"
 
-int fno = 0;
+int fno = 1;
 bool flast = false;
 
-licence_t TOlicence(char *s)
+licence_t TOlicence(char *src)
 {
-	if (!strcmp(s, "mit"))
+	char *s = tostrupr(src);
+	if (!strcmp(s, "MIT"))
 		return MIT;
-	if (!strcmp(s, "gpl"))
+	if (!strcmp(s, "GPL"))
 		return GPL;
-	if (!strcmp(s, "bsd"))
+	if (!strcmp(s, "BSD"))
 		return BSD;
+	free(s);
 	return UNL;
-}
-
-style_t TOstyle(char *s)
-{
-	if (!strcmp(s, "posix"))
-		return POSIX;
-	if (!strcmp(s, "simple"))
-		return SIMPLE;
-	if (!strcmp(s, "GNU"))
-		return GNU;
-	if (!strcmp(s, "lib"))
-		return LIBRARY;
-	if (!strcmp(s, "fasm"))
-		return FASM;
-	return SIMPLE;
 }
 
 char *str_dup(char *s)
@@ -49,6 +37,17 @@ char *str_dup(char *s)
 	if (!new)
 		return NULL;
 	strcpy(new, s);
+	return new;
+}
+
+char *tostrupr(char *s)
+{
+	char *new = malloc(strlen(s) + 1);
+	if (!new)
+		return NULL;
+	strcpy(new, s);
+	for (int i = 0; new[i] != '\0'; ++i)
+		new[i] = toupper((unsigned char)new[i]);
 	return new;
 }
 

@@ -1,2 +1,7 @@
 CompileFlags:
-  Add: ["--std=c2x", "-xc"]
+  Add: [-std=c23]
+
+Diagnostics:
+  ClangTidy:
+    Add: [clang-diagnostic-*]
+    Remove: []

@@ -15,6 +15,7 @@ fi
 
 sh ./tools/format || fatal Could not run './tools/format'
 rm -rf .cache || fatal Could not run 'rm -rf .cache'
+rm -f compile_commands.json || fatal Could not run 'rm -f compile_commands.json'
 make dist-clean || fatal Could not run 'make dist-clean'
 
 echo done.

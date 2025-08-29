@@ -16,10 +16,12 @@
 #include <limits.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #include "../include/yait.h"
 #include "standard.h"
 #include "util.h"
+#include "../config.h"
 
 #define print_option(option, description) \
 	printf("        %-20s %-20s\n", option, description)
@@ -35,78 +37,120 @@ static void usage(int status)
 	puts("Creates a C project with opinionated defaults");
 	puts("When only given the first argument it will detect your name\n");
 	puts("Mandatory arguments to long options are mandatory for short options too");
-	print_option("--no-git", "Do not inititize git reposity");
-	print_option("--clang", "Add clang-format files and tooling");
+	print_option("--no-git", "Do not initialize git repository");
 	print_option("-L <licence>",
 		     "Set licence. This list can be found by passing 'list'");
-	print_option("-l <library>",
-		     "Add a library. This list can be found by passing 'list'");
-	print_option("-n <name>",
-		     "Set the name of the author ( default git username )");
-	print_option(
-		"--style=<style>",
-		"Pick from a list of built in styles. This list can be found by passing 'list'");
 	print_option("-E", "Open editor after project creation");
 	puts("    --help     display this help text and exit\n");
 	puts("    --version  output version information and exit\n");
 }
 
+void print_lines(const char *first, ...)
+{
+	va_list args;
+	const char *s;
+
+	va_start(args, first);
+
+	for (s = first; s != NULL; s = va_arg(args, const char *))
+		printf("%s\n", s);
+
+	va_end(args);
+}
+
+static inline int parse_extras_token(manifest_t *conf, char *s)
+{
+	if (!strcmp(s, "list")) {
+		print_lines("nob", "Cleanup", "format", NULL);
+		exit(EXIT_SUCCESS);
+	}
+
+	if (!strcmp(s, "nob"))
+		return conf->extra.nob = true, 0;
+	if (!strcmp(s, "Cleanup"))
+		return conf->extra.Cleanup = true, 0;
+	if (!strcmp(s, "format"))
+		return conf->extra.clang_format = true, 0;
+	fprintf(stderr, "Option '%s' is not valid. See %s --extras=list\n", s,
+		PROGRAM);
+	return 1;
+}
+
 static int parse_arguments(manifest_t *conf, int argc, char **argv)
 {
-	int opt;
+	int opt, option_index;
 
 	// clang-format off
 	static struct option long_opts[] = {
-		{ "style", required_argument, 0, 's' },
-		{ "no-git", no_argument, 0, 'g' },
-		{ "clang", no_argument, 0, 'c' },
+		{ "git", no_argument, 0, 'g' },
+		{ "no-git", no_argument, 0, 'G' },
+		{ "lib", no_argument, 0, 'L' },
+		{ "both", no_argument, 0, 'b' },
+		{ "autotools", no_argument, 0, 'a' },
+		{ "cmake", no_argument, 0, 'c' },
+		{ "make", no_argument, 0, 'm' },
+		{ "bare", no_argument, 0, 'B' },
+		{ "flat", no_argument, 0, 'f' },
+		{ "author", required_argument, 0, 'A' },
+		{ "extras", required_argument, 0, 0 },
 		{ 0, 0, 0, 0 } };
 	// clang-format on
 
-	while ((opt = getopt_long(argc, argv, "s:gcn:L:l:En:", long_opts,
-				  NULL)) != -1) {
-		switch (opt) {
-		case 's':
-			if (strcmp(optarg, "list") == 0) {
-				puts("posix\nsimple\nGNU\nlib\nfasm\nlib");
-				exit(EXIT_SUCCESS);
+	while ((opt = getopt_long(argc, argv, "gGLbacmBfAl:E", long_opts,
+				  &option_index)) != -1) {
+		if (opt == 0 &&
+		    strcmp(long_opts[option_index].name, "extras") == 0) {
+			int err;
+			char *arg = optarg;
+			char *token = strtok(arg, ",");
+			while (token) {
+				err = parse_extras_token(conf, token);
+				if (err)
+					exit(err);
+				token = strtok(NULL, ",");
 			}
-			conf->style = TOstyle(optarg);
-			break;
+		}
+		switch (opt) {
 		case 'g':
-			conf->flags.git = false;
+			conf->git = true;
 			break;
-		case 'c':
-			conf->flags.clang = true;
-			break;
-		case 'n':
-			conf->name = str_dup(optarg);
+		case 'G':
+			conf->git = false;
 			break;
 		case 'L':
-			conf->licence = TOlicence(optarg);
+			conf->lib = true;
+			break;
+		case 'b':
+			conf->lib = true;
+			conf->exe = true;
+			break;
+		case 'a':
+			conf->autotools = true;
+			break;
+		case 'c':
+			conf->cmake = true;
+			break;
+		case 'm':
+			conf->make = true;
+			break;
+		case 'B':
+			conf->bare = true;
+			break;
+		case 'f':
+			conf->flat = true;
+			break;
+		case 'A':
+			conf->author = optarg;
 			break;
 		case 'l':
-			if (strcmp(optarg, "list") == 0) {
-				puts("ncurses\nraylib\nstb\nuthash\nlinenoise");
+			if (!strcmp(optarg, "list")) {
+				print_lines("MIT", "BSD", "GPL", "UNL", NULL);
 				exit(EXIT_SUCCESS);
 			}
-			if (strcmp(optarg, "ncurses") == 0)
-				conf->libraries.ncurses = true;
-			else if (strcmp(optarg, "raylib") == 0)
-				conf->libraries.raylib = true;
-			else if (strcmp(optarg, "stb") == 0)
-				conf->libraries.stb = true;
-			else if (strcmp(optarg, "uthash") == 0)
-				conf->libraries.uthash = true;
-			else if (strcmp(optarg, "linenoise") == 0)
-				conf->libraries.linenoise = true;
-			else
-				fprintf(stderr,
-					"warning: %s is not a support library",
-					optarg);
+			conf->licence = TOlicence(optarg);
 			break;
 		case 'E':
-			conf->flags.editor = true;
+			conf->open_editor = true;
 			conf->editor = getenv("EDITOR");
 			break;
 		default:
@@ -115,7 +159,7 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 	}
 
 	if (optind >= argc) {
-		fputs("error: missing required positional argument\n", stderr);
+		fputs("error: missing project name\n", stderr);
 		return 1;
 	}
 	conf->project = str_dup(argv[optind]);
@@ -162,20 +206,22 @@ int main(int argc, char **argv)
 	int status;
 	manifest_t manifest = {
 		.project = "Project",
-		.name = "author",
-		.editor = "nano",
+		.author = "author",
+		.editor = "vim",
+
 		.licence = UNL,
-		.style = POSIX,
 
-		.libraries.ncurses = false,
-		.libraries.raylib = false,
-		.libraries.stb = false,
-		.libraries.uthash = false,
-		.libraries.linenoise = false,
+		.git = true,
+		.autotools = false,
+		.cmake = false,
+		.make = true,
+		.bare = false,
+		.flat = false,
+		.open_editor = false,
 
-		.flags.git = true,
-		.flags.clang = false,
-		.flags.editor = false,
+		.extra.nob = false,
+		.extra.clang_format = false,
+		.extra.Cleanup = false,
 	};
 
 	status = parse_standard_options(usage, argc, argv);
@@ -188,7 +234,7 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	get_name(&manifest.name);
+	get_name(&manifest.author);
 	status = create_project(manifest);
 
 	if (status) {
@@ -196,9 +242,17 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	char buffer[PATH_MAX];
-	getcwd(buffer, PATH_MAX);
-	fprintf(stderr, "Created %s at\n %s\n", manifest.project, buffer);
+	char *cwd;
+
+	cwd = getcwd(NULL, 0);
+	if (cwd == NULL) {
+		perror("getcwd");
+		exit(EXIT_FAILURE);
+	}
+
+	fprintf(stderr, "Created %s at\n %s\n", manifest.project, cwd);
+
+	free(cwd);
 
 	return EXIT_SUCCESS;
 }
