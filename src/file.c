@@ -2,7 +2,7 @@
  * 
  * This file is part of yait
  *
- * This project and file is licenced under the BSD-3-Clause licence.
+ * This project and file is licensed under the BSD-3-Clause licence.
  * <https://opensource.org/license/bsd-3-clause>
  */
 
@@ -49,6 +49,7 @@ int mkdir_p(const char *path)
 
 int cfprintf(const char *path, const char *format, ...)
 {
+	int lines = atoi(getenv("LINES"));
 	char *dirpath;
 	const char *slash = strrchr(path, '/');
 	if (slash) {

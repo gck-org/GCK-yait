@@ -15,7 +15,6 @@ typedef struct {
 	licence_t licence;
 
 	bool lib;
-	bool exe;
 
 	bool git;
 	bool autotools;
@@ -26,9 +25,9 @@ typedef struct {
 	bool open_editor;
 
 	struct {
-		bool nob;
-		bool clang_format;
-		bool Cleanup;
+		bool build_nob;
+		bool tools_format;
+		bool tools_Cleanup;
 	} extra;
 
 	char *project;

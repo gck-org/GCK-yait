@@ -2,7 +2,7 @@
  *
  * This file is part of yait
  *
- * This project and file is licenced under the BSD-3-Clause licence.
+ * This project and file is licensed under the BSD-3-Clause licence.
  * <https://opensource.org/licence/bsd-3-clause>
  */
 
@@ -29,6 +29,43 @@ int create_project(manifest_t manifest)
 	if (status)
 		return 1;
 
+	if (manifest.bare) {
+		cfprintf("main.c", "");
+		cfprintf(
+			"Makefile",
+			".POSIX:\nCC ::= gcc\nCFLAGS ::= -std=c23 -Wall -Wextra -Wpedantic\n\nall: %s\n\nclean\n\t$(RM) %s",
+			manifest.project, manifest.project);
+		cfprintf("README", "%s", manifest.project);
+		goto bare_skip;
+	}
+
+	main_source = manifest.flat ? "main.c" : "src/main.c";
+	cfprintf(main_source, "#include <stdio.h>\n"
+			      "\n"
+			      "int main()\n"
+			      "{\n"
+			      "\tputs(\"Hello, World!\");\n"
+			      "\treturn 0;\n"
+			      "}\n");
+	char *upr_name = tostrupr(manifest.project);
+	if (manifest.make) {
+		cfprintf(
+			"Makefile",
+			"PREFIX = /usr/bin\n"
+			"\n"
+			"%s_SRCS := $(wildcard src/*.c)\n"
+			"%s_OBJS := $(patsubst src/%.c,build/obj/%.o,$(%s_SRCS))"
+			"\n"
+			"%s := bin/%s"
+			"\n"
+			"-include config.mak\n"
+			"\n"
+			"ifeq ($(wildcard config.mak),)\n",
+			upr_name, upr_name, upr_name, upr_name,
+			manifest.project);
+	}
+
+bare_skip:
 	flast = true;
 	switch (manifest.licence) {
 	case MIT:

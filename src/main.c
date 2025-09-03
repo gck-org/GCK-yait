@@ -37,8 +37,10 @@ static void usage(int status)
 	puts("Creates a C project with opinionated defaults");
 	puts("When only given the first argument it will detect your name\n");
 	puts("Mandatory arguments to long options are mandatory for short options too");
+	print_option("--git", "Initialize git repository (default)");
 	print_option("--no-git", "Do not initialize git repository");
-	print_option("-L <licence>",
+	print_option("--lib", "Make this a library");
+	print_option("-l <licence>",
 		     "Set licence. This list can be found by passing 'list'");
 	print_option("-E", "Open editor after project creation");
 	puts("    --help     display this help text and exit\n");
@@ -66,11 +68,11 @@ static inline int parse_extras_token(manifest_t *conf, char *s)
 	}
 
 	if (!strcmp(s, "nob"))
-		return conf->extra.nob = true, 0;
+		return conf->extra.build_nob = true, 0;
 	if (!strcmp(s, "Cleanup"))
-		return conf->extra.Cleanup = true, 0;
+		return conf->extra.tools_Cleanup = true, 0;
 	if (!strcmp(s, "format"))
-		return conf->extra.clang_format = true, 0;
+		return conf->extra.tools_format = true, 0;
 	fprintf(stderr, "Option '%s' is not valid. See %s --extras=list\n", s,
 		PROGRAM);
 	return 1;
@@ -85,7 +87,6 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 		{ "git", no_argument, 0, 'g' },
 		{ "no-git", no_argument, 0, 'G' },
 		{ "lib", no_argument, 0, 'L' },
-		{ "both", no_argument, 0, 'b' },
 		{ "autotools", no_argument, 0, 'a' },
 		{ "cmake", no_argument, 0, 'c' },
 		{ "make", no_argument, 0, 'm' },
@@ -120,18 +121,20 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 		case 'L':
 			conf->lib = true;
 			break;
-		case 'b':
-			conf->lib = true;
-			conf->exe = true;
-			break;
 		case 'a':
 			conf->autotools = true;
+			conf->cmake = false;
+			conf->make = false;
 			break;
 		case 'c':
 			conf->cmake = true;
+			conf->autotools = false;
+			conf->make = false;
 			break;
 		case 'm':
 			conf->make = true;
+			conf->autotools = false;
+			conf->cmake = false;
 			break;
 		case 'B':
 			conf->bare = true;
@@ -183,7 +186,6 @@ int get_name(char **output)
 		size_t chunk_len = strlen(buffer);
 		char *new_output = realloc(*output, output_len + chunk_len + 1);
 		if (!new_output) {
-			free(*output);
 			pclose(pipe);
 			exit(EXIT_FAILURE);
 		}
@@ -218,10 +220,11 @@ int main(int argc, char **argv)
 		.bare = false,
 		.flat = false,
 		.open_editor = false,
+		.lib = false,
 
-		.extra.nob = false,
-		.extra.clang_format = false,
-		.extra.Cleanup = false,
+		.extra.build_nob = false,
+		.extra.tools_format = false,
+		.extra.tools_Cleanup = false,
 	};
 
 	status = parse_standard_options(usage, argc, argv);
