@@ -8,4 +8,21 @@
 default
 #######
 
-This documentation goes over the whats and whys of the yait default layout.
+When you create a project with yait using the following command, it use a
+standardized default directory structure:
+
+	$ yait Project
+
+This command produces the following structure, it is a modification of the GNU
+layout, specifically GNU Hello.
+
+/project
+	doc/
+	man/
+	src/
+	tools/
+	config.h
+	configure*
+	COPYING
+	Makefile
+	README
