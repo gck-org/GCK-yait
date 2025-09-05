@@ -1,10 +1,10 @@
 #!/bin/sh
 
 awk '
-BEGIN {
-    printf "\""
-}
 {
+    # Start a new string literal
+    printf "\""
+
     for (i = 1; i <= length($0); i++) {
         c = substr($0, i, 1)
         if (c == "\\") {
@@ -31,10 +31,9 @@ BEGIN {
             printf "%s", c
         }
     }
-    printf "\\n"
-}
-END {
-    printf "\"\n"
+
+    # Always end each literal with \n inside, close quote, then newline
+    printf "\\n\"\n"
 }
 function ord(str,   l, r) {
     l = sprintf("%c", 255)
