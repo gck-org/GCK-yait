@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -29,7 +30,7 @@ int create_project(manifest_t manifest)
 	if (status)
 		return 1;
 
-	if (manifest.bare) {
+	if (manifest.build == BARE) {
 		cfprintf("main.c", "");
 		cfprintf(
 			"Makefile",
@@ -48,7 +49,8 @@ int create_project(manifest_t manifest)
 			      "\treturn 0;\n"
 			      "}\n");
 	char *upr_name = tostrupr(manifest.project);
-	if (manifest.make) {
+	switch (manifest.build) {
+	case MAKE:
 		cfprintf(
 			"Makefile",
 			"PREFIX = /usr/bin\n"
@@ -63,6 +65,52 @@ int create_project(manifest_t manifest)
 			"ifeq ($(wildcard config.mak),)\n",
 			upr_name, upr_name, upr_name, upr_name,
 			manifest.project);
+		break;
+	case CMAKE:
+		cfprintf("CMakeLists.txt",
+			 "cmake_minimum_required(VERSION 3.16)\n"
+			 "\n"
+			 "project(%s\n"
+			 "  VERSION 0.1.0\n"
+			 "  LANGUAGES C)\n"
+			 "\n"
+			 "set(CMAKE_C_STANDARD 23)\n"
+			 "set(CMAKE_C_STANDARD_REQUIRED ON)\n"
+			 "set(CMAKE_C_EXTENSIONS OFF)\n"
+			 "\n"
+			 "include(GNUInstallDirs)\n"
+			 "\n"
+			 "add_executable(%s\n"
+			 "  src/main.c\n"
+			 ")\n"
+			 "\n"
+			 "install(TARGETS %s\n"
+			 "  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}\n"
+			 ")\n",
+			 manifest.project, manifest.project, manifest.project);
+		break;
+	case AUTOTOOLS:
+		cfprintf("configure.ac",
+			 "AC_PREREQ([2.69])\n"
+			 "AC_INIT([%s], [0.1], [bug-report@exmaple.com])\n"
+			 "AM_INIT_AUTOMAKE([foreign -Wall])\n"
+			 "AC_CONFIG_SRCDIR([src/main.c])\n"
+			 "AC_CONFIG_HEADERS([config.h])"
+			 "AC_PROG_CC\n"
+			 "AC_CONFIG_FILES([Makefile src/Makefile])\n"
+			 "AC_OUTPUT\n",
+			 manifest.project);
+		cfprintf("Makefile.am", "SUBDIRS = src\n");
+		cfprintf("src/Makefile.am",
+			 "bin_PROGRAMS = %s\n"
+			 "%s_SOURCES = main.c\n",
+			 manifest.project, manifest.project);
+		cfprintf("bootstrap",
+			 "#!/bin/sh\n"
+			 "set -e\n"
+			 "\n"
+			 "autoreconf --install --verbose --force\n");
+		break;
 	}
 
 bare_skip:
@@ -87,6 +135,21 @@ bare_skip:
 	if (!manifest.git) {
 		fprintf(stderr, "Initializing git reposity");
 		system("git init --quiet");
+		fprintf(stderr, ", done.\n");
+	}
+
+	if (manifest.build == AUTOTOOLS) {
+		fprintf(stderr, "Changing files permissions 1");
+		struct stat st;
+		if (stat("bootstrap", &st) == -1) {
+			perror("stat failed");
+			return 1;
+		}
+		mode_t new_mode = st.st_mode | S_IXUSR;
+		if (chmod("bootstrap", new_mode) == -1) {
+			perror("chmod failed");
+			return 1;
+		}
 		fprintf(stderr, ", done.\n");
 	}
 

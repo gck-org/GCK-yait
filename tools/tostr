@@ -1,0 +1,44 @@
+#!/bin/sh
+
+awk '
+BEGIN {
+    printf "\""
+}
+{
+    for (i = 1; i <= length($0); i++) {
+        c = substr($0, i, 1)
+        if (c == "\\") {
+            printf "\\\\"
+        } else if (c == "\"") {
+            printf "\\\""
+        } else if (c == "\t") {
+            printf "\\t"
+        } else if (c == "\r") {
+            printf "\\r"
+        } else if (c == "\n") {
+            printf "\\n"
+        } else if (c == "\f") {
+            printf "\\f"
+        } else if (c == "\b") {
+            printf "\\b"
+        } else if (c == "\a") {
+            printf "\\a"
+        } else if (c == "\v") {
+            printf "\\v"
+        } else if (c ~ /[[:cntrl:]]/) {
+            printf "\\x%02x", ord(c)
+        } else {
+            printf "%s", c
+        }
+    }
+    printf "\\n"
+}
+END {
+    printf "\"\n"
+}
+function ord(str,   l, r) {
+    l = sprintf("%c", 255)
+    r = sprintf("%c", 0)
+    return index(l str r, str) - 1
+}
+'

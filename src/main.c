@@ -122,22 +122,16 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 			conf->lib = true;
 			break;
 		case 'a':
-			conf->autotools = true;
-			conf->cmake = false;
-			conf->make = false;
+			conf->build = AUTOTOOLS;
 			break;
 		case 'c':
-			conf->cmake = true;
-			conf->autotools = false;
-			conf->make = false;
+			conf->build = CMAKE;
 			break;
 		case 'm':
-			conf->make = true;
-			conf->autotools = false;
-			conf->cmake = false;
+			conf->build = MAKE;
 			break;
 		case 'B':
-			conf->bare = true;
+			conf->build = BARE;
 			break;
 		case 'f':
 			conf->flat = true;
@@ -214,10 +208,7 @@ int main(int argc, char **argv)
 		.licence = UNL,
 
 		.git = true,
-		.autotools = false,
-		.cmake = false,
-		.make = true,
-		.bare = false,
+		.build = MAKE,
 		.flat = false,
 		.open_editor = false,
 		.lib = false,

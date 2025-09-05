@@ -49,7 +49,7 @@ int mkdir_p(const char *path)
 
 int cfprintf(const char *path, const char *format, ...)
 {
-	int lines = atoi(getenv("LINES"));
+	// int lines = atoi(getenv("LINES"));
 	char *dirpath;
 	const char *slash = strrchr(path, '/');
 	if (slash) {
