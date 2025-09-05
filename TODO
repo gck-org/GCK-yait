@@ -8,5 +8,6 @@ Todo:
 	* Implement the extra options
 	* Document the extra options
 	* Rewrite README [README]
+	* Update tostr to have each line be in its own literal [tools/tostr]
 
 end of file TODO
