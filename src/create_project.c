@@ -30,15 +30,10 @@ int create_project(manifest_t manifest)
 	if (status)
 		return 1;
 
-	if (manifest.build == BARE) {
-		cfprintf("main.c", "");
-		cfprintf(
-			"Makefile",
-			".POSIX:\nCC ::= gcc\nCFLAGS ::= -std=c23 -Wall -Wextra -Wpedantic\n\nall: %s\n\nclean\n\t$(RM) %s",
-			manifest.project, manifest.project);
-		cfprintf("README", "%s", manifest.project);
-		goto bare_skip;
-	}
+	cfprintf(
+		"README",
+		"%s ( short description )\n\nThis cool project actions adverbly.\n",
+		manifest.project);
 
 	main_source = manifest.flat ? "main.c" : "src/main.c";
 	cfprintf(main_source, "#include <stdio.h>\n"
@@ -111,9 +106,17 @@ int create_project(manifest_t manifest)
 			 "\n"
 			 "autoreconf --install --verbose --force\n");
 		break;
+	case BARE:
+		cfprintf("main.c", "");
+		cfprintf(
+			"Makefile",
+			".POSIX:\nCC ::= gcc\nCFLAGS ::= -std=c23 -Wall -Wextra -Wpedantic\n\nall: %s\n\nclean\n\t$(RM) %s",
+			manifest.project, manifest.project);
+		break;
+	default:
+		abort();
 	}
 
-bare_skip:
 	flast = true;
 	switch (manifest.licence) {
 	case MIT:
