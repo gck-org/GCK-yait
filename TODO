@@ -3,5 +3,9 @@ VX yait - TODO
 Todo:
 
 	* Polish for 1.0
+	* Documen build systems
+	* Update man page [man/yait.1]
+	* Implement the extra options
+	* Document the extra options
 
 end of file TODO
