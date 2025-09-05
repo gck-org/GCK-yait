@@ -31,7 +31,7 @@ licence_t TOlicence(char *src)
 	return UNL;
 }
 
-char *str_dup(char *s)
+char *str_dup(const char *s)
 {
 	char *new = malloc(strlen(s) + 1);
 	if (!new)
@@ -40,7 +40,7 @@ char *str_dup(char *s)
 	return new;
 }
 
-char *tostrupr(char *s)
+char *tostrupr(const char *s)
 {
 	char *new = malloc(strlen(s) + 1);
 	if (!new)

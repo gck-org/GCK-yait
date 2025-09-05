@@ -16,8 +16,8 @@ licence_t TOlicence(char *s);
 int getopt_long(int argc, char *const argv[], const char *optstring,
 		const struct option *longopts, int *longindex);
 
-char *str_dup(char *s);
-char *tostrupr(char *s);
+char *str_dup(const char *s);
+char *tostrupr(const char *s);
 
 extern int fno;
 extern bool flast;

@@ -60,7 +60,7 @@ void print_lines(const char *first, ...)
 	va_end(args);
 }
 
-static inline int parse_extras_token(manifest_t *conf, char *s)
+static inline int parse_extras_token(manifest_t *conf, const char *s)
 {
 	if (!strcmp(s, "list")) {
 		print_lines("nob", "Cleanup", "format", NULL);
