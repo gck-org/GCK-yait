@@ -9,5 +9,6 @@ Todo:
 	* Document the extra options
 	* Rewrite README [README]
 	* Update tostr to have each line be in its own literal [tools/tostr]
+	* Get name from either the git config file, or system user name--warning on git init.
 
 end of file TODO
