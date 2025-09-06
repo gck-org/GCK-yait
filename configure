@@ -12,6 +12,7 @@ VAR=VALUE.
   LDFLAGS         C linker flags
 
   --prefix=<path> Set the install path
+  --debug Flags for debug build
 
 EOF
 exit 0
@@ -22,7 +23,7 @@ cmdexists () { type "$1" >/dev/null 2>&1 ; }
 trycc () { test -z "$CC" && cmdexists "$1" && CC=$1 ; }
 
 prefix=/usr/bin/
-CFLAGS="-Wall -Wextra -O2 --std=c23 -Wpedantic -Wformat=2"
+CFLAGS="-std=c23 -O2 -pipe -Wall -Wextra -Wpedantic -Wformat=2 -Wshadow -Wcast-qual -Wcast-align=strict -Wconversion -Wsign-conversion -Wnull-dereference -Wstrict-overflow=5 -Wstrict-aliasing=2 -Wswitch-enum -Wundef -fstack-protector-strong -D_FORTIFY_SOURCE=3 -fPIE -pie -fno-plt -Wl,-z,relro,-z,now" # release flags
 LDFLAGS=
 CC=
 
@@ -32,10 +33,12 @@ trycc cc
 trycc clang
 printf "%s\n" "$CC"
 
+DEBUG=false
 for arg ; do
 case "$arg" in
 --help|h) usage ;;
 --prefix=*) prefix=${arg#*=} ;;
+--debug=*) DEBUG=true ;;
 CFLAGS=*) CFLAGS=${arg#*=} ;;
 LDFLAGS=*) LDFLAGS=${arg#*=} ;;
 CC=*) CC=${arg#*=} ;;
@@ -52,6 +55,10 @@ printf "yes\n"
 else
 printf "no; %s\n" "$output"
 exit 1
+fi
+
+if [ -z "$DEBUG" ]; then
+CFLAGS="-std=c23 -O0 -g3 -Wall -Wextra -Wpedantic -Werror -Wshadow -Wdouble-promotion -Wformat=2 -Wnull-dereference -Wconversion -Wsign-conversion -Wcast-qual -Wcast-align=strict -Wpointer-arith -Wstrict-overflow=5 -Wstrict-aliasing=2 -Wundef -Wunreachable-code -Wswitch-enum -fanalyzer -fsanitize=undefined,address -fstack-protector-strong -D_FORTIFY_SOURCE=3"
 fi
 
 printf "creating config.mak... "
