@@ -67,7 +67,7 @@ int getopt_long(int argc, char *const argv[], const char *optstring,
 		}
 		if (argv[optind][1] == '-') {
 			const char *arg = argv[optind] + 2;
-			const char *eq = strchr(arg, '=');
+			char *eq = strchr(arg, '=');
 			size_t len = eq ? (size_t)(eq - arg) : strlen(arg);
 			for (int i = 0; longopts[i].name; i++) {
 				if (strncmp(arg, longopts[i].name, len) == 0 &&

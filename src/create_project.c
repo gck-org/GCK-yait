@@ -113,6 +113,7 @@ int create_project(manifest_t manifest)
 			".POSIX:\nCC ::= gcc\nCFLAGS ::= -std=c23 -Wall -Wextra -Wpedantic\n\nall: %s\n\nclean\n\t$(RM) %s",
 			manifest.project, manifest.project);
 		break;
+	case BCOUNT:
 	default:
 		abort();
 	}
@@ -131,14 +132,18 @@ int create_project(manifest_t manifest)
 	case UNL:
 		cfprintf("COPYING", "%s", UNLICENSE_txt);
 		break;
+	case LCOUNT:
 	default:
 		abort();
 	}
 
 	if (!manifest.git) {
 		fprintf(stderr, "Initializing git reposity");
-		system("git init --quiet");
-		fprintf(stderr, ", done.\n");
+		status = system("git init --quiet");
+		if (status)
+			fprintf(stderr, ", failed.\n");
+		else
+			fprintf(stderr, ", done.\n");
 	}
 
 	if (manifest.build == AUTOTOOLS) {
@@ -157,8 +162,10 @@ int create_project(manifest_t manifest)
 	}
 
 	if (manifest.open_editor) {
-		snprintf(buffer, BUFSIZ, "nvim %s", main_source);
-		system(buffer);
+		snprintf(buffer, BUFSIZ, "$EDITOR %s", main_source);
+		status = system(buffer);
+		if (status)
+			fprintf(stderr, "Could not open editor");
 	}
 
 	return 0;
