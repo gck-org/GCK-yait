@@ -6,10 +6,6 @@
  * <https://opensource.org/license/bsd-3-clause>
  */
 
-#ifndef COMMIT
-#define COMMIT 0
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
