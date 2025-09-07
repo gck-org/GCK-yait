@@ -8,6 +8,5 @@ Todo:
 	* Implement the extra options
 	* Document the extra options
 	* Rewrite README [README]
-	* Get name from either the git config file, or system user name--warning on git init.
 
 end of file TODO
