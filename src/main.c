@@ -29,7 +29,7 @@
 static void usage(int status)
 {
 	if (status != 0) {
-		puts("Try 'yait --help' for more information.\n");
+		puts("Try 'yait --help' for more information.");
 		return;
 	}
 
@@ -42,9 +42,15 @@ static void usage(int status)
 	print_option("--lib", "Make this a library");
 	print_option("-l <licence>",
 		     "Set licence. This list can be found by passing 'list'");
-	print_option("-E", "Open editor after project creation");
-	puts("    --help     display this help text and exit\n");
-	puts("    --version  output version information and exit\n");
+	print_option("-E", "Open $EDITOR after project creation");
+	print_option("--autotools", "Use the autotools build system");
+	print_option("--cmake", "Use the cmake build system");
+	print_option("--make", "Use the GNU make build system (default)");
+	print_option("--bare", "Minimal C project structure");
+	print_option("--flat", "All files in project root.");
+	print_option("--extras=<arg1>,<arg2>", "Extra build options, Pass list to list out options.");
+	puts("    --help     display this help text and exit");
+	puts("    --version  output version information and exit");
 }
 
 void print_lines(const char *first, ...)
@@ -156,8 +162,7 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 	}
 
 	if (optind >= argc) {
-		fputs("error: missing project name\n", stderr);
-		return 1;
+		return HELP_REQUESTED;
 	}
 	conf->project = str_dup(argv[optind]);
 
@@ -166,34 +171,33 @@ static int parse_arguments(manifest_t *conf, int argc, char **argv)
 
 int get_name(char **output)
 {
-	FILE *pipe;
-	char buffer[128];
-	size_t output_len = 0;
+	FILE *fp;
+	char buf[256];
+	char *res = NULL;
+	struct passwd *pw;
 
-	*output = NULL;
-
-	pipe = popen("git config user.name", "r");
-	if (!pipe)
-		exit(EXIT_FAILURE);
-
-	while (fgets(buffer, sizeof(buffer), pipe) != NULL) {
-		size_t chunk_len = strlen(buffer);
-		char *new_output = realloc(*output, output_len + chunk_len + 1);
-		if (!new_output) {
-			pclose(pipe);
-			exit(EXIT_FAILURE);
+	fp = popen("git config --get user.name", "r");
+	if (fp) {
+		if (fgets(buf, sizeof buf, fp)) {
+			size_t len = strlen(buf);
+			if (len > 0 && buf[len - 1] == '\n')
+				buf[len - 1] = '\0';
+			res = strdup(buf);
 		}
-		*output = new_output;
-		memcpy((*output) + output_len, buffer, chunk_len);
-		output_len += chunk_len;
-		(*output)[output_len] = '\0';
+		pclose(fp);
 	}
 
-	pclose(pipe);
+	if (!res) {
+		pw = getpwuid(getuid());
+		if (!pw || !pw->pw_name)
+			return -1;
+		res = strdup(pw->pw_name);
+	}
 
-	if (output_len > 0 && (*output)[output_len - 1] == '\n')
-		(*output)[output_len - 1] = '\0';
+	if (!res)
+		return -1;
 
+	*output = res;
 	return 0;
 }
 
@@ -224,6 +228,10 @@ int main(int argc, char **argv)
 		       EXIT_FAILURE;
 
 	status = parse_arguments(&manifest, argc, argv);
+	if (status == HELP_REQUESTED) {
+		usage(0);
+	}
+
 	if (status) {
 		return EXIT_FAILURE;
 	}
