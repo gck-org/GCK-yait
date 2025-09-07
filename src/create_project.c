@@ -35,14 +35,16 @@ int create_project(manifest_t manifest)
 		"%s ( short description )\n\nThis cool project actions adverbly.\n",
 		manifest.project);
 
-	main_source = manifest.flat ? "main.c" : "src/main.c";
-	cfprintf(main_source, "#include <stdio.h>\n"
-			      "\n"
-			      "int main()\n"
-			      "{\n"
-			      "\tputs(\"Hello, World!\");\n"
-			      "\treturn 0;\n"
-			      "}\n");
+	if (manifest.build != BARE) {
+		main_source = manifest.flat ? "main.c" : "src/main.c";
+		cfprintf(main_source, "#include <stdio.h>\n"
+				      "\n"
+				      "int main()\n"
+				      "{\n"
+				      "\tputs(\"Hello, World!\");\n"
+				      "\treturn 0;\n"
+				      "}\n");
+	}
 	char *upr_name = tostrupr(manifest.project);
 	switch (manifest.build) {
 	case MAKE:
@@ -107,11 +109,19 @@ int create_project(manifest_t manifest)
 			 "autoreconf --install --verbose --force\n");
 		break;
 	case BARE:
-		cfprintf("main.c", "");
-		cfprintf(
-			"Makefile",
-			".POSIX:\nCC ::= gcc\nCFLAGS ::= -std=c23 -Wall -Wextra -Wpedantic\n\nall: %s\n\nclean\n\t$(RM) %s",
-			manifest.project, manifest.project);
+		snprintf(buffer, BUFSIZ, "%s.c", manifest.project);
+		cfprintf(buffer, "");
+		main_source = str_dup(buffer);
+		cfprintf("Makefile",
+			 ".POSIX:\n"
+			 "CC ::= gcc\n"
+			 "CFLAGS ::= -std=c23 -Wall -Wextra -Wpedantic\n"
+			 "\n"
+			 "all: %s\n"
+			 "\n"
+			 "clean:\n"
+			 "\t$(RM) %s",
+			 manifest.project, manifest.project);
 		break;
 	case BCOUNT:
 	default:
