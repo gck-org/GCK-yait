@@ -20,7 +20,7 @@ build:
 	mkdir -p build/obj
 
 build/obj/%.o: src/%.c config.mak
-	$(CC) $(CFLAGS) -Iinclude -c $< -o $@
+	$(CC) $(CFLAGS) -DCOMMIT=$(shell git rev-list --count --all) -Iinclude -c $< -o $@
 
 $(YAIT): $(YAIT_OBJS) 
 	$(CC) $(CFLAGS) -Iinclude -DCOMMIT=$(shell git rev-list --count --all) $^ -o $@
@@ -37,7 +37,7 @@ clean:
 	$(RM) -r bin
 	$(RM) -r build
 
-dist-clean: clean
+distclean: clean
 	$(RM) config.mak
 
 .PHONY: all clean dist-clean install uninstall build
