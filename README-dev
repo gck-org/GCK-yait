@@ -1,0 +1,39 @@
+This README.dev file describes the development environment.
+
+  Copyright (C) 2025 VX.
+
+  Copying and distribution of this file, with or without modification,
+  are permitted in any medium without royalty provided the copyright
+  notice and this notice are preserved.
+
+Build system
+------------
+
+This distribution uses the a GNU autotools-like build system. This is
+made up of a configure script, and a Makefile. The configure script
+detects a GNU compliant C compiler on the system and sets any program
+flags: debug, release, custom. The Makefile builds the binary based on
+the output [config.mak] of the configure script.
+
+
+Building
+--------
+
+To build this distribution you first must run the configure script. This
+outputs a config.mak file that will be used in the Make step. Then run
+make; this builds the objects into build/ and the binary into bin/.
+
+
+Configuration
+-------------
+
+The configuration script is used to generate a build intermediate step
+called the config.mak. This file is used by the Makefile to figure out
+GNU compilant C compiler to use, what CFLAGS and LDFLAGS to use, and
+where to install the binary if requested. By default these values are
+gcc, the release flag set, and /usr/bin/. The configuration script
+supports the following flags that control CFLAGS: --release, --debug
+and CFLAGS="". Release is the default, and is set for the fastest
+runtime and size. Debug is for in-development programming and is the
+strictest when it comes to warnings and other compiler output.
+CFLAGS="" is for custom flag definition.
