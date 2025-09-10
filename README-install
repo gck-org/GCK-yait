@@ -8,3 +8,22 @@ This README.install file describes the installation process
 
 Prerequisites
 -------------
+	
+	* POSIX system
+
+	* C23 GNU flag compiler
+
+	* GNU make
+	
+	* Git
+
+
+See INSTALL for general install information
+
+
+C23
+---
+
+This distribution uses strict POSIX C23 compliance. This is done to ensure
+portability, C23's benefits, predictable behavior, no compiler extensions,
+maintainability, future-proofing, and explicit contract.
