@@ -31,6 +31,7 @@ printf "checking for C compiler... "
 trycc gcc
 trycc cc
 trycc clang
+trycc icx
 printf "%s\n" "$CC"
 
 DEBUG=false
@@ -47,7 +48,7 @@ esac
 done
 
 
-printf "checking weather C compiler works... "
+printf "checking whether C compiler works... "
 status="fail"
 tmpc="$(mktemp -d)/test.c"
 echo "typedef int x;" > "$tmpc"
