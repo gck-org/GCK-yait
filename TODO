@@ -9,7 +9,7 @@ Todo:
 	* Document the extra options
 	* Rewrite README [README]
 	* Fix licences code
-	* Finish README-dev
 	* Finish README-install
+	* Update usage text to work with help2man
 
 end of file TODO
