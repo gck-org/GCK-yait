@@ -11,5 +11,6 @@ Todo:
 	* Finish README-install
 	* Update usage text to work with help2man
 	* Add build target for man, but ship with it.
+	* Build target for doc/ (texi)
 
 end of file TODO
