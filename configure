@@ -28,9 +28,9 @@ LDFLAGS=
 CC=
 
 printf "checking for C compiler... "
+trycc clang
 trycc gcc
 trycc cc
-trycc clang
 trycc icx
 printf "%s\n" "$CC"
 
@@ -62,6 +62,11 @@ fi
 if [ -z "$DEBUG" ]; then
 CFLAGS="-std=c23 -O0 -g3 -Wall -Wextra -Wpedantic -Werror -Wshadow -Wdouble-promotion -Wformat=2 -Wnull-dereference -Wconversion -Wsign-conversion -Wcast-qual -Wcast-align=strict -Wpointer-arith -Wstrict-overflow=5 -Wstrict-aliasing=2 -Wundef -Wunreachable-code -Wswitch-enum -fanalyzer -fsanitize=undefined,address -fstack-protector-strong -D_FORTIFY_SOURCE=3"
 fi
+
+case "$OSTYPE"
+case "cygwin"|"msys") echo "enabling windows specific flags" ; CFLAGS="-v ${CFLAGS}";;
+*) ;;
+easc
 
 printf "creating config.mak... "
 printf "PREFIX=%s\n" "$prefix" > config.mak
