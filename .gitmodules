@@ -1,9 +1,0 @@
-[submodule "foo/ncurses"]
-	path = foo/ncurses
-	url = https://github.com/mirror/ncurses
-[submodule "dd/ncurses"]
-	path = dd/ncurses
-	url = https://github.com/mirror/ncurses
-[submodule "dd/uthash"]
-	path = dd/uthash
-	url = https://github.com/troydhanson/uthash
