@@ -5,6 +5,9 @@ YAIT_OBJS := $(patsubst src/%.c,build/obj/%.o,$(YAIT_SRCS))
 
 YAIT := bin/yait
 
+ALLOWED_DIRS = doc include man src tools
+DISTDIRS := $(sort $(shell find . -maxdepth 1 -type d -not -name '.' -printf '%f\n'))
+
 -include config.mak
 
 ifeq ($(wildcard config.mak),)
@@ -40,4 +43,29 @@ clean:
 distclean: clean
 	$(RM) config.mak
 
-.PHONY: all clean dist-clean install uninstall build
+check: $(YAIT)
+	./src/tests/run_unit_tests.sh
+
+syntax-check:
+	@set -e; \
+	fail=0; \
+	for f in $(YAIT_SRCS); do \
+		echo "$$f"; \
+		if ! $(CC) $(CFLAGS) -fsyntax-only $$f; then \
+			fail=1; \
+		fi
+	done; \
+	if test $$fail -ne 0; then \
+		exit 1;
+	fi
+
+distcheck: distclean
+	@set -e; \
+	for d in $(DESTDIRS); do \
+		case " $(ALLOWED_DIRS) " in \
+			*" $$d "*) ;; \
+			*) echo "Error unexpected directory '$$d'"; exit 1 ;; \
+		esac; \
+	done
+
+.PHONY: all clean dist-clean install uninstall build release check syntax-check distcheck
