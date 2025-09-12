@@ -1,9 +1,29 @@
-yait ( yet another init tool )
+This is the README file for the VX yait distribution.
+yait generates a optioned C project.
 
-yait is designed to allow you to create more side projects; that you will
-definitely finish. This tool will create a new directory containing all
-project files needed for your new and shinny C project--all for the
-price of a hat. This includes a build system and some basic source files
-to give you a kick start on your new project--with optional libraries!
+  Copyright (C) 2025 VX.
 
-For more detailed documentation see doc/
+  Copying and distribution of this file, with or without modification,
+  are permitted in any medium without royalty provided the copyright
+  notice and this notice are preserved.
+
+See the files ./INSTALL* for building and installation instructions.
+
+Bug reports:
+ Please include enough information for the maintainers to reproduce the
+ problem. Generally speaking, that means:
+- the contents of any input files necessary to reproduce the bug
+  and command line invocations of the program(s) involved (crucial!).
+- a description of the problem and any samples of the erroneous output.
+- the version number of the program(s) involved (use --version).
+- hardware, operating system, and compiler versions (uname -a).
+- unusual options you gave to configure, if any (see config.mak).
+- anything else that you think would be helpful.
+
+See README-dev for information on the development environment -- any
+interested parties are welcome. If you're a programmer and wish to
+contribute, this should get you started. If you're not a programmer,
+your help in writing test cases, checking documentation against the
+implementation, etc., would still be very much appreciated.
+
+VX yait is free software. See the file COPYING for copying conditions.
