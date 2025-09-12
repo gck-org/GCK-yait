@@ -48,7 +48,8 @@ static void usage(int status)
 	print_option("--make", "Use the GNU make build system (default)");
 	print_option("--bare", "Minimal C project structure");
 	print_option("--flat", "All files in project root.");
-	print_option("--extras=<arg1>,<arg2>", "Extra build options, Pass list to list out options.");
+	print_option("--extras=<arg1>,<arg2>",
+		     "Extra build options, Pass list to list out options.");
 	puts("    --help     display this help text and exit");
 	puts("    --version  output version information and exit");
 }

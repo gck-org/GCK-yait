@@ -1,21 +1,20 @@
 #!/bin/sh
-
 # Usage: ./Cleanup
 
 fatal() {
-	echo "$@"
-	echo fail.
-	exit 1
+    echo "fatal: $*" >&2
+    exit 1
 }
 
-if [ ! -d "./tools" ]; then
-    echo "error: must be run from parent directory"
-    exit 1
-fi
+run() {
+    "$@" || fatal "could not run: $*"
+}
 
-sh ./tools/format || fatal Could not run './tools/format'
-rm -rf .cache || fatal Could not run 'rm -rf .cache'
-rm -f compile_commands.json || fatal Could not run 'rm -f compile_commands.json'
-make distclean || fatal Could not run 'make dist-clean'
+[ -d "./tools" ] || fatal "must be run from parent directory"
 
-echo done.
+run sh ./tools/format
+run rm -rf .cache
+run rm -f compile_commands.json
+run make distclean
+
+echo "done."
