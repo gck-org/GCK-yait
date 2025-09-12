@@ -1,0 +1,21 @@
+Installation Instructions
+*************************
+
+Copyright (C) 2025 VX.
+
+   Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.  This file is offered as-is,
+without warranty of any kind.
+
+Basic Installation
+==================
+
+   Briefly, the shell command `./configure && make && make install` should
+configure, build, and install this package. The following more-detailed
+instruction are generic; see the `README` file for instructions specific to
+this package.
+
+   The `configure` shell script attempts to guess correct values for
+various system-dependent variables used during compilation. It uses
+those values within a `Makefile` in
