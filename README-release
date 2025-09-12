@@ -28,3 +28,5 @@ Once all the builds and tests have passed,
 * Run the following to create release tarballs.
 
   make release
+
+* Upload the tarball to the relavent distribtuion platform.
