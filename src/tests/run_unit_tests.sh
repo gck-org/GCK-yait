@@ -1,11 +1,18 @@
 #!/bin/sh
 
+yait="$(pwd)/bin/yait"
+
 fatal() {
     echo "fatal: $*" >&2
     exit 1
 }
 
-[ -d "./tests" ] || fatal "must be run from parent directory"
+[ -d "./yait" ] && fatal "must be run from parent directory"
 
-./bin/yait --help 2>&1 || fatal "failed on --help"
-./bin/yait --version 2>&1 || fatal "failed on --version"
+$yait --help > /dev/null/ 2>&1 || fatal "failed on --help"
+$yait --version > /dev/null 2>&1 || fatal "failed on --version"
+
+tmpd=$(mktemp -d)
+cd $tmpd
+
+$yait foo || fatal "failed to create `foo` at ${tmpd}"
