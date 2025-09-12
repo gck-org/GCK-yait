@@ -1,0 +1,30 @@
+Here are most of the steps before you make a release.
+
+* Start from a clean, up-to-date git driectory on "master":
+
+  make -k distclean || { ./configure && make distclean; }
+  git checkout master
+  git pull origin master
+
+* Ensure that the latest stable versions of make, sh, etc.
+are in your path. See the prerequisites list in README-dev
+for a compile list of tools.
+
+* Ensure that you have no uncommitted diffs. This should produce
+no output:
+
+  git diff
+
+* Ensure that you've pushed all changes that belong in the release:
+
+  git push origin master
+
+* Pre-release testing: ensure that the following command succeeds:
+
+  make check syntax-check distcheck
+
+Once all the builds and tests have passed,
+
+* Run the following to create release tarballs.
+
+  make release
