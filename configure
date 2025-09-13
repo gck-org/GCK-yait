@@ -64,13 +64,13 @@ case "$CC" in
 gcc) CFLAGS="$GDEBUGFLAGS";;
 clang) CFLAGS="$CDEBUGFLAGS";;
 *) ;;
-easc
+esac
 else
 case "$CC" in
 gcc) ;;
 clang) ;;
 *) ;;
-easc
+esac
 fi
 
 case "$OSTYPE" in
