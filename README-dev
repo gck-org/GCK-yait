@@ -30,7 +30,7 @@ The configuration script is used to generate a build intermediate step called
 the config.mak. This file is used by the Makefile to figure out C compiler to
 use, what CFLAGS and LDFLAGS to use, and where to install the binary if
 requested. By default these values are gcc, the release flag set, and
-/usr/bin/. The configuration script supports the following flags that control
+/usr/local/. The configuration script supports the following flags that control
 CFLAGS: --debug and CFLAGS="". By default, the script uses flags for a release
 build. Debug is for in-development programming and is the strictest when it
 comes to warnings and other compiler output. CFLAGS="" is for custom flag
