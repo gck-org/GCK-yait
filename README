@@ -1,7 +1,7 @@
-This is the README file for the VX yait distribution.
+This is the README file for the GCK yait distribution.
 yait generates a optioned C project.
 
-  Copyright (C) 2025 VX.
+  Copyright (C) 2025 GCK.
 
   Copying and distribution of this file, with or without modification,
   are permitted in any medium without royalty provided the copyright
@@ -26,4 +26,4 @@ contribute, this should get you started. If you're not a programmer,
 your help in writing test cases, checking documentation against the
 implementation, etc., would still be very much appreciated.
 
-VX yait is free software. See the file COPYING for copying conditions.
+GCK yait is free software. See the file COPYING for copying conditions.
