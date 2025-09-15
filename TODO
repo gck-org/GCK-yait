@@ -1,14 +1,12 @@
-VX yait - TODO
+GCK yait - TODO
 
 Todo:
 
 	* Polish for 1.0
 	* Implement the extra options
 	* Document the extra options
-	* Fix licences code
-	* Finish README-install
 	* Update usage text to work with help2man
-	* Add build target for man, but ship with it.
-	* Build target for doc/ (texi)
+	* Add build target for man.
+	* Update copyright information
 
 end of file TODO
