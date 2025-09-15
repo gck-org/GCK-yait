@@ -1,4 +1,4 @@
-/* Copyright (C) vx_clutch
+/* Copyright (C) GCK
  *
  * This file is part of yait
  *
