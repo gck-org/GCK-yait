@@ -7,6 +7,7 @@ Todo:
 	* Document the extra options
 	* Update usage text to work with help2man
 	* Add build target for man.
-	* Update copyright information
+	* Refactor to more GNU style main
+	* Look into conf file
 
 end of file TODO
