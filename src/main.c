@@ -33,25 +33,29 @@ static void usage(int status)
 		return;
 	}
 
-	puts("Usage: yait [OPTION]... <PATH>");
-	puts("Creates a C project with opinionated defaults");
-	puts("When only given the first argument it will detect your name\n");
-	puts("Mandatory arguments to long options are mandatory for short options too");
-	print_option("--git", "Initialize git repository (default)");
-	print_option("--no-git", "Do not initialize git repository");
-	print_option("--lib", "Make this a library");
-	print_option("-l <licence>",
-		     "Set licence. This list can be found by passing 'list'");
-	print_option("-E", "Open $EDITOR after project creation");
-	print_option("--autotools", "Use the autotools build system");
-	print_option("--cmake", "Use the cmake build system");
-	print_option("--make", "Use the GNU make build system (default)");
-	print_option("--bare", "Minimal C project structure");
-	print_option("--flat", "All files in project root.");
-	print_option("--extras=<arg1>,<arg2>",
-		     "Extra build options, Pass list to list out options.");
-	puts("    --help     display this help text and exit");
-	puts("    --version  output version information and exit");
+	printf("Usage: %s [OPTION]... [project-name]\n", PROGRAM);
+	fputs("\
+Generates an optionated C project.\n",
+	      stdout);
+	puts("");
+	fputs("\
+      --help                  display this help and exit\n\
+      --version               display version information and eixt\n",
+	      stdout);
+	puts("");
+	fputs("\
+      --git                   Initialize git repository (default)\n\
+      --no-git                Do not initialize git repository\n\
+      --lib                   Make this a library\n\
+      -l <licence>            Set licence. This list can be found by passing 'list'\n\
+      -E                      Open $EDITOR after project creation\n\
+      --autotools             Use the autotools build system\n\
+      --cmake                 Use the cmake build system\n\
+      --make                  Use the GNU make build system (default)\n\
+      --bare                  Minimal C project structure\n\
+      --flat                  All files in project root.\n\
+      --extras=<arg1>,<arg2>  Extra build options, Pass list to list out options.\n",
+	      stdout);
 }
 
 void print_lines(const char *first, ...)

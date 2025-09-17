@@ -5,7 +5,6 @@ Todo:
 	* Polish for 1.0
 	* Implement the extra options
 	* Document the extra options
-	* Update usage text to work with help2man
 	* Add build target for man.
 	* Refactor to more GNU style main
 	* Look into conf file
