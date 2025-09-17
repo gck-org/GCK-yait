@@ -2,11 +2,9 @@ GCK yait - TODO
 
 Todo:
 
-	* Polish for 1.0
-	* Implement the extra options
-	* Document the extra options
-	* Add build target for man.
-	* Refactor to more GNU style main
-	* Look into conf file
+  * Refactor to more GNU style main
+	* Implement the extra option
+  * Build tarball with Makefile
+  * Polish for 1.0
 
 end of file TODO
