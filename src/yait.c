@@ -19,11 +19,12 @@
 #include <string.h>
 #include <sys/wait.h>
 
-#include "../lib/proginfo.h"
-#include "../lib/err.h"
-#include "../lib/str_dup.h"
-#include "../include/yait.h"
-#include "../config.h"
+#include <proginfo.h>
+#include <err.h>
+#include <str_dup.h>
+#include <yait.h>
+#include <config.h>
+
 #include "name.h"
 
 static const struct option longopts[] = {
