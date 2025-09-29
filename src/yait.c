@@ -17,9 +17,11 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <string.h>
+#include <sys/wait.h>
 
 #include "../lib/proginfo.h"
 #include "../lib/err.h"
+#include "../lib/str_dup.h"
 #include "../include/yait.h"
 #include "../config.h"
 #include "name.h"
@@ -27,11 +29,59 @@
 static const struct option longopts[] = {
         { "author", required_argument, 0, 'a' },
         { "licence", required_argument, 0, 'l' },
+        { "quiet", no_argument, 0, 'q' },
+        { "force", no_argument, 0, 'f' },
         { 0, 0, 0, 0 } };
 
 static int exit_status;
 
 static void print_help();
+static void print_version();
+
+static char *get_name()
+{
+	int fds[2];
+	if (pipe(fds) == -1)
+		goto sysuser;
+
+	pid_t pid = fork();
+	if (pid == -1) {
+		close(fds[0]);
+		close(fds[1]);
+		goto sysuser;
+	}
+
+	if (pid == 0) {
+		dup2(fds[1], STDOUT_FILENO);
+		close(fds[0]);
+		close(fds[1]);
+		execlp("git", "git", "config", "--get", "user.name",
+		       (char *)NULL);
+		_exit(127);
+	}
+
+	close(fds[1]);
+	char buf[256];
+	ssize_t n = read(fds[0], buf, sizeof buf - 1);
+	close(fds[0]);
+	int status;
+	waitpid(pid, &status, 0);
+	if (n > 0 && WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+		buf[n] = 0;
+		buf[strcspn(buf, "\n")] = 0;
+		return str_dup(buf);
+	}
+
+sysuser: {
+	char *name = getlogin();
+	if (name)
+		return str_dup(name);
+	struct passwd *pw = getpwuid(getuid());
+	if (pw && pw->pw_name)
+		return str_dup(pw->pw_name);
+}
+	return "author";
+}
 
 int main(int argc, char **argv)
 {
@@ -40,6 +90,8 @@ int main(int argc, char **argv)
 	set_prog_name(argv[0]);
 
 	exit_status = EXIT_SUCCESS;
+	bool quiet = false;
+	bool force = false;
 
 	manifest_t manifest = {
 		.author = get_name(),
@@ -50,7 +102,7 @@ int main(int argc, char **argv)
 
 	parse_standard_options(argc, argv, print_help, print_version);
 
-	while ((optc = getopt_long(argc, argv, "a:l:E", longopts, NULL)) != -1)
+	while ((optc = getopt_long(argc, argv, "a:l:Eqf", longopts, NULL)) != -1)
 		switch (optc) {
 		case 'l':
 			if (!strcmp(optarg, "list")) {
@@ -68,6 +120,12 @@ int main(int argc, char **argv)
 			break;
 		case 'E':
 			manifest.editor = getenv("EDITOR");
+			break;
+		case 'q':
+			quiet = true;
+			break;
+		case 'f':
+			force = true;
 			break;
 		default:
 			lose = 1;
