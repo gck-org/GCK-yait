@@ -9,25 +9,10 @@
 #ifndef YAIT_H
 #define YAIT_H
 
-typedef enum { MIT, GPL, BSD, UNL, LCOUNT } licence_t;
-typedef enum { MAKE, CMAKE, AUTOTOOLS, BARE, BCOUNT } built_t;
+typedef enum { MIT, GPL, BSD } licence_t;
 
 typedef struct {
 	licence_t licence;
-	built_t build;
-
-	bool lib;
-
-	bool git;
-	bool flat;
-	bool open_editor;
-
-	struct {
-		bool build_nob;
-		bool tools_format;
-		bool tools_Cleanup;
-	} extra;
-
 	char *project;
 	char *author;
 	char *editor;

@@ -1,11 +1,11 @@
 PREFIX = /usr/bin/
 
-YAIT_SRCS := $(wildcard src/*.c)
+YAIT_SRCS := $(wildcard src/*.c) $(wildcard lib/*.c)
 YAIT_OBJS := $(patsubst src/%.c,build/obj/%.o,$(YAIT_SRCS))
 
 YAIT := bin/yait
 
-ALLOWED_DIRS = doc include man src tools
+ALLOWED_DIRS = doc include man src tools lib
 DISTDIRS := $(sort $(shell find . -maxdepth 1 -type d -not -name '.' -printf '%f\n'))
 
 -include config.mak
@@ -23,10 +23,10 @@ build:
 	mkdir -p build/obj
 
 build/obj/%.o: src/%.c config.mak
-	$(CC) $(CFLAGS) -DCOMMIT=$(shell git rev-list --count --all) -Iinclude -c $< -o $@
+	$(CC) $(CFLAGS) -DCOMMIT=$(shell git rev-list --count --all) -Iinclude -Ilib -c $< -o $@
 
 $(YAIT): $(YAIT_OBJS) 
-	$(CC) $(CFLAGS) -Iinclude -DCOMMIT=$(shell git rev-list --count --all) $^ -o $@
+	$(CC) $(CFLAGS) -Iinclude -Ilib -DCOMMIT=$(shell git rev-list --count --all) $^ -o $@
 
 endif
 

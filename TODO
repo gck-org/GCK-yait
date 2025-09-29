@@ -3,7 +3,7 @@ GCK yait - TODO
 Todo:
 
   * Refactor to more GNU style main
-	* Implement the extra option
+  * Factor out str_dup
   * Build tarball with Makefile
   * Polish for 1.0
 

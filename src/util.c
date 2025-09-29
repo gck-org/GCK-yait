@@ -28,7 +28,7 @@ licence_t TOlicence(char *src)
 	if (!strcmp(s, "BSD"))
 		return BSD;
 	free(s);
-	return UNL;
+	return BSD;
 }
 
 char *str_dup(const char *s)
