@@ -18,6 +18,17 @@
 int fno = 1;
 bool flast = false;
 
+char *tostrupr(const char *s)
+{
+	char *new = malloc(strlen(s) + 1);
+	if (!new)
+		return NULL;
+	strcpy(new, s);
+	for (int i = 0; new[i] != '\0'; ++i)
+		new[i] = toupper((unsigned char)new[i]);
+	return new;
+}
+
 licence_t TOlicence(char *src)
 {
 	char *s = tostrupr(src);
@@ -29,26 +40,6 @@ licence_t TOlicence(char *src)
 		return BSD;
 	free(s);
 	return BSD;
-}
-
-char *str_dup(const char *s)
-{
-	char *new = malloc(strlen(s) + 1);
-	if (!new)
-		return NULL;
-	strcpy(new, s);
-	return new;
-}
-
-char *tostrupr(const char *s)
-{
-	char *new = malloc(strlen(s) + 1);
-	if (!new)
-		return NULL;
-	strcpy(new, s);
-	for (int i = 0; new[i] != '\0'; ++i)
-		new[i] = toupper((unsigned char)new[i]);
-	return new;
 }
 
 static char *nextchar;
