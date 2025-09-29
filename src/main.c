@@ -24,13 +24,14 @@
 #include "../config.h"
 #include "name.h"
 
-static struct option longopts[] = { { "author", required_argument, 0, 'a' },
-				    { "licence", required_argument, 0, 'l' },
-				    { 0, 0, 0, 0 } };
+static const struct option longopts[] = {
+        { "author", required_argument, 0, 'a' },
+        { "licence", required_argument, 0, 'l' },
+        { 0, 0, 0, 0 } };
 
 static int exit_status;
 
-static void usage(int status);
+static void print_help();
 
 int main(int argc, char **argv)
 {
@@ -47,14 +48,14 @@ int main(int argc, char **argv)
 		.project = "Project",
 	};
 
-	parse_standard_options(argc, argv, usage, emit_version);
+	parse_standard_options(argc, argv, print_help, emit_version);
 
 	while ((optc = getopt_long(argc, argv, "a:l:E", longopts, NULL)) != -1)
 
 		switch (optc) {
 		case 'l':
 			if (!strcmp(optarg, "list")) {
-				printf("BSD\nGPL\nMIT\n");
+				puts("BSD\nGPL\nMIT");
 				exit(EXIT_SUCCESS);
 			}
 			if (!strcmp(optarg, "GPL"))
@@ -62,7 +63,7 @@ int main(int argc, char **argv)
 			else if (!strcmp(optarg, "MIT"))
 				manifest.licence = MIT;
 			else {
-				printf("BSD\nGPL\nMIT\n");
+				puts("BSD\nGPL\nMIT");
 				exit(EXIT_FAILURE);
 			}
 			break;
@@ -72,6 +73,10 @@ int main(int argc, char **argv)
 		default:
 			lose = 1;
 		}
+	if (lose || optind < argc) {
+		errorf("extra operand: %s", argv[optind]);
+		usage();
+	}
 
 	char *cwd = getcwd(NULL, 0);
 	if (!cwd) {
@@ -83,14 +88,9 @@ int main(int argc, char **argv)
 	return exit_status;
 }
 
-static void usage(int status)
+static void print_help()
 {
-	if (status != 0) {
-		puts("Try 'yait --help' for more information.");
-		return;
-	}
-
-	printf("Usage: %s [OPTION]... [project-name]\n", PROGRAM);
+	printf("Usage: %s [OPTION]... [project-name]...\n", PROGRAM);
 	fputs("\
 Generates an optionated C project.\n",
 	      stdout);
@@ -101,8 +101,10 @@ Generates an optionated C project.\n",
 	      stdout);
 	puts("");
 	fputs("\
-      -E                      Open $EDITOR after project creation (default false)\n\
-      --author=NAME           Set the program author (default git username)\n\
+      -E                      Open $EDITOR after project creation\n\
+      -q, --quiet             Only print required messages\n\
+      -f, --force             Overwrite existing files\n\
+      --author=NAME           Set the program author (default git username|system username)\n\
       --licence=LICENCE       Set the program licence (default BSD)\n",
 	      stdout);
 }
