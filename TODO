@@ -2,7 +2,6 @@ GCK yait - TODO
 
 Todo:
 
-  * Refactor to more GNU style main
   * Switch to gcklib and update it.
   * Build tarball with Makefile
   * Polish for 1.0
