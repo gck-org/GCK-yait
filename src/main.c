@@ -48,10 +48,9 @@ int main(int argc, char **argv)
 		.project = "Project",
 	};
 
-	parse_standard_options(argc, argv, print_help, emit_version);
+	parse_standard_options(argc, argv, print_help, print_version);
 
 	while ((optc = getopt_long(argc, argv, "a:l:E", longopts, NULL)) != -1)
-
 		switch (optc) {
 		case 'l':
 			if (!strcmp(optarg, "list")) {
@@ -107,4 +106,18 @@ Generates an optionated C project.\n",
       --author=NAME           Set the program author (default git username|system username)\n\
       --licence=LICENCE       Set the program licence (default BSD)\n",
 	      stdout);
+	exit(exit_status);
+}
+
+/* Print version and copyright information.  */
+
+static void print_version()
+{
+  printf("%s %s %d\n", prog_name, VERSION, COMMIT);
+	
+  printf("Copyright (C) %d GCK.\n", YEAR);
+
+  puts("This is free software: you are free to change and redistribute it.");
+  puts("There is NO WARRNTY, to the extent permitted by law.");
+  exit(exit_status);
 }
