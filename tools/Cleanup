@@ -10,7 +10,7 @@ run() {
     "$@" || fatal "could not run: $*"
 }
 
-[ -d "./tools" ] || fatal "must be run from parent directory"
+[ -d "./git" ] && fatal "must be run from parent directory"
 
 run sh ./tools/format
 run rm -rf .cache
