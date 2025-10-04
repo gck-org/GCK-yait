@@ -41,7 +41,7 @@ uninstall:
 	$(RM) $(PREFIX)$(PACKAGE)
 
 clean:
-	$(RM) -r $(BIN)
+	$(RM) $(BIN)
 	$(RM) -r build
 
 distclean: clean
