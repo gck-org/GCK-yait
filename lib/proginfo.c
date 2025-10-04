@@ -9,15 +9,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../config.h"
+#include <libgen.h>
+#include <config.h>
 
 #include "proginfo.h"
 
 const char *prog_name = "";
 
-void set_prog_name(const char *name)
+void set_prog_name(char *name)
 {
-	prog_name = prog_name ? name : "";
+	prog_name = prog_name ? basename(name) : "";
 }
 
 void emit_try_help()
@@ -36,12 +37,12 @@ There is NO WARRNTY, to the extent permitted by law.\n\
 	       prog_name, VERSION, COMMIT, YEAR);
 }
 
-int parse_standard_options(int argc, char **argv, void (*usage)(int),
-			   void (*version)())
+int parse_standard_options(int argc, char **argv, void (*print_help)(),
+			   void (*print_version)())
 {
 	for (int i = 0; i < argc; ++i) {
 		if (!strcmp(argv[i], "--help")) {
-			usage(0);
+			print_help();
 			exit(EXIT_SUCCESS);
 		} else if (!strcmp(argv[i], "--version")) {
 			emit_version();

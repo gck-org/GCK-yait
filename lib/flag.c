@@ -1,46 +1,17 @@
 /* Copyright (C) GCK
  *
- * This file is part of yait
+ * This file is part of gcklib
  *
- * This project and file is licenced under the BSD-3-Clause licence.
+ * This project and file is licensed under the BSD-3-Clause licence.
  * <https://opensource.org/licence/bsd-3-clause>
  */
 
-#include <ctype.h>
-#include <stdio.h>
 #include <getopt.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "util.h"
-#include "../include/yait.h"
-
-int fno = 1;
-bool flast = false;
-
-char *tostrupr(const char *s)
-{
-	char *new = malloc(strlen(s) + 1);
-	if (!new)
-		return NULL;
-	strcpy(new, s);
-	for (int i = 0; new[i] != '\0'; ++i)
-		new[i] = toupper((unsigned char)new[i]);
-	return new;
-}
-
-licence_t TOlicence(char *src)
-{
-	char *s = tostrupr(src);
-	if (!strcmp(s, "MIT"))
-		return MIT;
-	if (!strcmp(s, "GPL"))
-		return GPL;
-	if (!strcmp(s, "BSD"))
-		return BSD;
-	free(s);
-	return BSD;
-}
+#include "flag.h"
 
 static char *nextchar;
 

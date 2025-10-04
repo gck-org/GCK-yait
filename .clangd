@@ -1,5 +1,5 @@
 CompileFlags:
-  Add: [-x, c, -std=c23]
+  Add: [-x, c, -std=c23, -Ilib, -I.]
 
 Diagnostics:
   ClangTidy:

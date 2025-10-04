@@ -11,12 +11,12 @@
 
 extern const char *prog_name;
 
-void set_prog_name(const char *name);
+void set_prog_name(char *name);
 
 void emit_try_help();
 void emit_version();
 
-int parse_standard_options(int argc, char **argv, void (*usage)(int),
-			   void (*version)());
+int parse_standard_options(int argc, char **argv, void (*print_help)(),
+			   void (*print_version)());
 
 #endif
