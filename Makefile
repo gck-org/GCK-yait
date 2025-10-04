@@ -1,12 +1,16 @@
-PREFIX = /usr/bin/
+PACKAGE := yait
 
-YAIT_SRCS := $(wildcard src/*.c) $(wildcard lib/*.c)
-YAIT_OBJS := $(patsubst src/%.c,build/obj/%.o,$(YAIT_SRCS))
+SRCS := $(wildcard src/*.c) $(wildcard lib/*.c)
+OBJS := $(patsubst src/%.c,build/obj/%.o,$(SRCS))
 
-YAIT := bin/yait
+BIN := bin/$(PACKAGE)
 
-ALLOWED_DIRS = doc include man src tools lib
-DISTDIRS := $(sort $(shell find . -maxdepth 1 -type d -not -name '.' -printf '%f\n'))
+COMMIT := $(shell git rev-list --count --all)
+FLAGS := -I. -DCOMMIT=$(COMMIT)
+
+VERSION := $(shell git describe --tags --always --dirty)
+TARBALL := $(PACKAGE)-$(VERSION).tar.gz
+RELEASE_FILES := doc src lib COPYING AUTHORS README yait.1 INSTALL Makefile configure config.h
 
 -include config.mak
 
@@ -23,49 +27,28 @@ build:
 	mkdir -p build/obj
 
 build/obj/%.o: src/%.c config.mak
-	$(CC) $(CFLAGS) -DCOMMIT=$(shell git rev-list --count --all) -Iinclude -Ilib -c $< -o $@
+	$(CC) $(FLAGS) -c $< -o $@
 
-$(YAIT): $(YAIT_OBJS) 
-	$(CC) $(CFLAGS) -Iinclude -Ilib -DCOMMIT=$(shell git rev-list --count --all) $^ -o $@
+$(BIN): $(OBJS) 
+	$(CC) $(FLAGS) $^ -o $@
 
 endif
 
-install: $(YAIT)
-	cp $(YAIT) $(PREFIX)
+install: $(BIN)
+	cp $(BIN) $(PREFIX)
 
 uninstall:
-	$(RM) $(PREFIX)yait
+	$(RM) $(PREFIX)$(PACKAGE)
 
 clean:
-	$(RM) -r bin
+	$(RM) -r $(BIN)
 	$(RM) -r build
 
 distclean: clean
 	$(RM) config.mak
+	$(RM) $(TARBALL)
 
-check: $(YAIT)
-	./src/tests/run_unit_tests.sh
+release: clean all
+	tar -czf $(TARBALL) $(RELEASE_FILES)
 
-syntax-check:
-	@set -e; \
-	fail=0; \
-	for f in $(YAIT_SRCS); do \
-		echo "$$f"; \
-		if ! $(CC) $(CFLAGS) -fsyntax-only $$f; then \
-			fail=1; \
-		fi
-	done; \
-	if test $$fail -ne 0; then \
-		exit 1;
-	fi
-
-distcheck: distclean
-	@set -e; \
-	for d in $(DESTDIRS); do \
-		case " $(ALLOWED_DIRS) " in \
-			*" $$d "*) ;; \
-			*) echo "Error unexpected directory '$$d'"; exit 1 ;; \
-		esac; \
-	done
-
-.PHONY: all clean dist-clean install uninstall build release check syntax-check distcheck
+.PHONY: all clean distclean install uninstall build release
