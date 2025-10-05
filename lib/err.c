@@ -59,9 +59,9 @@ void fatalf(const char *format, ...)
 	va_start(args, format);
 
 	if (__check()) {
-		fprintf(stderr, "%sfatal%s: ", ERROR, RESET);
+		fprintf(stderr, "%sfatal error%s: ", ERROR, RESET);
 	} else {
-		fputs("fatal: ", stderr);
+		fputs("fatal error: ", stderr);
 	}
 
 	vfprintf(stderr, format, args);
@@ -69,6 +69,7 @@ void fatalf(const char *format, ...)
 
 	va_end(args);
 
+	fputs("program terminated.\n", stderr);
 	exit(EXIT_FAILURE);
 }
 void warnf(const char *format, ...)

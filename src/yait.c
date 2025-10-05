@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 	}
 
 	if (optind >= argc) {
-		fatalf("no project name provided");
+		fatalf("no input name");
 	}
 
 	if (optind + 1 < argc) {
@@ -386,15 +386,69 @@ printf \"CC=%%s\n\" \"$CC\"\n\
 printf \"done\n\"\n\
 ");
 
+	fs_write("Makefile", "\
+PACKAGE := %s\n\
+\n\
+SRCS := $(wildcard src/*.c) $(wildcard lib/*.c)\n\
+OBJS := $(patsubst src/%%.c,build/obj/%%.o,$(SRCS))\n\
+\n\
+BIN := bin/$(PACKAGE)\n\
+\n\
+COMMIT := $(shell git rev-list --count --all)\n\
+FLAGS := -I. -DCOMMIT=$(COMMIT)\n\
+\n\
+VERSION := $(shell git describe --tags --always --dirty)\n\
+TARBALL := $(PACKAGE)-$(VERSION).tar.gz\n\
+RELEASE_FILES := doc src lib COPYING AUTHORS README yait.1 INSTALL Makefile configure config.h\n\
+\n\
+-include config.mak\n\
+\n\
+ifeq ($(wildcard config.mak),)\n\
+all:\n\
+	@echo \"File config.mak not found, run configure \"\n\
+	@exit 1\n\
+else\n\
+\n\
+all: build $(BIN)\n\
+\n\
+build:\n\
+	mkdir -p bin\n\
+	mkdir -p build/obj\n\
+\n\
+build/obj/%.o: src/%.c config.mak\n\
+	$(CC) $(FLAGS) $(CFLAGS) -c $< -o $@\n\
+\n\
+$(BIN): $(OBJS) \n\
+	$(CC) $(FLAGS) $(CFLAGS) $^ -o $@\n\
+\n\
+endif\n\
+\n\
+install: $(BIN)\n\
+	cp $(BIN) $(PREFIX)\n\
+\n\
+uninstall:\n\
+	$(RM) $(PREFIX)$(PACKAGE)\n\
+\n\
+clean:\n\
+	$(RM) $(BIN)\n\
+	$(RM) -r build\n\
+\n\
+distclean: clean\n\
+	$(RM) config.mak\n\
+	$(RM) $(TARBALL)\n\
+\n\
+release: clean all\n\
+	tar -czf $(TARBALL) $(RELEASE_FILES)\n\
+\n\
+.PHONY: all clean distclean install uninstall build release\n\
+",
+		 package);
+
 	char *cwd = getcwd(NULL, 0);
-	if (cwd == NULL) {
+	if (cwd == NULL)
 		fatalfa(errno);
-	}
-
-	if (!quiet) {
+	if (!quiet)
 		fprintf(stderr, "Created %s at\n %s\n", package, cwd);
-	}
-
 	free(cwd);
 
 	return exit_status;

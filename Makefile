@@ -20,17 +20,17 @@ all:
 	@exit 1
 else
 
-all: build $(YAIT)
+all: build $(BIN)
 
 build:
 	mkdir -p bin
 	mkdir -p build/obj
 
 build/obj/%.o: src/%.c config.mak
-	$(CC) $(FLAGS) -c $< -o $@
+	$(CC) $(FLAGS) $(CFLAGS) -c $< -o $@
 
 $(BIN): $(OBJS) 
-	$(CC) $(FLAGS) $^ -o $@
+	$(CC) $(FLAGS) $(CFLAGS) $^ -o $@
 
 endif
 
