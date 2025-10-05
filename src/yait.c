@@ -1,4 +1,4 @@
-/* Copyright (C) vx-clutch
+/* Copyright (C) GCK
  *
  * This file is part of yait
  *
@@ -18,6 +18,7 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "../config.h"
 #include "../lib/err.h"
@@ -83,7 +84,7 @@ sysuser: {
 	if (pw && pw->pw_name)
 		return str_dup(pw->pw_name);
 }
-	return "author";
+	return str_dup("author");
 }
 
 int main(int argc, char **argv)
@@ -97,14 +98,21 @@ int main(int argc, char **argv)
 	bool quiet = false;
 	bool force = false;
 	bool editor = false;
-	const char *author = get_name();
-	licence_t licence;
+	char *author = get_name();
+	licence_t licence = BSD;
 
 	parse_standard_options(argc, argv, print_help, print_version);
 
 	while ((optc = getopt_long(argc, argv, "a:l:Eqf", longopts, NULL)) !=
 	       -1)
 		switch (optc) {
+		case 'a':
+			if (optarg) {
+				if (author)
+					free(author);
+				author = str_dup(optarg);
+			}
+			break;
 		case 'l':
 			if (!strcmp(optarg, "list")) {
 				puts("BSD\nGPL\nMIT\nUNL");
@@ -155,6 +163,192 @@ int main(int argc, char **argv)
 	memcpy(pdir, package, len);
 	pdir[len] = '/';
 	pdir[len + 1] = '\0';
+
+	fs_new(pdir);
+	if (chdir(pdir))
+		fatalfa(errno);
+
+	fs_write("doc/version.texi", "\
+@set UPDATED %s\
+@set UPDATED-MONTH %s\
+@set EDITION 1\
+@set VERSION alpha\
+",
+		 "1 January 1970", "January 2025");
+
+	char path[BUFSIZ];
+	snprintf(path, sizeof(path), "doc/%s.texi", package);
+	fs_write(path, "\
+\\input texinfo @c -*-texinfo-*-\n\
+@c %**start of header\n\
+@setfilename foo.info\n\
+@include version.texi\n\
+@settitle %s foo @value{VERSION}\n\
+\n\
+@defcodeindex op\n\
+@syncodeindex op cp\n\
+@c %**end of header\n\
+\n\
+@copying\n\
+This manual is for %s foo (version @value{VERSION}, @value{UPDATED}),\n\
+a simple program for demonstrating Texinfo documentation.\n\
+\n\
+Copyright @copyright{} 2025 VX.\n\
+\n\
+@quotation\n\
+Copying and distribution of this file, with or without modification,\n\
+are permitted in any medium without royalty provided the copyright\n\
+notice and this notice are preserved.\n\
+@end quotation\n\
+@end copying\n\
+\n\
+@titlepage\n\
+@title %s foo\n\
+@subtitle for version @value{VERSION}, @value{UPDATED}\n\
+@page\n\
+@vskip 0pt plus 1filll\n\
+@insertcopying\n\
+@end titlepage\n\
+\n\
+@contents\n\
+\n\
+@ifnottex\n\
+@node Top\n\
+@top %s foo\n\
+\n\
+This manual is for %s foo (version @value{VERSION}, @value{UPDATED}),\n\
+a simple program for demonstrating Texinfo documentation.\n\
+@end ifnottex\n\
+\n\
+@menu\n\
+* Overview::           General overview and purpose.\n\
+* Sample output::      Example usage and output.\n\
+* Invoking foo::       How to run @command{foo}.\n\
+* Reporting bugs::     Sending bug reports and suggestions.\n\
+* Concept index::      Index of concepts.\n\
+@end menu\n\
+\n\
+\n\
+@node Overview\n\
+@chapter Overview\n\
+\n\
+@cindex overview\n\
+@cindex purpose\n\
+\n\
+The %s @command{foo} program serves as a minimal example of a %s utility.\n\
+Its purpose is to show how to build and document small command-line tools\n\
+that follow GNU-style conventions.\n\
+\n\
+@itemize @bullet\n\
+@item\n\
+Implements clean command-line option parsing using GNU-style long options.\n\
+@item\n\
+Provides simple, predictable behavior for testing build systems.\n\
+@item\n\
+Demonstrates how to write Texinfo manuals for %s programs.\n\
+@end itemize\n\
+\n\
+@cindex implementation\n\
+%s foo is implemented in C and follows the GNU coding and maintainer standards.\n\
+It uses Autotools for configuration and build setup, and Texinfo for documentation.\n\
+\n\
+\n\
+@node Sample output\n\
+@chapter Sample output\n\
+\n\
+@cindex examples\n\
+@cindex sample output\n\
+\n\
+Here are some examples of running %s foo:\n\
+\n\
+@example\n\
+$ foo\n\
+foo: hello, world!\n\
+@end example\n\
+\n\
+@example\n\
+$ foo --message=\"VX rules!\"\n\
+foo: VX rules!\n\
+@end example\n\
+\n\
+@example\n\
+$ foo --version\n\
+VX foo @value{VERSION}\n\
+@end example\n\
+\n\
+\n\
+@node Invoking foo\n\
+@chapter Invoking @command{foo}\n\
+\n\
+@cindex invoking\n\
+@cindex usage\n\
+@cindex options\n\
+\n\
+The general form for running @command{foo} is:\n\
+\n\
+@example\n\
+foo @var{option} @dots{}\n\
+@end example\n\
+\n\
+With no options, @command{foo} prints a default message.\n\
+\n\
+@command{foo} supports the following options:\n\
+\n\
+@table @option\n\
+@item --message=@var{text}\n\
+@itemx -m @var{text}\n\
+@opindex --message\n\
+@opindex -m\n\
+Print @var{text} instead of the default greeting.\n\
+\n\
+@item --help\n\
+@itemx -h\n\
+@opindex --help\n\
+@opindex -h\n\
+Display help text and exit successfully.\n\
+\n\
+@item --version\n\
+@itemx -v\n\
+@opindex --version\n\
+@opindex -v\n\
+Print the version number and licensing information, then exit.\n\
+@end table\n\
+\n\
+\n\
+@node Reporting bugs\n\
+@chapter Reporting bugs\n\
+\n\
+@cindex bugs\n\
+@cindex reporting\n\
+@cindex contact\n\
+\n\
+When reporting bugs, include:\n\
+@itemize @bullet\n\
+@item The output of @samp{foo --version}.\n\
+@item Your operating system and compiler version.\n\
+@item The exact command line used.\n\
+@item Any relevant output or error messages.\n\
+@end itemize\n\
+\n\
+Patches are welcome, preferably made with @samp{diff -u} and including\n\
+a @file{ChangeLog} entry.\n\
+\n\
+\n\
+@node GNU Free Documentation License\n\
+@appendix GNU Free Documentation License\n\
+\n\
+@include fdl.texi\n\
+\n\
+\n\
+@node Concept index\n\
+@unnumbered Concept index\n\
+\n\
+@printindex cp\n\
+\n\
+@bye\
+",
+		 author, author, author, author, author, author, author, author,
+		 author, author);
 
 	fs_write("README", "\
 This is the README for the GCK %s distribution.\n\
@@ -289,8 +483,8 @@ See also the AUTHORS file.\n\
 #define VERSION \"beta\"\n\
 #define YEAR %d\n\
 \n\
-#endif\n\
-			",
+#endif\
+",
 		 package, YEAR);
 
 	fs_write("configure", "\
@@ -327,7 +521,7 @@ trycc gcc\n\
 trycc clang\n\
 trycc cc\n\
 trycc icx\n\
-printf \"%s\n\" \"$CC\"\n\
+printf \"%%s\n\" \"$CC\"\n\
 \n\
 DEBUG=false\n\
 for arg; do\n\
@@ -338,7 +532,7 @@ case \"$arg\" in\n\
 CFLAGS=*) CFLAGS=${arg#*=} ;;\n\
 LDFLAGS=*) LDFLAGS=${arg#*=} ;;\n\
 CC=*) CC=${arg#*=} ;;\n\
-*) printf \"Unrecognized option %s\n\" \"$arg\" ;;\n\
+*) printf \"Unrecognized option %%s\n\" \"$arg\" ;;\n\
 esac\n\
 done\n\
 \n\
@@ -355,10 +549,10 @@ fi\n\
 GDEBUGCFLAGS=\"-std=c23 -O0 -g3 -Wall -Wextra -Wpedantic -Werror -Wshadow -Wdouble-promotion -Wformat=2 -Wnull-dereference -Wconversion -Wsign-conversion -Wcast-qual -Wcast-align=strict -Wpointer-arith -Wstrict-overflow=5 -Wstrict-aliasing=2 -Wundef -Wunreachable-code -Wswitch-enum -fanalyzer -fsanitize=undefined,address -fstack-protector-strong -D_FORTIFY_SOURCE=3\"\n\
 CDEBUGCFLAGS=\"-std=gnu2x -O0 -g3 -Wall -Wextra -Wpedantic -Werror -Wshadow -Wdouble-promotion -Wformat=2 -Wnull-dereference -Wconversion -Wsign-conversion -Wcast-qual -Wcast-align=strict -Wpointer-arith -Wstrict-overflow=5 -Wstrict-aliasing=2 -Wundef -Wunreachable-code -Wswitch-enum -fanalyzer -fsanitize=undefined,address -fstack-protector-strong -D_FORTIFY_SOURCE=3\"\n\
 \n\
-if [ -z \"$DEBUG\" ]; then\n\
+if [ \"$DEBUG\" = \"false\" ]; then\n\
 case \"$CC\" in\n\
-gcc) CFLAGS=\"$GDEBUGFLAGS\";;\n\
-clang) CFLAGS=\"$CDEBUGFLAGS\";;\n\
+gcc) CFLAGS=\"$GDEBUGCFLAGS\";;\n\
+clang) CFLAGS=\"$CDEBUGCFLAGS\";;\n\
 *) ;;\n\
 esac\n\
 else\n\
@@ -383,7 +577,7 @@ printf \"CFLAGS=%%s\n\" \"$CFLAGS\"\n\
 printf \"LDFLAGS=%%s\n\" \"$LDFLAGS\"\n\
 printf \"CC=%%s\n\" \"$CC\"\n\
 } > config.mak\n\
-printf \"done\n\"\n\
+printf \"done\n\"\
 ");
 
 	fs_write("Makefile", "\
@@ -440,16 +634,9 @@ distclean: clean\n\
 release: clean all\n\
 	tar -czf $(TARBALL) $(RELEASE_FILES)\n\
 \n\
-.PHONY: all clean distclean install uninstall build release\n\
+.PHONY: all clean distclean install uninstall build release\
 ",
 		 package);
-
-	char *cwd = getcwd(NULL, 0);
-	if (cwd == NULL)
-		fatalfa(errno);
-	if (!quiet)
-		fprintf(stderr, "Created %s at\n %s\n", package, cwd);
-	free(cwd);
 
 	return exit_status;
 }
@@ -458,12 +645,12 @@ static void print_help()
 {
 	printf("Usage: %s [OPTION]... [project-name]...\n", PROGRAM);
 	fputs("\
-Generates an optionated C project.\n",
+Generates an opinionated C project.\n",
 	      stdout);
 	puts("");
 	fputs("\
       --help                  display this help and exit\n\
-      --version               display version information and eixt\n",
+      --version               display version information and exit\n",
 	      stdout);
 	puts("");
 	fputs("\
@@ -483,6 +670,6 @@ static void print_version()
 	printf("Copyright (C) %d GCK.\n", YEAR);
 
 	puts("This is free software: you are free to change and redistribute it.");
-	puts("There is NO WARRNTY, to the extent permitted by law.");
+	puts("There is NO WARRANTY, to the extent permitted by law.");
 	exit(exit_status);
 }

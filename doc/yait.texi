@@ -2,7 +2,7 @@
 @c %**start of header
 @setfilename yait.info
 @include version.texi
-@settitle VX yait @value{VERSION}
+@settitle GCK yait @value{VERSION}
 
 @c Define a new index for options.
 @defcodeindex op
@@ -12,10 +12,10 @@
 @c %**end of header
 
 @copying
-This manual is for VX yait (version @value{VERSION}, @value{UPDATED}),
+This manual is for GCK yait (version @value{VERSION}, @value{UPDATED}),
 which generates an optionated C project.
 
-Copyright @copyright{} 2025 VX.
+Copyright @copyright{} 2025 GCK.
 
 @quotation
 Copying and distribution of this file, with or without modification,
@@ -25,7 +25,7 @@ notice and this notice are preserved.
 @end copying
 
 @titlepage
-@title VX yait
+@title GCK yait
 @subtitle for version @value{VERSION}, @value{UPDATED}
 @page
 @vskip 0pt plus 1filll
@@ -39,7 +39,7 @@ notice and this notice are preserved.
 @node Top
 @top GNU Hello
 
-This manual is for VX yait (version @value{VERSION}, @value{UPDATED}),
+This manual is for GCK yait (version @value{VERSION}, @value{UPDATED}),
 which generates an optionated C project.
 @end ifnottex
 
