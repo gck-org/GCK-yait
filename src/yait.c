@@ -17,10 +17,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <stdbool.h>
 
 #include "../config.h"
+#include "licence.h"
 #include "../lib/err.h"
 #include "../lib/fs.h"
 #include "../lib/xmem.h"
@@ -350,6 +352,186 @@ a @file{ChangeLog} entry.\n\
 		 author, author, author, author, author, author, author, author,
 		 author, author);
 
+	// TODO(vx-clutch): Why dosn't this write the source?
+	snprintf(path, sizeof(path), "src/%s.c", package);
+	fs_write(path, "\
+/* Copyright (C) %s\n\
+ *\n\
+ * This file is part of %s\n\
+ *\n\
+ * This project and file is licenced under the BSD-3-Clause licence.\n\
+ * <https://opensource.org/licence/bsd-3-clause>\n\
+ */\n\
+\n\
+// Usage: %s [OPTION]...\n\
+\n\
+#include <stdlib.h>\n\
+\n\
+static int exit_status;\n\
+\n\
+static void print_help();\n\
+static void print_version();\n\
+\n\
+int main(int argc, char **argv)\n\
+{\n\
+\n\
+	exit_status = EXIT_SUCCESS;\n\
+	return exit_status;\n\
+}\
+");
+
+	fs_write("tools/Cleanup", "\
+#!/bin/sh\n\
+# Usage: ./Cleanup\n\
+\n\
+fatal() {\n\
+    echo \"fatal: $*\" >&2\n\
+    exit 1\n\
+}\n\
+\n\
+run() {\n\
+    \"$@\" || fatal \"could not run: $*\"\n\
+}\n\
+\n\
+[ -d \"./git\" ] && fatal \"must be run from parent directory\"\n\
+\n\
+run sh ./tools/format\n\
+run rm -rf .cache\n\
+run rm -f compile_commands.json\n\
+run make distclean\n\
+\n\
+echo \"done.\"\
+");
+	fs_write("tools/format", "\
+#!/bin/sh\n\
+\n\
+# Usage ./format\n\
+\n\
+find . -name \"*.c\" -exec clang-format -i --verbose {} \\;\n\
+find . -name \"*.h\" -exec clang-format -i --verbose {} \\;\
+");
+
+	fs_write(".clang-format", "\
+---\n\
+AccessModifierOffset: -4\n\
+AlignAfterOpenBracket: Align\n\
+AlignConsecutiveAssignments: false\n\
+AlignConsecutiveDeclarations: false\n\
+AlignEscapedNewlines: Left\n\
+AlignOperands: true\n\
+AlignTrailingComments: false\n\
+AllowAllParametersOfDeclarationOnNextLine: false\n\
+AllowShortBlocksOnASingleLine: false\n\
+AllowShortCaseLabelsOnASingleLine: false\n\
+AllowShortFunctionsOnASingleLine: None\n\
+AllowShortIfStatementsOnASingleLine: false\n\
+AllowShortLoopsOnASingleLine: false\n\
+AlwaysBreakAfterDefinitionReturnType: None\n\
+AlwaysBreakAfterReturnType: None\n\
+AlwaysBreakBeforeMultilineStrings: false\n\
+AlwaysBreakTemplateDeclarations: false\n\
+BinPackArguments: true\n\
+BinPackParameters: true\n\
+BraceWrapping:\n\
+  AfterClass: false\n\
+  AfterControlStatement: false\n\
+  AfterEnum: false\n\
+  AfterFunction: true\n\
+  AfterNamespace: true\n\
+  AfterObjCDeclaration: false\n\
+  AfterStruct: false\n\
+  AfterUnion: false\n\
+  AfterExternBlock: false\n\
+  BeforeCatch: false\n\
+  BeforeElse: false\n\
+  IndentBraces: false\n\
+  SplitEmptyFunction: true\n\
+  SplitEmptyRecord: true\n\
+  SplitEmptyNamespace: true\n\
+BreakBeforeBinaryOperators: None\n\
+BreakBeforeBraces: Custom\n\
+BreakBeforeInheritanceComma: false\n\
+BreakBeforeTernaryOperators: false\n\
+BreakConstructorInitializersBeforeComma: false\n\
+BreakConstructorInitializers: BeforeComma\n\
+BreakAfterJavaFieldAnnotations: false\n\
+BreakStringLiterals: false\n\
+ColumnLimit: 80\n\
+CommentPragmas: '^ IWYU pragma:'\n\
+CompactNamespaces: false\n\
+ConstructorInitializerAllOnOneLineOrOnePerLine: false\n\
+ConstructorInitializerIndentWidth: 8\n\
+ContinuationIndentWidth: 8\n\
+Cpp11BracedListStyle: false\n\
+DerivePointerAlignment: false\n\
+DisableFormat: false\n\
+ExperimentalAutoDetectBinPacking: false\n\
+FixNamespaceComments: false\n\
+\n\
+IncludeBlocks: Preserve\n\
+IncludeCategories:\n\
+  - Regex: '.*'\n\
+    Priority: 1\n\
+IncludeIsMainRegex: '(Test)?$'\n\
+IndentCaseLabels: false\n\
+IndentGotoLabels: false\n\
+IndentPPDirectives: None\n\
+IndentWidth: 8\n\
+IndentWrappedFunctionNames: false\n\
+JavaScriptQuotes: Leave\n\
+JavaScriptWrapImports: true\n\
+KeepEmptyLinesAtTheStartOfBlocks: false\n\
+MacroBlockBegin: ''\n\
+MacroBlockEnd: ''\n\
+MaxEmptyLinesToKeep: 1\n\
+NamespaceIndentation: None\n\
+ObjCBinPackProtocolList: Auto\n\
+ObjCBlockIndentWidth: 8\n\
+ObjCSpaceAfterProperty: true\n\
+ObjCSpaceBeforeProtocolList: true\n\
+\n\
+PenaltyBreakAssignment: 10\n\
+PenaltyBreakBeforeFirstCallParameter: 30\n\
+PenaltyBreakComment: 10\n\
+PenaltyBreakFirstLessLess: 0\n\
+PenaltyBreakString: 10\n\
+PenaltyExcessCharacter: 100\n\
+PenaltyReturnTypeOnItsOwnLine: 60\n\
+\n\
+PointerAlignment: Right\n\
+ReflowComments: false\n\
+SortIncludes: false\n\
+SortUsingDeclarations: false\n\
+SpaceAfterCStyleCast: false\n\
+SpaceAfterTemplateKeyword: true\n\
+SpaceBeforeAssignmentOperators: true\n\
+SpaceBeforeCtorInitializerColon: true\n\
+SpaceBeforeInheritanceColon: true\n\
+SpaceBeforeParens: ControlStatementsExceptForEachMacros\n\
+SpaceBeforeRangeBasedForLoopColon: true\n\
+SpaceInEmptyParentheses: false\n\
+SpacesBeforeTrailingComments: 1\n\
+SpacesInAngles: false\n\
+SpacesInContainerLiterals: false\n\
+SpacesInCStyleCastParentheses: false\n\
+SpacesInParentheses: false\n\
+SpacesInSquareBrackets: false\n\
+Standard: Cpp03\n\
+TabWidth: 8\n\
+UseTab: Always\n\
+...\
+");
+
+	fs_write(".clangd", "\
+CompileFlags:\n\
+  Add: [-x, c, -std=c23, -Ilib, -I.]\n\
+\n\
+Diagnostics:\n\
+  ClangTidy:\n\
+    Add: [clang-diagnostic-*]\n\
+    Remove: []\
+");
+
 	fs_write("README", "\
 This is the README for the GCK %s distribution.\n\
 %s does a thing.\n\
@@ -442,9 +624,9 @@ details\n\
 		 YEAR);
 
 	fs_write("AUTHORS", "\
-Authors of GCK yait.\n\
+Authors of %s %s.\n\
 \n\
-  Copyright (C) 2025 GCK.\n\
+  Copyright (C) %d %s.\n\
 \n\
   Copying and distribution of this file, with or without modification,\n\
   are permitted in any medium without royalty provided the copyright\n\
@@ -454,12 +636,12 @@ Also see the THANKS files.\n\
 \n\
 %s\n\
 ",
-		 author);
+		 author, package, YEAR, package, author);
 
 	fs_write("THANKS", "\
-Additional contributors to GCK %s.\n\
+Additional contributors to %s %s.\n\
 \n\
-  Copyright (C) %d GCK.\n\
+  Copyright (C) %d %s.\n\
 \n\
   Copying and distribution of this file, with or without modification,\n\
   are permitted in any medium without royalty provided the copyright\n\
@@ -471,7 +653,7 @@ Thanks to:\n\
 \n\
 See also the AUTHORS file.\n\
 			",
-		 package, YEAR);
+		 author, package, YEAR, author);
 
 	fs_write("config.h", "\
 #ifndef CONFIG_H\n\
@@ -479,13 +661,13 @@ See also the AUTHORS file.\n\
 \n\
 /* Program information */\n\
 #define PROGRAM \"%s\"\n\
-#define AUTHORS \"GCK\"\n\
+#define AUTHORS \"%s\"\n\
 #define VERSION \"beta\"\n\
 #define YEAR %d\n\
 \n\
 #endif\
 ",
-		 package, YEAR);
+		 package, author, YEAR);
 
 	fs_write("configure", "\
 #!/bin/sh\n\
@@ -609,7 +791,7 @@ build:\n\
 	mkdir -p bin\n\
 	mkdir -p build/obj\n\
 \n\
-build/obj/%.o: src/%.c config.mak\n\
+build/obj/%%.o: $(SRCS) config.mak\n\
 	$(CC) $(FLAGS) $(CFLAGS) -c $< -o $@\n\
 \n\
 $(BIN): $(OBJS) \n\
@@ -637,6 +819,52 @@ release: clean all\n\
 .PHONY: all clean distclean install uninstall build release\
 ",
 		 package);
+
+	fs_write("TODO", "\
+%s %s- TODO\n\
+\n\
+Todo:\n\
+\n\
+  * Generate %s.1 with help2man.\n\
+\n\
+end of file TODO\
+",
+		 author, package, package);
+
+	switch (licence) {
+	case BSD:
+		fs_write("COPYING", fBSD, YEAR, author);
+		break;
+	case MIT:
+		fs_write("COPYING", fMIT, YEAR, author);
+		break;
+	case GPL:
+		fs_write("COPYING", fGPL);
+		break;
+	case UNL:
+		fs_write("COPYING", fUNL);
+		break;
+	default:
+		fatalf("illegal state");
+	}
+
+	struct stat st;
+
+	if (stat("configure", &st) != 0) {
+		fatalfa(errno);
+	}
+
+	mode_t mode = st.st_mode | S_IXUSR;
+
+	if (chmod("configure", mode) != 0) {
+		fatalfa(errno);
+	}
+	if (chmod("tools/format", mode) != 0) {
+		fatalfa(errno);
+	}
+	if (chmod("tools/Cleanup", mode) != 0) {
+		fatalfa(errno);
+	}
 
 	return exit_status;
 }
