@@ -2,8 +2,7 @@ GCK yait - TODO
 
 Todo:
 
-  * Switch to gcklib and update it.
-  * Build tarball with Makefile
-  * Polish for 1.0
+  * Fix package.c generation
+  * Add git integration: git init, add the gcklib submodule, ./gcklib-tool --import proginfo
 
 end of file TODO
