@@ -112,6 +112,7 @@ int main(int argc, char **argv)
 	bool force = false;
 	bool editor = false;
 	char *author = get_name();
+	int year = get_year();
 	licence_t licence = BSD;
 
 	parse_standard_options(argc, argv, print_help, print_version);
@@ -610,7 +611,7 @@ implementation, etc., would still be very much appreciated.\n\
 \n\
 GCK %s is free software. See the file COPYING for copying conditions.\n\
 \n",
-		 package, package, YEAR, package);
+		 package, package, year, package);
 
 	fs_write("INSTALL", "\
 Installation Instructions\n\
@@ -668,7 +669,7 @@ Documentation and other data files still use the regular prefix.\n\
 `configure` also accepts some other options. Run `configure --help` for more\n\
 details\n\
 ",
-		 YEAR);
+		 year);
 
 	fs_write("AUTHORS", "\
 Authors of %s %s.\n\
@@ -683,7 +684,7 @@ Also see the THANKS files.\n\
 \n\
 %s\n\
 ",
-		 author, package, YEAR, package, author);
+		 author, package, year, package, author);
 
 	fs_write("THANKS", "\
 Additional contributors to %s %s.\n\
@@ -700,7 +701,7 @@ Thanks to:\n\
 \n\
 See also the AUTHORS file.\n\
 			",
-		 author, package, YEAR, author);
+		 author, package, year, author);
 
 	fs_write("config.h", "\
 #ifndef CONFIG_H\n\
@@ -714,7 +715,7 @@ See also the AUTHORS file.\n\
 \n\
 #endif\
 ",
-		 package, author, YEAR);
+		 package, author, year);
 
 	fs_write("configure", "\
 #!/bin/sh\n\
@@ -880,10 +881,10 @@ end of file TODO\
 
 	switch (licence) {
 	case BSD:
-		fs_write("COPYING", fBSD, YEAR, author);
+		fs_write("COPYING", fBSD, year, author);
 		break;
 	case MIT:
-		fs_write("COPYING", fMIT, YEAR, author);
+		fs_write("COPYING", fMIT, year, author);
 		break;
 	case GPL:
 		fs_write("COPYING", fGPL);
