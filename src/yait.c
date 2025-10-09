@@ -178,7 +178,8 @@ int main(int argc, char **argv)
 	pdir[len] = '/';
 	pdir[len + 1] = '\0';
 
-	fs_new(pdir);
+	if (fs_new(pdir) == -1 && errno != EEXIST)
+		fatalfa(errno);
 	if (chdir(pdir))
 		fatalfa(errno);
 
