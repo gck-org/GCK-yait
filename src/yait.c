@@ -94,10 +94,10 @@ sysuser: {
 static int get_year()
 {
 	time_t now = time(NULL);
-    struct tm *t = localtime(&now);
+	struct tm *t = localtime(&now);
 
-    // The tm_year member stores years since 1900, so add 1900 to get the actual year
-	return current_year = t->tm_year + 1900;
+	// The tm_year member stores years since 1900, so add 1900 to get the actual year
+	return t->tm_year + 1900;
 }
 
 int main(int argc, char **argv)
@@ -402,9 +402,9 @@ void print_help()\n\
 {\n\
 	printf(\"Usage: %%s [OPTION]...\\n\", PROGRAM);\n\
 	fputs(\"\\
-%s does a thing.\\n\",
-		stdout);\n\
-	puts(\"\");\n\
+%s does a thing.\\n\",\n\
+		 stdout);\n\
+	\n puts(\"\");\n\
 	fputs(\"\\
 	  --help               display this help and exit\\n\\
 	  --version            display version information and exit\\n\",\n\
@@ -420,13 +420,14 @@ void print_version()\n\
 {\n\
 	printf(\"%%s %%s %%d\\n\", prog_name, VERSION, COMMIT);\n\
 	\n\
-	printf(\"Copyright (C) %%d %s.\\n\", YEAR);
+	printf(\"Copyright (C) %%d %s.\\n\", YEAR);\n\
 	\n\
 	puts(\"This is free software: you are free to change and redistribute it.\");\n\
 	puts(\"There is NO WARRANTY, to the extent permitted by law.\");\n\
 	exit(exit_status);\n\
-}\n\
-", author, package, package, package, author);
+}\
+",
+		 author, package, package, package, author);
 
 	fs_write("tools/Cleanup", "\
 #!/bin/sh\n\
