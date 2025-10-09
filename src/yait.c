@@ -20,8 +20,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <time.h>
 
-#include "../config.h"
+#include <config.h>
+
 #include "licence.h"
 #include "../lib/err.h"
 #include "../lib/fs.h"
@@ -87,6 +89,15 @@ sysuser: {
 		return str_dup(pw->pw_name);
 }
 	return str_dup("author");
+}
+
+static int get_year()
+{
+	time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+
+    // The tm_year member stores years since 1900, so add 1900 to get the actual year
+	return current_year = t->tm_year + 1900;
 }
 
 int main(int argc, char **argv)
@@ -195,7 +206,7 @@ int main(int argc, char **argv)
 This manual is for %s foo (version @value{VERSION}, @value{UPDATED}),\n\
 a simple program for demonstrating Texinfo documentation.\n\
 \n\
-Copyright @copyright{} 2025 VX.\n\
+Copyright @copyright{} 2025 %s.\n\
 \n\
 @quotation\n\
 Copying and distribution of this file, with or without modification,\n\
@@ -269,13 +280,13 @@ foo: hello, world!\n\
 @end example\n\
 \n\
 @example\n\
-$ foo --message=\"VX rules!\"\n\
-foo: VX rules!\n\
+$ foo --message=\"%s rules!\"\n\
+foo: %s rules!\n\
 @end example\n\
 \n\
 @example\n\
 $ foo --version\n\
-VX foo @value{VERSION}\n\
+%s foo @value{VERSION}\n\
 @end example\n\
 \n\
 \n\
@@ -350,7 +361,7 @@ a @file{ChangeLog} entry.\n\
 @bye\
 ",
 		 author, author, author, author, author, author, author, author,
-		 author, author);
+		 author, author, author, author, author, author);
 
 	// TODO(vx-clutch): Why dosn't this write the source?
 	snprintf(path, sizeof(path), "src/%s.c", package);
@@ -366,6 +377,11 @@ a @file{ChangeLog} entry.\n\
 // Usage: %s [OPTION]...\n\
 \n\
 #include <stdlib.h>\n\
+#include <stdio.h>\n\
+\n\
+#include <config.h>\n\
+\n\
+#include \"../lib/proginfo.h\"\n\
 \n\
 static int exit_status;\n\
 \n\
@@ -374,11 +390,42 @@ static void print_version();\n\
 \n\
 int main(int argc, char **argv)\n\
 {\n\
-\n\
+	set_prog_name(argv[0]);\n\
+	\n\
 	exit_status = EXIT_SUCCESS;\n\
+\n\
 	return exit_status;\n\
-}\
-");
+}\n\
+\n\
+void print_help()\n\
+{\n\
+	printf(\"Usage: %%s [OPTION]...\\n\", PROGRAM);\n\
+	fputs(\"\\
+%s does a thing.\\n\",
+		stdout);\n\
+	puts(\"\");\n\
+	fputs(\"\\
+	  --help               display this help and exit\\n\\
+	  --version            display version information and exit\\n\",\n\
+	      stdout);\n\
+	puts(\"\");\n\
+	fputs(\"\\
+	  --option             Does an awesome thing\\n\\\",\n\
+	  stdout);\n\
+	exit(exit_status);\n\
+}\n\
+\n\
+void print_version()\n\
+{\n\
+	printf(\"%%s %%s %%d\\n\", prog_name, VERSION, COMMIT);\n\
+	\n\
+	printf(\"Copyright (C) %%d %s.\\n\", YEAR);
+	\n\
+	puts(\"This is free software: you are free to change and redistribute it.\");\n\
+	puts(\"There is NO WARRANTY, to the extent permitted by law.\");\n\
+	exit(exit_status);\n\
+}\n\
+", author, package, package, package, author);
 
 	fs_write("tools/Cleanup", "\
 #!/bin/sh\n\
