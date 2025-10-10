@@ -4,5 +4,6 @@ Todo:
 
   * Fix package.c generation
   * Add git integration: git init, add the gcklib submodule, ./gcklib-tool --import proginfo
+  * -x: for shell
 
 end of file TODO

@@ -111,13 +111,14 @@ int main(int argc, char **argv)
 	bool quiet = false;
 	bool force = false;
 	bool editor = false;
+	bool shell = false;
 	char *author = get_name();
 	int year = get_year();
 	licence_t licence = BSD;
 
 	parse_standard_options(argc, argv, print_help, print_version);
 
-	while ((optc = getopt_long(argc, argv, "a:l:Eqf", longopts, NULL)) !=
+	while ((optc = getopt_long(argc, argv, "a:l:Eqfx", longopts, NULL)) !=
 	       -1)
 		switch (optc) {
 		case 'a':
@@ -153,6 +154,9 @@ int main(int argc, char **argv)
 			break;
 		case 'f':
 			force = true;
+			break;
+		case 'x':
+			shell = true;
 			break;
 		default:
 			lose = 1;
