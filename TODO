@@ -2,8 +2,9 @@ GCK yait - TODO
 
 Todo:
 
-  * Fix package.c generation
+  * Fix package.c generation (won't write main source)
   * Add git integration: git init, add the gcklib submodule, ./gcklib-tool --import proginfo
   * -p: specify path
+  * new binary yait-sh
 
 end of file TODO
