@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 
 	parse_standard_options(argc, argv, print_help, print_version);
 
-	while ((optc = getopt_long(argc, argv, "a:l:Eqfx", longopts, NULL)) !=
+	while ((optc = getopt_long(argc, argv, "a:l:EqfS", longopts, NULL)) !=
 	       -1)
 		switch (optc) {
 		case 'a':
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
 		case 'f':
 			force = true;
 			break;
-		case 'x':
+		case 'S':
 			shell = true;
 			break;
 		default:
@@ -175,6 +175,67 @@ int main(int argc, char **argv)
 	}
 
 	package = str_dup(argv[optind]);
+
+	if (shell) {
+		fs_write(package, "\
+#!/bin/sh\n\
+\n\
+# Usage: $0 [options]...\n\
+\n\
+prog_name=$(basename $0)\n\
+tool_version=\"beta\"\n\
+year=%d\n\
+\n\
+fatal() {\n\
+	echo \"fatal: $*\" >&2\n\
+	exit 1\n\
+}\n\
+\n\
+run() {\n\
+	\"$@\" || fatal \"could not run: $*\"\n\
+}\n\
+\n\
+print_help() {\n\
+    cat <<EOF\n\
+Usage: $prog_name [options]...\n\
+\n\
+      --help     print this help and exit.\n\
+      --version  print version information.\n\
+EOF\n\
+}\n\
+\n\
+print_version() {\n\
+    cat <<EOF\n\
+$prog_name $tool_version $(git rev-list --count --all 2>/dev/null || echo 0)\n\
+Copyright (C) $year %s.\n\
+This is free software: you are free to change and redistribute it.\n\
+There is NO WARRANTY, to the extent permitted by law.\n\
+EOF\n\
+}\n\
+\n\
+while [ $# -gt 0 ]; do\n\
+    case \"$1\" in\n\
+        --help) print_help; exit 0 ;;\n\
+        --version) print_version; exit 0 ;;\n\
+	*) fatal \"Not implemented yet\" ;;\n\
+    esac\n\
+    shift\n\
+done\n\
+",
+			 year, author);
+		struct stat st;
+
+		if (stat(package, &st) != 0) {
+			fatalfa(errno);
+		}
+
+		mode_t mode = st.st_mode | S_IXUSR;
+
+		if (chmod(package, mode) != 0) {
+			fatalfa(errno);
+		}
+		return exit_status;
+	}
 
 	size_t len = strlen(package);
 	char *pdir = xmalloc(len + 2);
