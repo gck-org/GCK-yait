@@ -8,6 +8,7 @@
 
 // Usage: yait [OPTION]... <PROJECT>
 
+#include <config.h>
 #include <errno.h>
 #include <getopt.h>
 #include <limits.h>
@@ -21,8 +22,6 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <time.h>
-
-#include <config.h>
 
 #include "licence.h"
 #include "../lib/err.h"
@@ -105,16 +104,15 @@ int main(int argc, char **argv)
 	int optc;
 	int lose = 0;
 	char *package;
-	set_prog_name(argv[0]);
-
-	exit_status = EXIT_SUCCESS;
 	bool quiet = false;
 	bool force = false;
 	bool editor = false;
 	bool shell = false;
 	char *author = get_name();
+	exit_status = EXIT_SUCCESS;
 	int year = get_year();
 	licence_t licence = BSD;
+	set_prog_name(argv[0]);
 
 	parse_standard_options(argc, argv, print_help, print_version);
 
