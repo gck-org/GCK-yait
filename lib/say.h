@@ -1,11 +1,5 @@
 /*
- *   gcklib.err - Contains color printing functions
- *
- *   CONFIGURATION
- *       #define NOCOLOR
- *           Force no color when printing
- *       #define SHOW_TRACE
- *           Add debug traces to error printing
+ *   gcklib.say - Provides printing and some string utilies
  *
  *
  *   LICENSE: BSD-3-Clause
@@ -38,30 +32,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ERR_H
-#define ERR_H
+#ifndef SAY_H
+#define SAY_H
 
-void errorf(const char *format, ...);
-_Noreturn void fatalf(const char *format, ...);
-void notef(const char *format, ...);
-void warnf(const char *format, ...);
-void hintf(const char *format, ...);
+#include <stdarg.h>
 
-void errorfa(int code);
-_Noreturn void fatalfa(int code);
-void notefa(int code);
-void warnfa(int code);
-void hintfa(int code);
+int asprintf(char **buf, const char *fmt, ...);
+int vasprintf(char **buf, const char *fmt, va_list ap);
+int say(const char *restrict format, ...);
 
-#if defined(SHOW_TRACE)
-#define errorf(fmt, ...)                             \
-	errorf("%s:%s:%d: " fmt, __FILE__, __func__, \
-	       __LINE__ __VA_OPT__(, ) __VA_ARGS__)
-#define fatalf(fmt, ...)                             \
-	fatalf("%s:%s:%d: " fmt, __FILE__, __func__, \
-	       __LINE__ __VA_OPT__(, ) __VA_ARGS__)
-#endif
+void alert();
+
+_Noreturn void die(const char *msg);
 
 #endif
 
-/* end of file err.h */
+/* end of file say.h */

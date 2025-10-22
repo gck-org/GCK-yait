@@ -56,12 +56,14 @@
 #include <stdbool.h>
 #include <time.h>
 
+#define SHOW_TRACE
+
 #include "licence.h"
 #include "../lib/err.h"
 #include "../lib/fs.h"
-#include "../lib/xmem.h"
 #include "../lib/proginfo.h"
 #include "../lib/textc.h"
+#include "../lib/say.h"
 
 typedef enum { MIT, GPL, BSD, UNL } licence_t;
 
@@ -268,14 +270,15 @@ done\n\
 		return exit_status;
 	}
 
-	size_t len = strlen(package);
-	char *pdir = xmalloc(len + 2);
-	memcpy(pdir, package, len);
-	pdir[len] = '/';
-	pdir[len + 1] = '\0';
+	// size_t len = strlen(package);
+	// char *pdir = xmalloc(len + 2);
+	// memcpy(pdir, package, len);
+	// pdir[len] = '/';
+	// pdir[len + 1] = '\0';
+	char *pdir;
+	asprintf(&pdir, "%s/", package);
 
-	if (fs_new(pdir) == -1 && errno != EEXIST)
-		fatalfa(errno);
+	fs_new(pdir);
 	if (chdir(pdir))
 		fatalfa(errno);
 
@@ -287,9 +290,10 @@ done\n\
 ",
 		 "1 January 1970", "January 2025");
 
-	char path[BUFSIZ];
-	snprintf(path, sizeof(path), "doc/%s.texi", package);
-	fs_write(path, "\
+	char *texi_buffer;
+	// snprintf(path_buffer, sizeof(path_buffer), "doc/%s.texi", package);
+	asprintf(&texi_buffer, "doc/%s.texi", package);
+	fs_write(texi_buffer, "\
 \\input texinfo @c -*-texinfo-*-\n\
 @c %**start of header\n\
 @setfilename foo.info\n\
@@ -460,10 +464,13 @@ a @file{ChangeLog} entry.\n\
 ",
 		 author, author, author, author, author, author, author, author,
 		 author, author, author, author, author, author);
+	free(texi_buffer);
 
 	// TODO(vx-clutch): Why dosn't this write the source?
-	snprintf(path, sizeof(path), "src/%s.c", package);
-	fs_write(path, "\
+	// snprintf(path_buffer, sizeof(path_buffer), "src/%s.c", package);
+	char *src_path;
+	asprintf(&src_path, "src/%s.c", package);
+	fs_write(src_path, "\
 /* Copyright (C) %s\n\
  *\n\
  * This file is part of %s\n\
@@ -525,6 +532,7 @@ void print_version()\n\
 }\
 ",
 		 author, package, package, package, author);
+	free(src_path);
 
 	fs_write("tools/Cleanup", "\
 #!/bin/sh\n\

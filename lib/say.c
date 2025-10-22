@@ -1,11 +1,5 @@
 /*
- *   gcklib.err - Contains color printing functions
- *
- *   CONFIGURATION
- *       #define NOCOLOR
- *           Force no color when printing
- *       #define SHOW_TRACE
- *           Add debug traces to error printing
+ *   gcklib.say - Provides printing and some string utilies
  *
  *
  *   LICENSE: BSD-3-Clause
@@ -38,30 +32,74 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ERR_H
-#define ERR_H
+#include "say.h"
 
-void errorf(const char *format, ...);
-_Noreturn void fatalf(const char *format, ...);
-void notef(const char *format, ...);
-void warnf(const char *format, ...);
-void hintf(const char *format, ...);
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
 
-void errorfa(int code);
-_Noreturn void fatalfa(int code);
-void notefa(int code);
-void warnfa(int code);
-void hintfa(int code);
+#include "xmem.h"
 
-#if defined(SHOW_TRACE)
-#define errorf(fmt, ...)                             \
-	errorf("%s:%s:%d: " fmt, __FILE__, __func__, \
-	       __LINE__ __VA_OPT__(, ) __VA_ARGS__)
-#define fatalf(fmt, ...)                             \
-	fatalf("%s:%s:%d: " fmt, __FILE__, __func__, \
-	       __LINE__ __VA_OPT__(, ) __VA_ARGS__)
-#endif
+void alert()
+{
+	fputs("\a", stderr);
+	fflush(stderr);
+	return;
+}
 
-#endif
+int vasprintf(char **result, const char *fmt, va_list ap)
+{
+	int total_width = strlen(fmt) + 1;
+	*result = (char *)xmalloc(total_width);
+	return vsprintf(*result, fmt, ap);
+}
 
-/* end of file err.h */
+int asprintf(char **buf, const char *fmt, ...)
+{
+	int status;
+	va_list ap;
+	va_start(ap, fmt);
+	status = vasprintf(buf, fmt, ap);
+	va_end(ap);
+	return status;
+}
+
+int say(const char *restrict format, ...)
+{
+	struct winsize w;
+	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) {
+		va_list args;
+		va_start(args, format);
+		int ret = vprintf(format, args);
+		va_end(args);
+		putchar('\n');
+		fflush(stdout);
+		return ret;
+	}
+
+	printf("\0337"); // save cursor (ESC 7)
+	printf("\033[%d;1H", w.ws_row); // move to last row
+	printf("\033[2K"); // clear entire line
+
+	va_list args;
+	va_start(args, format);
+	int ret = vprintf(format, args); // print formatted message
+	va_end(args);
+
+	fflush(stdout); // ensure it's visible immediately
+	printf("\0338"); // restore cursor (ESC 8)
+	fflush(stdout);
+
+	return ret;
+}
+
+_Noreturn void die(const char *msg)
+{
+	fputs(msg, stderr);
+	exit(EXIT_FAILURE);
+}
+
+/* end of file say.c */
