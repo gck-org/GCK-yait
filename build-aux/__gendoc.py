@@ -46,6 +46,35 @@
 import sys
 import os
 
+header = '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+</style>
+</head>
+<body>
+<div class="header"></div>
+<div class="reference">
+<pre><code>
+'''
+
+footer = '''
+</code></pre>
+</div>
+</body>
+</html>
+'''
+
+entry = '''
+%s // %s
+'''
+
+# TODO: read all files
+# TODO: Parse for /*- -*/
+# TODO: Add entry to entries arr
+
 def main(args):
     print(f"call {args[0]}")
     return 0
