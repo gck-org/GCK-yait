@@ -4,7 +4,7 @@
  *   FEATURES:
  *       - Generate complete build systems: Autotools-like Makefile
  *       - Generate complete base system, ready to compile
- -       - Generate preconfigured gcklib, ready to import
+ *       - Generate preconfigured gcklib, ready to import
  *
  *   LIMITATIONS:
  *       - Platform: Only builds for POSIX systems
