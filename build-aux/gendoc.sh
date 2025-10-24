@@ -33,15 +33,17 @@ There is NO WARRANTY, to the extent permitted by law.
 EOF
 }
 
-header=$(cat <<EOF
-
-EOF)
+old_args="$@"
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --help) print_help; exit 0 ;;
         --version) print_version; exit 0 ;;
-	*) fatal "Not implemented yet" ;;
     esac
     shift
 done
+
+PYTHON_BIN="$(command -v python3 || command -v python)"
+SCRIPT="__gendoc.py"
+
+exec "$PYTHON_BIN" "$SCRIPT" $old_args
