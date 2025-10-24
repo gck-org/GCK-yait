@@ -56,8 +56,6 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define SHOW_TRACE
-
 #include "licence.h"
 #include "../lib/err.h"
 #include "../lib/fs.h"

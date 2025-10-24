@@ -44,8 +44,6 @@
 
 #include "err.h"
 
-#include "proginfo.h"
-
 #define RESET "\x1B[0m"
 #define ERROR "\x1B[1;91m"
 #define WARN "\x1B[1;95m"

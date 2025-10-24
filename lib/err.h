@@ -54,12 +54,16 @@ void warnfa(int code);
 void hintfa(int code);
 
 #if defined(SHOW_TRACE)
-#define errorf(fmt, ...)                             \
-	errorf("%s:%s:%d: " fmt, __FILE__, __func__, \
-	       __LINE__ __VA_OPT__(, ) __VA_ARGS__)
-#define fatalf(fmt, ...)                             \
-	fatalf("%s:%s:%d: " fmt, __FILE__, __func__, \
-	       __LINE__ __VA_OPT__(, ) __VA_ARGS__)
+#define errorf(fmt, ...)                                     \
+	do {                                                 \
+		errorf("%s:%s:%d: " fmt, __FILE__, __func__, \
+		       __LINE__ __VA_OPT__(, ) __VA_ARGS__); \
+	} while (0)
+#define fatalf(fmt, ...)                                     \
+	do {                                                 \
+		fatalf("%s:%s:%d: " fmt, __FILE__, __func__, \
+		       __LINE__ __VA_OPT__(, ) __VA_ARGS__); \
+	} while (0)
 #endif
 
 #endif
