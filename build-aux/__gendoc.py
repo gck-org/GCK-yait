@@ -2,9 +2,7 @@
 #   gendoc vbeta - Generates docs from source comments
 #
 #   FEATURES:
-#       - Generate complete build systems: Autotools-like Makefile
-#       - Generate complete base system, ready to compile
-#       - Generate preconfigured gcklib, ready to import
+#       - Generate comment-based documentation
 #
 #   LIMITATIONS:
 #       - Platform: Only builds for POSIX systems
@@ -75,8 +73,15 @@ entry = '''
 # TODO: Parse for /*- -*/
 # TODO: Add entry to entries arr
 
+# Entry structure
+#
+# /*-                ;Start marker
+# int addTwo(int x)  ;Signature
+# Adds two to x      ;Description
+# -*/                ;End marker
+
 def main(args):
-    print(f"call {args[0]}")
+    print(f"call {args[0]}"
     return 0
 
 if __name__ == "__main__":
