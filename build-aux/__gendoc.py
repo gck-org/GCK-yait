@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #
 #   gendoc vbeta - Generates docs from source comments
 #
@@ -9,7 +10,6 @@
 #
 #   COMPILATION (Linux - POSIX):
 #       ./gendoc.sh
-#
 #
 #   LICENSE: BSD-3-Clause
 #
@@ -42,47 +42,75 @@
 #
 
 import sys
+import re
 import os
 
-header = '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<style>
-</style>
-</head>
-<body>
-<div class="header"></div>
-<div class="reference">
-<pre><code>
-'''
 
-footer = '''
-</code></pre>
-</div>
-</body>
-</html>
-'''
+def extract_blocks(source):
+    pattern = re.compile(r'/\*-\s*(.*?)\s*-\*/', re.DOTALL)
+    blocks = pattern.findall(source)
+    results = []
+    for block in blocks:
+        lines = [line.strip() for line in block.strip().splitlines() if line.strip()]
+        if not lines:
+            continue
+        decl = lines[0]
+        desc = " ".join(lines[1:]) if len(lines) > 1 else ""
+        results.append([decl, desc])
+    return results
 
-entry = '''
-%s // %s
-'''
 
-# TODO: read all files
-# TODO: Parse for /*- -*/
-# TODO: Add entry to entries arr
+def search_directory(directory):
+    collected = []
+    for root, _, files in os.walk(directory):
+        for name in files:
+            if name.endswith(('.c', '.h')):
+                path = os.path.join(root, name)
+                with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                    collected.extend(extract_blocks(f.read()))
+    return collected
 
-# Entry structure
-#
-# /*-                ;Start marker
-# int addTwo(int x)  ;Signature
-# Adds two to x      ;Description
-# -*/                ;End marker
 
-def main(args):
-    print(f"call {args[0]}"
+def main(argv):
+    source_dir = argv[1] if len(argv) > 1 else "../src"
+    if not os.path.isdir(source_dir):
+        print(f"error: '{source_dir}' is not a directory", file=sys.stderr)
+        return 1
+
+    result = search_directory(source_dir)
+    if not result:
+        return 0
+
+    max_decl_len = max(len(decl) for decl, _ in result)
+    output_path = "gendoc.html"
+
+    header = (
+        "<!DOCTYPE html>\n"
+        "<html>\n"
+        "<head>\n"
+        "<meta charset='utf-8'>\n"
+        "<title>Documentation</title>\n"
+        "<style>\n"
+        "body { font-family: monospace; white-space: pre; }\n"
+        "</style>\n"
+        "</head>\n"
+        "<body>\n<pre><code>\n"
+    )
+
+    footer = (
+        "</code></pre>\n"
+        "</body>\n"
+        "</html>\n"
+    )
+
+
+    with open(output_path, 'w', encoding='utf-8') as out:
+        out.write(header)
+        for decl, desc in result:
+            out.write(f"{decl.ljust(max_decl_len)}  // {desc}\n")
+        out.write(footer)
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))

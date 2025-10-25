@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 /*-
-int foo(int x)
+int foo(int x);
 Addes 34 to the provided integer x.
 -*/
 
