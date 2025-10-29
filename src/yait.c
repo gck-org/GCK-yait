@@ -485,66 +485,66 @@ a @file{ChangeLog} entry.\n\
 	asprintf(&src_path, "src/%s.c", package);
 	fs_write(src_path, "typedef int x;");
 	//   fs_write(src_path, "\
-// /* Copyright (C) %s\n\
-//  *\n\
-//  * This file is part of %s\n\
-//  *\n\
-//  * This project and file is licenced under the BSD-3-Clause licence.\n\
-//  * <https://opensource.org/licence/bsd-3-clause>\n\
-//  */\n\
-// \n\
-// // Usage: %s [OPTION]...\n\
-// \n\
-// #include <stdlib.h>\n\
-// #include <stdio.h>\n\
-// \n\
-// #include <config.h>\n\
-// \n\
-// #include \"../lib/proginfo.h\"\n\
-// \n\
-// static int exit_status;\n\
-// \n\
-// static void print_help();\n\
-// static void print_version();\n\
-// \n\
-// int main(int argc, char **argv)\n\
-// {\n\
-// 	set_prog_name(argv[0]);\n\
-// 	\n\
-// 	exit_status = EXIT_SUCCESS;\n\
-// \n\
-// 	return exit_status;\n\
-// }\n\
-// \n\
-// void print_help()\n\
-// {\n\
-// 	printf(\"Usage: %%s [OPTION]...\\n\", PROGRAM);\n\
-// 	fputs(\"\\
-// %s does a thing.\\n\",\n\
-// 		 stdout);\n\
-// 	\n puts(\"\");\n\
-// 	fputs(\"\\
-// 	  --help               display this help and exit\\n\\
-// 	  --version            display version information and exit\\n\",\n\
-// 	      stdout);\n\
-// 	puts(\"\");\n\
-// 	fputs(\"\\
-// 	  --option             Does an awesome thing\\n\\\",\n\
-// 	  stdout);\n\
-// 	exit(exit_status);\n\
-// }\n\
-// \n\
-// void print_version()\n\
-// {\n\
-// 	printf(\"%%s %%s %%d\\n\", prog_name, VERSION, COMMIT);\n\
-// 	\n\
-// 	printf(\"Copyright (C) %%d %s.\\n\", YEAR);\n\
-// 	\n\
-// 	puts(\"This is free software: you are free to change and redistribute it.\");\n\
-// 	puts(\"There is NO WARRANTY, to the extent permitted by law.\");\n\
-// 	exit(exit_status);\n\
-// }\
-// ",
+	// /* Copyright (C) %s\n\
+	//  *\n\
+	//  * This file is part of %s\n\
+	//  *\n\
+	//  * This project and file is licenced under the BSD-3-Clause licence.\n\
+	//  * <https://opensource.org/licence/bsd-3-clause>\n\
+	//  */\n\
+	// \n\
+	// // Usage: %s [OPTION]...\n\
+	// \n\
+	// #include <stdlib.h>\n\
+	// #include <stdio.h>\n\
+	// \n\
+	// #include <config.h>\n\
+	// \n\
+	// #include \"../lib/proginfo.h\"\n\
+	// \n\
+	// static int exit_status;\n\
+	// \n\
+	// static void print_help();\n\
+	// static void print_version();\n\
+	// \n\
+	// int main(int argc, char **argv)\n\
+	// {\n\
+	// 	set_prog_name(argv[0]);\n\
+	// 	\n\
+	// 	exit_status = EXIT_SUCCESS;\n\
+	// \n\
+	// 	return exit_status;\n\
+	// }\n\
+	// \n\
+	// void print_help()\n\
+	// {\n\
+	// 	printf(\"Usage: %%s [OPTION]...\\n\", PROGRAM);\n\
+	// 	fputs(\"\\
+	// %s does a thing.\\n\",\n\
+	// 		 stdout);\n\
+	// 	\n puts(\"\");\n\
+	// 	fputs(\"\\
+	// 	  --help               display this help and exit\\n\\
+	// 	  --version            display version information and exit\\n\",\n\
+	// 	      stdout);\n\
+	// 	puts(\"\");\n\
+	// 	fputs(\"\\
+	// 	  --option             Does an awesome thing\\n\\\",\n\
+	// 	  stdout);\n\
+	// 	exit(exit_status);\n\
+	// }\n\
+	// \n\
+	// void print_version()\n\
+	// {\n\
+	// 	printf(\"%%s %%s %%d\\n\", prog_name, VERSION, COMMIT);\n\
+	// 	\n\
+	// 	printf(\"Copyright (C) %%d %s.\\n\", YEAR);\n\
+	// 	\n\
+	// 	puts(\"This is free software: you are free to change and redistribute it.\");\n\
+	// 	puts(\"There is NO WARRANTY, to the extent permitted by law.\");\n\
+	// 	exit(exit_status);\n\
+	// }\
+	// ",
 	//            author, package, package, package, author);
 	free(src_path);
 
