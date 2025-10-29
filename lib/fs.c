@@ -53,150 +53,159 @@
 #include "xmem.h"
 
 #if defined(FS_ERROR_ON)
-#define RETURN(code)                                                           \
-  errorfa(code);                                                               \
-  return code
+#define RETURN(code)   \
+	errorfa(code); \
+	return code
 #elif defined(FS_FATAL_OFF)
 #define RETURN(code) return code
 #else
 #define RETURN(code) fatalfa(code)
 #endif
 
-char *fs_read(const char *path) {
-  FILE *fptr = fopen(path, "r");
-  if (!fptr) {
+char *fs_read(const char *path)
+{
+	FILE *fptr = fopen(path, "r");
+	if (!fptr) {
 #if defined(FS_ERROR_ON)
-    errorfa(errno);
+		errorfa(errno);
 #elif defined(FS_FATAL_ON)
-    fatalfa(errno);
+		fatalfa(errno);
 #endif
-    return NULL;
-  }
+		return NULL;
+	}
 
-  size_t cap = 1024;
-  size_t len = 0;
-  char *buf = xmalloc(cap);
+	size_t cap = 1024;
+	size_t len = 0;
+	char *buf = xmalloc(cap);
 
-  int c;
-  while ((c = fgetc(fptr)) != EOF) {
-    if (len + 1 >= cap) {
-      cap *= 2;
-      char *tmp = realloc(buf, cap);
-      if (!tmp) {
-        free(buf);
-        fclose(fptr);
-        return NULL;
-      }
-      buf = tmp;
-    }
-    buf[len++] = (char)c;
-  }
-  buf[len] = '\0';
+	int c;
+	while ((c = fgetc(fptr)) != EOF) {
+		if (len + 1 >= cap) {
+			cap *= 2;
+			char *tmp = realloc(buf, cap);
+			if (!tmp) {
+				free(buf);
+				fclose(fptr);
+				return NULL;
+			}
+			buf = tmp;
+		}
+		buf[len++] = (char)c;
+	}
+	buf[len] = '\0';
 
-  fclose(fptr);
-  return buf;
+	fclose(fptr);
+	return buf;
 }
 
-bool fs_exists(const char *path) {
-  FILE *fptr;
-  bool exists;
+bool fs_exists(const char *path)
+{
+	FILE *fptr;
+	bool exists;
 
-  fptr = fopen(path, "r");
-  if (fptr) {
-    exists = true;
-  } else {
-    exists = false;
-  }
+	fptr = fopen(path, "r");
+	if (fptr) {
+		exists = true;
+	} else {
+		exists = false;
+	}
 
-  fclose(fptr);
-  return exists;
+	fclose(fptr);
+	return exists;
 }
 
-int fs_append(const char *path, const char *format, ...) {
-  FILE *fp = fopen(path, "a");
-  if (!fp)
-    RETURN(errno);
+int fs_append(const char *path, const char *format, ...)
+{
+	FILE *fp = fopen(path, "a");
+	if (!fp)
+		RETURN(errno);
 
-  va_list ap;
-  va_start(ap, format);
-  int ret = vfprintf(fp, format, ap);
-  va_end(ap);
+	va_list ap;
+	va_start(ap, format);
+	int ret = vfprintf(fp, format, ap);
+	va_end(ap);
 
-  if (ret < 0) {
-    fclose(fp);
-    RETURN(errno);
-  }
+	if (ret < 0) {
+		fclose(fp);
+		RETURN(errno);
+	}
 
-  if (fclose(fp) != 0)
-    RETURN(errno);
+	if (fclose(fp) != 0)
+		RETURN(errno);
 
-  return ret;
+	return ret;
 }
 
-int fs_del(const char *path) { RETURN(remove(path)); }
-
-int fs_new(const char *path) {
-  size_t len;
-  int fd;
-
-  if (path == NULL) {
-    errno = EINVAL;
-    RETURN(-1);
-  }
-
-  len = strlen(path);
-  if (len == 0) {
-    errno = EINVAL;
-    RETURN(-1);
-  }
-
-  if (path[len - 1] == '/') {
-    if (mkdir(path, 0777) == -1)
-      RETURN(-1);
-  } else {
-    fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0666);
-    if (fd == -1)
-      RETURN(-1);
-    close(fd);
-  }
-
-  return 0;
+int fs_del(const char *path)
+{
+	RETURN(remove(path));
 }
 
-int fs_write(const char *path, const char *format, ...) {
-  FILE *fptr = fopen(path, "w");
-  if (!fptr)
-    RETURN(-1);
+int fs_new(const char *path)
+{
+	size_t len;
+	int fd;
 
-  va_list ap;
-  va_start(ap, format);
-  int ret = vfprintf(fptr, format, ap);
-  va_end(ap);
+	if (path == NULL) {
+		errno = EINVAL;
+		RETURN(-1);
+	}
 
-  if (ret < 0) {
-    fclose(fptr);
-    RETURN(-1);
-  }
+	len = strlen(path);
+	if (len == 0) {
+		errno = EINVAL;
+		RETURN(-1);
+	}
 
-  if (fclose(fptr) != 0)
-    RETURN(-1);
+	if (path[len - 1] == '/') {
+		if (mkdir(path, 0777) == -1)
+			RETURN(-1);
+	} else {
+		fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0666);
+		if (fd == -1)
+			RETURN(-1);
+		close(fd);
+	}
 
-  return ret;
+	return 0;
 }
 
-FILE *fs_temp() {
-  FILE *fptr = tmpfile();
+int fs_write(const char *path, const char *format, ...)
+{
+	FILE *fptr = fopen(path, "w");
+	if (!fptr)
+		RETURN(-1);
 
-  if (!fptr) {
+	va_list ap;
+	va_start(ap, format);
+	int ret = vfprintf(fptr, format, ap);
+	va_end(ap);
+
+	if (ret < 0) {
+		fclose(fptr);
+		RETURN(-1);
+	}
+
+	if (fclose(fptr) != 0)
+		RETURN(-1);
+
+	return ret;
+}
+
+FILE *fs_temp()
+{
+	FILE *fptr = tmpfile();
+
+	if (!fptr) {
 #if defined(FS_ERROR_ON)
-    errorf("tmp failed");
+		errorf("tmp failed");
 #elif defined(FS_FATAL_ON)
-    fatalf("tmp failed");
+		fatalf("tmp failed");
 #endif
-    return NULL;
-  }
+		return NULL;
+	}
 
-  return fptr;
+	return fptr;
 }
 
 /* end of file fs.c */

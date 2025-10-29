@@ -40,20 +40,26 @@
 
 #include "xmem.h"
 
-void *ensure_nonnull(void *ptr) {
-  if (ptr == NULL)
-    fatalf("memory exhausted");
-  return ptr;
+void *ensure_nonnull(void *ptr)
+{
+	if (ptr == NULL)
+		fatalf("memory exhausted");
+	return ptr;
 }
 
-void *xmalloc(size_t size) { return ensure_nonnull(malloc(size)); }
-
-void *xrealloc(void *ptr, size_t size) {
-  return ensure_nonnull(realloc(ptr, size));
+void *xmalloc(size_t size)
+{
+	return ensure_nonnull(malloc(size));
 }
 
-void *xcalloc(size_t nmemb, size_t size) {
-  return ensure_nonnull(calloc(nmemb, size));
+void *xrealloc(void *ptr, size_t size)
+{
+	return ensure_nonnull(realloc(ptr, size));
+}
+
+void *xcalloc(size_t nmemb, size_t size)
+{
+	return ensure_nonnull(calloc(nmemb, size));
 }
 
 /* end of file xmem.c */
