@@ -2,7 +2,8 @@ GCK yait --- TODO
 
 Todo:
 
-  * update copyright every January 1st
-  * pre-commit scripts
+  * improve file writting
+    * custom replace sytnax
+    * factor out the strings into seperate file
 
 end of file TODO
