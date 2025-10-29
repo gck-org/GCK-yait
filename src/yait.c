@@ -62,6 +62,7 @@
 #include "../lib/proginfo.h"
 #include "../lib/say.h"
 #include "../lib/textc.h"
+#include "../lib/xmem.h"
 #include "licence.h"
 
 typedef enum { MIT, GPL, BSD, UNL } licence_t;
@@ -76,6 +77,22 @@ static int exit_status;
 
 static void print_help();
 static void print_version();
+
+static char *source_replace(const char *restrict template,
+                            const char *restrict package,
+                            const char *restrict author) {
+  /*
+   * XXX(vx-clutch):
+   *     - package token : {{PACKAGE}}
+   *     - author token : {{AUTHOR}}
+   *
+   *     - allocate buffer
+   *     - replace all packages with package and authors with author
+   *     - return
+   */
+  char *buffer = xmalloc(99999999999);
+  return NULL;
+}
 
 static char *get_name() {
   int fds[2];
@@ -124,8 +141,6 @@ static int get_year() {
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
 
-  // The tm_year member stores years since 1900, so add 1900 to get the actual
-  // year
   return t->tm_year + 1900;
 }
 
@@ -263,17 +278,17 @@ done\n\
     return exit_status;
   }
 
-  // size_t len = strlen(package);
-  // char *pdir = xmalloc(len + 2);
-  // memcpy(pdir, package, len);
-  // pdir[len] = '/';
-  // pdir[len + 1] = '\0';
   char *pdir;
   asprintf(&pdir, "%s/", package);
 
   fs_new(pdir);
   if (chdir(pdir))
     fatalfa(errno);
+
+  fs_new("doc/");
+  fs_new("src/");
+  fs_new("tools/");
+  fs_new("lib/");
 
   fs_write("doc/version.texi", "\
 @set UPDATED %s\
@@ -284,7 +299,6 @@ done\n\
            "1 January 1970", "January 2025");
 
   char *texi_buffer;
-  // snprintf(path_buffer, sizeof(path_buffer), "doc/%s.texi", package);
   asprintf(&texi_buffer, "doc/%s.texi", package);
   fs_write(texi_buffer, "\
 \\input texinfo @c -*-texinfo-*-\n\
@@ -459,72 +473,71 @@ a @file{ChangeLog} entry.\n\
            author, author, author, author, author, author);
   free(texi_buffer);
 
-  // TODO(vx-clutch): Why dosn't this write the source?
-  // snprintf(path_buffer, sizeof(path_buffer), "src/%s.c", package);
   char *src_path;
   asprintf(&src_path, "src/%s.c", package);
-  fs_write(src_path, "\
-/* Copyright (C) %s\n\
- *\n\
- * This file is part of %s\n\
- *\n\
- * This project and file is licenced under the BSD-3-Clause licence.\n\
- * <https://opensource.org/licence/bsd-3-clause>\n\
- */\n\
-\n\
-// Usage: %s [OPTION]...\n\
-\n\
-#include <stdlib.h>\n\
-#include <stdio.h>\n\
-\n\
-#include <config.h>\n\
-\n\
-#include \"../lib/proginfo.h\"\n\
-\n\
-static int exit_status;\n\
-\n\
-static void print_help();\n\
-static void print_version();\n\
-\n\
-int main(int argc, char **argv)\n\
-{\n\
-	set_prog_name(argv[0]);\n\
-	\n\
-	exit_status = EXIT_SUCCESS;\n\
-\n\
-	return exit_status;\n\
-}\n\
-\n\
-void print_help()\n\
-{\n\
-	printf(\"Usage: %%s [OPTION]...\\n\", PROGRAM);\n\
-	fputs(\"\\
-%s does a thing.\\n\",\n\
-		 stdout);\n\
-	\n puts(\"\");\n\
-	fputs(\"\\
-	  --help               display this help and exit\\n\\
-	  --version            display version information and exit\\n\",\n\
-	      stdout);\n\
-	puts(\"\");\n\
-	fputs(\"\\
-	  --option             Does an awesome thing\\n\\\",\n\
-	  stdout);\n\
-	exit(exit_status);\n\
-}\n\
-\n\
-void print_version()\n\
-{\n\
-	printf(\"%%s %%s %%d\\n\", prog_name, VERSION, COMMIT);\n\
-	\n\
-	printf(\"Copyright (C) %%d %s.\\n\", YEAR);\n\
-	\n\
-	puts(\"This is free software: you are free to change and redistribute it.\");\n\
-	puts(\"There is NO WARRANTY, to the extent permitted by law.\");\n\
-	exit(exit_status);\n\
-}\
-",
-           author, package, package, package, author);
+  fs_write(src_path, "typedef int x;");
+  //   fs_write(src_path, "\
+// /* Copyright (C) %s\n\
+//  *\n\
+//  * This file is part of %s\n\
+//  *\n\
+//  * This project and file is licenced under the BSD-3-Clause licence.\n\
+//  * <https://opensource.org/licence/bsd-3-clause>\n\
+//  */\n\
+// \n\
+// // Usage: %s [OPTION]...\n\
+// \n\
+// #include <stdlib.h>\n\
+// #include <stdio.h>\n\
+// \n\
+// #include <config.h>\n\
+// \n\
+// #include \"../lib/proginfo.h\"\n\
+// \n\
+// static int exit_status;\n\
+// \n\
+// static void print_help();\n\
+// static void print_version();\n\
+// \n\
+// int main(int argc, char **argv)\n\
+// {\n\
+// 	set_prog_name(argv[0]);\n\
+// 	\n\
+// 	exit_status = EXIT_SUCCESS;\n\
+// \n\
+// 	return exit_status;\n\
+// }\n\
+// \n\
+// void print_help()\n\
+// {\n\
+// 	printf(\"Usage: %%s [OPTION]...\\n\", PROGRAM);\n\
+// 	fputs(\"\\
+// %s does a thing.\\n\",\n\
+// 		 stdout);\n\
+// 	\n puts(\"\");\n\
+// 	fputs(\"\\
+// 	  --help               display this help and exit\\n\\
+// 	  --version            display version information and exit\\n\",\n\
+// 	      stdout);\n\
+// 	puts(\"\");\n\
+// 	fputs(\"\\
+// 	  --option             Does an awesome thing\\n\\\",\n\
+// 	  stdout);\n\
+// 	exit(exit_status);\n\
+// }\n\
+// \n\
+// void print_version()\n\
+// {\n\
+// 	printf(\"%%s %%s %%d\\n\", prog_name, VERSION, COMMIT);\n\
+// 	\n\
+// 	printf(\"Copyright (C) %%d %s.\\n\", YEAR);\n\
+// 	\n\
+// 	puts(\"This is free software: you are free to change and redistribute it.\");\n\
+// 	puts(\"There is NO WARRANTY, to the extent permitted by law.\");\n\
+// 	exit(exit_status);\n\
+// }\
+// ",
+  //            author, package, package, package, author);
   free(src_path);
 
   fs_write("tools/Cleanup", "\
