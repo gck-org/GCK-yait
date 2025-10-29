@@ -93,7 +93,7 @@ static char *source_replace(const char *restrict template,
    *     - replace all packages with package and authors with author
    *     - return
    */
-	char *buffer = xmalloc(99999999999);
+	char *buffer = xmalloc(2147483647);
 	return NULL;
 }
 
