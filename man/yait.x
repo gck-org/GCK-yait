@@ -1,2 +1,4 @@
 [NAME]
-yait - an optionated C project generator
+yait - An opinionated C project generator
+[ADDITIONAL INFORMATION]
+.UR https://github.com/gck-org/yait

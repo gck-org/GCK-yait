@@ -1,10 +1,8 @@
-GCK yait - TODO
+GCK yait --- TODO
 
 Todo:
 
-  * Fix package.c generation
-  * Add git integration: git init, add the gcklib submodule, ./gcklib-tool --import proginfo
-  * -p: specify path
-  * sanitize input (gcklib feature)
+  * update copyright every January 1st
+  * pre-commit scripts
 
 end of file TODO

@@ -1,5 +1,8 @@
+#!/bin/sh
+#   gck.compile - Compile wrapper for GCK distributions
 #
-#   Makefile for yait (requires GNU make)
+#    COMPILATION (Linux - POSIX):
+#        ./compile
 #
 #
 #   LICENSE: BSD-3-Clause
@@ -32,62 +35,67 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-PACKAGE := yait
+me=$0
+scriptversion="1.0.0"
 
-SRCS := $(wildcard src/*.c) $(wildcard lib/*.c)
-OBJS := $(patsubst src/%.c,build/obj/%.o,$(SRCS))
+version="make $scriptversion
 
-BIN := bin/$(PACKAGE)
+Copyright (C) 2025 GCK.
 
-COMMIT := $(shell git rev-list --count --all)
-FLAGS := -I. -DCOMMIT=$(COMMIT) --std=c2x -pedantic
+This is free software; you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law."
 
-VERSION := $(shell git describe --tags --always --dirty)
-TARBALL := $(PACKAGE)-$(VERSION).tar.gz
-RELEASE_FILES := doc src lib COPYING AUTHORS README hello.1 INSTALL Makefile configure config.h
+usage="\
+Usage: $me [OPTION]...
+Compile wrapper for GCK distributions
 
--include config.mak
+Options:
+   -R         force re-compile everything
 
-ifeq ($(wildcard config.mak),)
-all:
-	@echo "File config.mak not found, run configure"
-	@exit 1
+   --help     print this help and exit
+   --version  output version information
+
+Automatically passes arugments to 'configure'"
+
+rebuild=
+
+while test $# -gt 0; do
+  case $1 in
+    --help) echo "$usage"; exit 0;;
+    --version) echo "$version"; exit 0;;
+    -R) rebuild=true ;;
+    -*)
+     echo "$0: Unknown option '$1'." >&2
+     echo "$0: Try '--help' for more information." >&2
+     exit 1;;
+  esac
+  shift
+done
+
+if [ -f ./config.mak ] && [ -z "$rebuild" ]; then
+   echo "$0: reusing old 'config.mak'"
 else
+if [ ! -x ./configure ]; then
+    echo "$0: 'configure' not found or not executable" >&2
+    exit 1
+fi
 
-all: build $(BIN) doc
+echo "$0: configuring $(basename "$(git rev-parse --show-toplevel)")"
+./configure "$@"
+if [ $? -ne 0 ]; then
+    echo "error: configure failed" >&2
+    exit 1
+fi
 
-build:
-	mkdir -p bin
-	mkdir -p build/obj
+fi
 
-build/obj/%.o: src/%.c config.mak
-	$(CC) $(FLAGS) $(CFLAGS) -c $< -o $@
+echo "$0: starting build"
+make -j"$(nproc)"
+if [ $? -ne 0 ]; then
+    echo "error: build failed" >&2
+    exit 1
+fi
 
-$(BIN): $(OBJS) 
-	$(CC) $(FLAGS) $(CFLAGS) $^ -o $@
+echo "$0: finish"
 
-endif
-
-install: $(BIN)
-	cp $(BIN) $(PREFIX)
-
-doc:
-	$(MAKE) -C doc all
-
-uninstall:
-	$(RM) $(PREFIX)$(PACKAGE)
-
-clean:
-	$(RM) -r bin
-	$(RM) -r build
-	$(MAKE) -C doc clean
-
-distclean: clean
-	$(RM) config.mak config.status
-	$(RM) $(TARBALL)
-	$(MAKE) -C doc clean
-
-release: clean all
-	tar -czf $(TARBALL) $(RELEASE_FILES)
-
-.PHONY: all clean distclean install uninstall build release doc
+# End: compile

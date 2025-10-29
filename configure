@@ -1,90 +1,200 @@
 #!/bin/sh
+#   gck.configure - Prepares the build system for GCK distributions
+#   FEATURES:
+#       - Generate config.mak
+#       - Sets C Flags
+#
+#    COMPILATION (Linux - POSIX):
+#        ./configure
+#
+#
+#   LICENSE: BSD-3-Clause
+#
+#   Copyright (c) 2025 GCK
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+# 
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 
-usage() {
-cat <<EOF
-Usage: $0 [OPTION]... [VAR=VALUE]...
+me=$0
+scriptversion="1.0.1"
 
-To assign environment variables (e.g., CC, CFLAGS...), specify them as
-VAR=VALUE.
+version="make $scriptversion
 
-CC              C compiler command [detected]
-CFLAGS          C compiler flags [-g, ...]
-LDFLAGS         C linker flags
+Copyright (C) 2025 GCK.
 
---prefix=<path> Set the install path
---debug         Flags for debug build, overrides CFLAGS
+This is free software; you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law."
 
-EOF
-exit 0
-}
+usage="\
+Usage: $me [OPTION]...
+Prepares the build system for GCK distributions
 
-cmdexists() { type "$1" >/dev/null 2>&1 ; }
-trycc() { [ -z "$CC" ] && cmdexists "$1" && CC=$1 ; }
+Options:
+   --release        enable release flags
+   --enable-debug   enable debugging options
+   --prefix PREFIX  set installation prefix
 
+   --help     print this help and exit
+   --version  output version information
+
+Environment variables:
+
+   CC      C compiler command
+   CFLAGS  C compiler flags
+
+Use these variables to override the choices made by 'configure'."
+
+release=false
+debug=false
 prefix=/usr/local
-CFLAGS="-std=c23"
-LDFLAGS=
+CFLAGS=-pedantic
 CC=
+args_old=$@
 
-printf "checking for C compiler... "
-trycc gcc
-trycc clang
-trycc cc
-trycc icx
-printf "%s\n" "$CC"
-
-DEBUG=false
-for arg; do
-case "$arg" in
---help|-h) usage ;;
---prefix=*) prefix=${arg#*=} ;;
---debug) DEBUG=true ;;
-CFLAGS=*) CFLAGS=${arg#*=} ;;
-LDFLAGS=*) LDFLAGS=${arg#*=} ;;
-CC=*) CC=${arg#*=} ;;
-*) printf "Unrecognized option %s\n" "$arg" ;;
-esac
+while [ $# -gt 0 ]; do
+  case $1 in
+    --help) echo "$usage"; exit 0 ;;
+    --version) echo "$version"; exit 0 ;;
+    --release) release=true ;;
+    --enable-debug) debug=true ;;
+    --prefix) shift; prefix=${1:?missing prefix argument} ;;
+    --strict) CFLAGS+="-Werror" ;;
+    CC=*) CC=${1#*=} ;;
+    CFLAGS=*) CFLAGS=${1#*=} ;;
+    -*)
+      echo "$0: Unknown option '$1'." >&2
+      echo "$0: Try '--help' for more information." >&2
+      exit 1 ;;
+  esac
+  shift
 done
 
+if [ "$release" = true ] && [ "$debug" = true ]; then
+  echo "$0: Can't set both '--release' and '--debug'." >&2
+  echo "$0: Try '--help' for more information." >&2
+  exit 1
+fi
+
+cmdexists() { command -v "$1" >/dev/null 2>&1 ; }
+trycc() { [ -z "$CC" ] && cmdexists "$1" && CC=$1 ; }
+
+if [ -z "$CC" ]; then
+  printf "checking for C compiler... "
+  trycc gcc
+  trycc clang
+  trycc cc
+  if [ -z "$CC" ]; then
+    echo "none found"
+    exit 1
+  fi
+  printf "%s\n" "$CC"
+fi
+
+printf "checking for git... "
+if cmdexists git; then
+  echo "yes"
+else
+  echo "no"
+  exit 1
+fi
+
 printf "checking whether C compiler works... "
-tmpc="$(mktemp -d)/test.c"
+tmpcdir="$(mktemp -d)"
+tmpc="$tmpcdir/test.c"
 echo "typedef int x;" > "$tmpc"
 if output=$($CC $CFLAGS -c -o /dev/null "$tmpc" 2>&1); then
-printf "yes\n"
+  printf "yes\n"
 else
-printf "no; %s\n" "$output"
-exit 1
+  printf "no; %s\n" "$output"
+  rm -rf "$tmpcdir"
+  exit 1
+fi
+rm -rf "$tmpcdir"
+
+if [ "$release" = true ]; then
+  CFLAGS="$CFLAGS -O3 -pipe -DNDEBUG -march=native -flto -s -fdata-sections -ffunction-sections -Wl,--gc-sections"
+elif [ "$debug" = true ]; then
+  CFLAGS="$CFLAGS -O0 -ggdb -Wall -Wextra -Wpedantic -fno-omit-frame-pointer -DDEBUG"
 fi
 
-GDEBUGCFLAGS="-std=c23 -O0 -g3 -Wall -Wextra -Wpedantic -Werror -Wshadow -Wdouble-promotion -Wformat=2 -Wnull-dereference -Wconversion -Wsign-conversion -Wcast-qual -Wcast-align=strict -Wpointer-arith -Wstrict-overflow=5 -Wstrict-aliasing=2 -Wundef -Wunreachable-code -Wswitch-enum -fanalyzer -fsanitize=undefined,address -fstack-protector-strong -D_FORTIFY_SOURCE=3"
-CDEBUGCFLAGS="-std=gnu2x -O0 -g3 -Wall -Wextra -Wpedantic -Werror -Wshadow -Wdouble-promotion -Wformat=2 -Wnull-dereference -Wconversion -Wsign-conversion -Wcast-qual -Wcast-align=strict -Wpointer-arith -Wstrict-overflow=5 -Wstrict-aliasing=2 -Wundef -Wunreachable-code -Wswitch-enum -fanalyzer -fsanitize=undefined,address -fstack-protector-strong -D_FORTIFY_SOURCE=3"
+echo "creating config.status"
+cat <<EOF > config.status
+#!/bin/sh
+#   DO NOT MODIFY. THIS IS A AUTOGENERATED SCRIPT FROM 'configure'
+#
+#    COMPILATION (Linux - POSIX):
+#        ./config.status
+#
+#
+#   LICENSE: BSD-3-Clause
+#
+#   Copyright (c) 2025 GCK
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+# 
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 
-if [ -z "$DEBUG" ]; then
-case "$CC" in
-gcc) CFLAGS="$GDEBUGFLAGS";;
-clang) CFLAGS="$CDEBUGFLAGS";;
-*) ;;
-esac
-else
-case "$CC" in
-gcc) ;;
-clang) ;;
-*) ;;
-esac
-fi
-
-case "$OSTYPE" in
-cygwin|msys) 
-echo "enabling windows specific flags"
-CFLAGS="-v $CFLAGS"
-;;
-esac
-
-printf "creating config.mak... "
+printf "config.status: recreating config.mak... "
 {
-printf "PREFIX=%s\n" "$prefix"
-printf "CFLAGS=%s\n" "$CFLAGS"
-printf "LDFLAGS=%s\n" "$LDFLAGS"
-printf "CC=%s\n" "$CC"
+  printf "PREFIX=%s\\n" "$prefix"
+  printf "CFLAGS=%s\\n" "$CFLAGS"
+  printf "CC=%s\\n" "$CC"
+} > config.status
+printf "done\n"
+EOF
+chmod u+x config.status
+
+printf "configure: creating config.mak... "
+{
+  printf "PREFIX=%s\n" "$prefix"
+  printf "CFLAGS=%s\n" "$CFLAGS"
+  printf "CC=%s\n" "$CC"
 } > config.mak
 printf "done\n"
+
+# End: configure

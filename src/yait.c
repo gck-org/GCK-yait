@@ -19,196 +19,191 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- * 
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived from
  *    this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <config.h>
 #include <errno.h>
 #include <getopt.h>
 #include <pwd.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/wait.h>
 #include <sys/stat.h>
-#include <unistd.h>
-#include <stdbool.h>
+#include <sys/wait.h>
 #include <time.h>
+#include <unistd.h>
 
-#include "licence.h"
 #include "../lib/err.h"
 #include "../lib/fs.h"
 #include "../lib/proginfo.h"
-#include "../lib/textc.h"
 #include "../lib/say.h"
+#include "../lib/textc.h"
+#include "licence.h"
 
 typedef enum { MIT, GPL, BSD, UNL } licence_t;
 
-static const struct option longopts[] = {
-	{ "author", required_argument, 0, 'a' },
-	{ "licence", required_argument, 0, 'l' },
-	{ "quiet", no_argument, 0, 'q' },
-	{ "force", no_argument, 0, 'f' },
-	{ 0, 0, 0, 0 }
-};
+static const struct option longopts[] = {{"author", required_argument, 0, 'a'},
+                                         {"licence", required_argument, 0, 'l'},
+                                         {"quiet", no_argument, 0, 'q'},
+                                         {"force", no_argument, 0, 'f'},
+                                         {0, 0, 0, 0}};
 
 static int exit_status;
 
 static void print_help();
 static void print_version();
 
-static char *get_name()
-{
-	int fds[2];
-	if (pipe(fds) == -1)
-		goto sysuser;
+static char *get_name() {
+  int fds[2];
+  if (pipe(fds) == -1)
+    goto sysuser;
 
-	pid_t pid = fork();
-	if (pid == -1) {
-		close(fds[0]);
-		close(fds[1]);
-		goto sysuser;
-	}
+  pid_t pid = fork();
+  if (pid == -1) {
+    close(fds[0]);
+    close(fds[1]);
+    goto sysuser;
+  }
 
-	if (pid == 0) {
-		dup2(fds[1], STDOUT_FILENO);
-		close(fds[0]);
-		close(fds[1]);
-		execlp("git", "git", "config", "--get", "user.name",
-		       (char *)NULL);
-		_exit(127);
-	}
+  if (pid == 0) {
+    dup2(fds[1], STDOUT_FILENO);
+    close(fds[0]);
+    close(fds[1]);
+    execlp("git", "git", "config", "--get", "user.name", (char *)NULL);
+    _exit(127);
+  }
 
-	close(fds[1]);
-	char buf[256];
-	ssize_t n = read(fds[0], buf, sizeof buf - 1);
-	close(fds[0]);
-	int status;
-	waitpid(pid, &status, 0);
-	if (n > 0 && WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-		buf[n] = 0;
-		buf[strcspn(buf, "\n")] = 0;
-		return str_dup(buf);
-	}
+  close(fds[1]);
+  char buf[256];
+  ssize_t n = read(fds[0], buf, sizeof buf - 1);
+  close(fds[0]);
+  int status;
+  waitpid(pid, &status, 0);
+  if (n > 0 && WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+    buf[n] = 0;
+    buf[strcspn(buf, "\n")] = 0;
+    return str_dup(buf);
+  }
 
 sysuser: {
-	char *name = getlogin();
-	if (name)
-		return str_dup(name);
-	struct passwd *pw = getpwuid(getuid());
-	if (pw && pw->pw_name)
-		return str_dup(pw->pw_name);
+  char *name = getlogin();
+  if (name)
+    return str_dup(name);
+  struct passwd *pw = getpwuid(getuid());
+  if (pw && pw->pw_name)
+    return str_dup(pw->pw_name);
 }
-	return str_dup("author");
-}
-
-static int get_year()
-{
-	time_t now = time(NULL);
-	struct tm *t = localtime(&now);
-
-	// The tm_year member stores years since 1900, so add 1900 to get the actual year
-	return t->tm_year + 1900;
+  return str_dup("author");
 }
 
-int main(int argc, char **argv)
-{
-	int optc;
-	int lose = 0;
-	char *package;
-	bool quiet = false;
-	bool force = false;
-	bool editor = false;
-	bool shell = false;
-	char *author = get_name();
-	exit_status = EXIT_SUCCESS;
-	int year = get_year();
-	licence_t licence = BSD;
-	set_prog_name(argv[0]);
+static int get_year() {
+  time_t now = time(NULL);
+  struct tm *t = localtime(&now);
 
-	parse_standard_options(argc, argv, print_help, print_version);
+  // The tm_year member stores years since 1900, so add 1900 to get the actual
+  // year
+  return t->tm_year + 1900;
+}
 
-	while ((optc = getopt_long(argc, argv, "a:l:EqfS", longopts, NULL)) !=
-	       -1)
-		switch (optc) {
-		case 'a':
-			if (optarg) {
-				if (author)
-					free(author);
-				author = str_dup(optarg);
-			}
-			break;
-		case 'l':
-			if (!strcmp(optarg, "list")) {
-				puts("BSD\nGPL\nMIT\nUNL");
-				exit(EXIT_SUCCESS);
-			}
-			if (!strcmp(optarg, "GPL"))
-				licence = GPL;
-			else if (!strcmp(optarg, "MIT"))
-				licence = MIT;
-			else if (!strcmp(optarg, "BSD"))
-				licence = BSD;
-			else if (!strcmp(optarg, "UNL"))
-				licence = UNL;
-			else {
-				puts("BSD\nGPL\nMIT\nUNL");
-				exit(EXIT_FAILURE);
-			}
-			break;
-		case 'E':
-			editor = true;
-			break;
-		case 'q':
-			quiet = true;
-			break;
-		case 'f':
-			force = true;
-			break;
-		case 'S':
-			shell = true;
-			break;
-		default:
-			lose = 1;
-		}
-	if (lose) {
-		emit_try_help();
-	}
+int main(int argc, char **argv) {
+  int optc;
+  int lose = 0;
+  char *package;
+  bool quiet = false;
+  bool force = false;
+  bool editor = false;
+  bool shell = false;
+  char *author = get_name();
+  exit_status = EXIT_SUCCESS;
+  int year = get_year();
+  licence_t licence = BSD;
+  set_prog_name(argv[0]);
 
-	if (optind >= argc) {
-		fatalf("no input name");
-	}
+  parse_standard_options(argc, argv, print_help, print_version);
 
-	if (optind + 1 < argc) {
-		errorf("extra operand: %s", argv[optind + 1]);
-		emit_try_help();
-	}
+  while ((optc = getopt_long(argc, argv, "a:l:EqfS", longopts, NULL)) != -1)
+    switch (optc) {
+    case 'a':
+      if (optarg) {
+        if (author)
+          free(author);
+        author = str_dup(optarg);
+      }
+      break;
+    case 'l':
+      if (!strcmp(optarg, "list")) {
+        puts("BSD\nGPL\nMIT\nUNL");
+        exit(EXIT_SUCCESS);
+      }
+      if (!strcmp(optarg, "GPL"))
+        licence = GPL;
+      else if (!strcmp(optarg, "MIT"))
+        licence = MIT;
+      else if (!strcmp(optarg, "BSD"))
+        licence = BSD;
+      else if (!strcmp(optarg, "UNL"))
+        licence = UNL;
+      else {
+        puts("BSD\nGPL\nMIT\nUNL");
+        exit(EXIT_FAILURE);
+      }
+      break;
+    case 'E':
+      editor = true;
+      break;
+    case 'q':
+      quiet = true;
+      break;
+    case 'f':
+      force = true;
+      break;
+    case 'S':
+      shell = true;
+      break;
+    default:
+      lose = 1;
+    }
+  if (lose) {
+    emit_try_help();
+  }
 
-	package = str_dup(argv[optind]);
+  if (optind >= argc) {
+    fatalf("no input name");
+  }
 
-	if (shell) {
-		fs_write(package, "\
+  if (optind + 1 < argc) {
+    errorf("extra operand: %s", argv[optind + 1]);
+    emit_try_help();
+  }
+
+  package = str_dup(argv[optind]);
+
+  if (shell) {
+    fs_write(package, "\
 #!/bin/sh\n\
 \n\
 # Usage: $0 [options]...\n\
@@ -253,45 +248,45 @@ while [ $# -gt 0 ]; do\n\
     shift\n\
 done\n\
 ",
-			 year, author);
-		struct stat st;
+             year, author);
+    struct stat st;
 
-		if (stat(package, &st) != 0) {
-			fatalfa(errno);
-		}
+    if (stat(package, &st) != 0) {
+      fatalfa(errno);
+    }
 
-		mode_t mode = st.st_mode | S_IXUSR;
+    mode_t mode = st.st_mode | S_IXUSR;
 
-		if (chmod(package, mode) != 0) {
-			fatalfa(errno);
-		}
-		return exit_status;
-	}
+    if (chmod(package, mode) != 0) {
+      fatalfa(errno);
+    }
+    return exit_status;
+  }
 
-	// size_t len = strlen(package);
-	// char *pdir = xmalloc(len + 2);
-	// memcpy(pdir, package, len);
-	// pdir[len] = '/';
-	// pdir[len + 1] = '\0';
-	char *pdir;
-	asprintf(&pdir, "%s/", package);
+  // size_t len = strlen(package);
+  // char *pdir = xmalloc(len + 2);
+  // memcpy(pdir, package, len);
+  // pdir[len] = '/';
+  // pdir[len + 1] = '\0';
+  char *pdir;
+  asprintf(&pdir, "%s/", package);
 
-	fs_new(pdir);
-	if (chdir(pdir))
-		fatalfa(errno);
+  fs_new(pdir);
+  if (chdir(pdir))
+    fatalfa(errno);
 
-	fs_write("doc/version.texi", "\
+  fs_write("doc/version.texi", "\
 @set UPDATED %s\
 @set UPDATED-MONTH %s\
 @set EDITION 1\
 @set VERSION alpha\
 ",
-		 "1 January 1970", "January 2025");
+           "1 January 1970", "January 2025");
 
-	char *texi_buffer;
-	// snprintf(path_buffer, sizeof(path_buffer), "doc/%s.texi", package);
-	asprintf(&texi_buffer, "doc/%s.texi", package);
-	fs_write(texi_buffer, "\
+  char *texi_buffer;
+  // snprintf(path_buffer, sizeof(path_buffer), "doc/%s.texi", package);
+  asprintf(&texi_buffer, "doc/%s.texi", package);
+  fs_write(texi_buffer, "\
 \\input texinfo @c -*-texinfo-*-\n\
 @c %**start of header\n\
 @setfilename foo.info\n\
@@ -460,15 +455,15 @@ a @file{ChangeLog} entry.\n\
 \n\
 @bye\
 ",
-		 author, author, author, author, author, author, author, author,
-		 author, author, author, author, author, author);
-	free(texi_buffer);
+           author, author, author, author, author, author, author, author,
+           author, author, author, author, author, author);
+  free(texi_buffer);
 
-	// TODO(vx-clutch): Why dosn't this write the source?
-	// snprintf(path_buffer, sizeof(path_buffer), "src/%s.c", package);
-	char *src_path;
-	asprintf(&src_path, "src/%s.c", package);
-	fs_write(src_path, "\
+  // TODO(vx-clutch): Why dosn't this write the source?
+  // snprintf(path_buffer, sizeof(path_buffer), "src/%s.c", package);
+  char *src_path;
+  asprintf(&src_path, "src/%s.c", package);
+  fs_write(src_path, "\
 /* Copyright (C) %s\n\
  *\n\
  * This file is part of %s\n\
@@ -529,10 +524,10 @@ void print_version()\n\
 	exit(exit_status);\n\
 }\
 ",
-		 author, package, package, package, author);
-	free(src_path);
+           author, package, package, package, author);
+  free(src_path);
 
-	fs_write("tools/Cleanup", "\
+  fs_write("tools/Cleanup", "\
 #!/bin/sh\n\
 # Usage: ./Cleanup\n\
 \n\
@@ -554,7 +549,7 @@ run make distclean\n\
 \n\
 echo \"done.\"\
 ");
-	fs_write("tools/format", "\
+  fs_write("tools/format", "\
 #!/bin/sh\n\
 \n\
 # Usage ./format\n\
@@ -563,7 +558,7 @@ find . -name \"*.c\" -exec clang-format -i --verbose {} \\;\n\
 find . -name \"*.h\" -exec clang-format -i --verbose {} \\;\
 ");
 
-	fs_write(".clang-format", "\
+  fs_write(".clang-format", "\
 ---\n\
 AccessModifierOffset: -4\n\
 AlignAfterOpenBracket: Align\n\
@@ -674,7 +669,7 @@ UseTab: Always\n\
 ...\
 ");
 
-	fs_write(".clangd", "\
+  fs_write(".clangd", "\
 CompileFlags:\n\
   Add: [-x, c, -std=c23, -Ilib, -I.]\n\
 \n\
@@ -684,7 +679,7 @@ Diagnostics:\n\
     Remove: []\
 ");
 
-	fs_write("README", "\
+  fs_write("README", "\
 This is the README for the GCK %s distribution.\n\
 %s does a thing.\n\
 \n\
@@ -715,9 +710,9 @@ implementation, etc., would still be very much appreciated.\n\
 \n\
 GCK %s is free software. See the file COPYING for copying conditions.\n\
 \n",
-		 package, package, year, package);
+           package, package, year, package);
 
-	fs_write("INSTALL", "\
+  fs_write("INSTALL", "\
 Installation Instructions\n\
 *************************\n\
 \n\
@@ -773,9 +768,9 @@ Documentation and other data files still use the regular prefix.\n\
 `configure` also accepts some other options. Run `configure --help` for more\n\
 details\n\
 ",
-		 year);
+           year);
 
-	fs_write("AUTHORS", "\
+  fs_write("AUTHORS", "\
 Authors of %s %s.\n\
 \n\
   Copyright (C) %d %s.\n\
@@ -788,9 +783,9 @@ Also see the THANKS files.\n\
 \n\
 %s\n\
 ",
-		 author, package, year, package, author);
+           author, package, year, package, author);
 
-	fs_write("THANKS", "\
+  fs_write("THANKS", "\
 Additional contributors to %s %s.\n\
 \n\
   Copyright (C) %d %s.\n\
@@ -805,9 +800,9 @@ Thanks to:\n\
 \n\
 See also the AUTHORS file.\n\
 			",
-		 author, package, year, author);
+           author, package, year, author);
 
-	fs_write("config.h", "\
+  fs_write("config.h", "\
 #ifndef CONFIG_H\n\
 #define CONFIG_H\n\
 \n\
@@ -819,9 +814,9 @@ See also the AUTHORS file.\n\
 \n\
 #endif\
 ",
-		 package, author, year);
+           package, author, year);
 
-	fs_write("configure", "\
+  fs_write("configure", "\
 #!/bin/sh\n\
 \n\
 usage() {\n\
@@ -914,7 +909,7 @@ printf \"CC=%%s\n\" \"$CC\"\n\
 printf \"done\n\"\
 ");
 
-	fs_write("Makefile", "\
+  fs_write("Makefile", "\
 PACKAGE := %s\n\
 \n\
 SRCS := $(wildcard src/*.c) $(wildcard lib/*.c)\n\
@@ -970,9 +965,9 @@ release: clean all\n\
 \n\
 .PHONY: all clean distclean install uninstall build release\
 ",
-		 package);
+           package);
 
-	fs_write("TODO", "\
+  fs_write("TODO", "\
 %s %s- TODO\n\
 \n\
 Todo:\n\
@@ -981,77 +976,75 @@ Todo:\n\
 \n\
 end of file TODO\
 ",
-		 author, package, package);
+           author, package, package);
 
-	switch (licence) {
-	case BSD:
-		fs_write("COPYING", fBSD, year, author);
-		break;
-	case MIT:
-		fs_write("COPYING", fMIT, year, author);
-		break;
-	case GPL:
-		fs_write("COPYING", fGPL);
-		break;
-	case UNL:
-		fs_write("COPYING", fUNL);
-		break;
-	default:
-		fatalf("illegal state");
-	}
+  switch (licence) {
+  case BSD:
+    fs_write("COPYING", fBSD, year, author);
+    break;
+  case MIT:
+    fs_write("COPYING", fMIT, year, author);
+    break;
+  case GPL:
+    fs_write("COPYING", fGPL);
+    break;
+  case UNL:
+    fs_write("COPYING", fUNL);
+    break;
+  default:
+    fatalf("illegal state");
+  }
 
-	struct stat st;
+  struct stat st;
 
-	if (stat("configure", &st) != 0) {
-		fatalfa(errno);
-	}
+  if (stat("configure", &st) != 0) {
+    fatalfa(errno);
+  }
 
-	mode_t mode = st.st_mode | S_IXUSR;
+  mode_t mode = st.st_mode | S_IXUSR;
 
-	if (chmod("configure", mode) != 0) {
-		fatalfa(errno);
-	}
-	if (chmod("tools/format", mode) != 0) {
-		fatalfa(errno);
-	}
-	if (chmod("tools/Cleanup", mode) != 0) {
-		fatalfa(errno);
-	}
+  if (chmod("configure", mode) != 0) {
+    fatalfa(errno);
+  }
+  if (chmod("tools/format", mode) != 0) {
+    fatalfa(errno);
+  }
+  if (chmod("tools/Cleanup", mode) != 0) {
+    fatalfa(errno);
+  }
 
-	return exit_status;
+  return exit_status;
 }
 
-static void print_help()
-{
-	printf("Usage: %s [OPTION]... [project-name]...\n", PROGRAM);
-	fputs("\
+static void print_help() {
+  printf("Usage: %s [OPTION]... [project-name]...\n", PROGRAM);
+  fputs("\
 Generates an opinionated C project.\n",
-	      stdout);
-	puts("");
-	fputs("\
+        stdout);
+  puts("");
+  fputs("\
       --help                  display this help and exit\n\
       --version               display version information and exit\n",
-	      stdout);
-	puts("");
-	fputs("\
+        stdout);
+  puts("");
+  fputs("\
       -E                      Open $EDITOR after project creation\n\
       -q, --quiet             Only print required messages\n\
       -f, --force             Overwrite existing files\n\
       --author=NAME           Set the program author (default git username|system username)\n\
       --licence=LICENCE       Set the program licence (default BSD)\n",
-	      stdout);
-	exit(exit_status);
+        stdout);
+  exit(exit_status);
 }
 
-static void print_version()
-{
-	printf("%s %s %d\n", prog_name, VERSION, COMMIT);
+static void print_version() {
+  printf("%s %s %d\n", prog_name, VERSION, COMMIT);
 
-	printf("Copyright (C) %d GCK.\n", YEAR);
+  printf("Copyright (C) %d GCK.\n", YEAR);
 
-	puts("This is free software: you are free to change and redistribute it.");
-	puts("There is NO WARRANTY, to the extent permitted by law.");
-	exit(exit_status);
+  puts("This is free software: you are free to change and redistribute it.");
+  puts("There is NO WARRANTY, to the extent permitted by law.");
+  exit(exit_status);
 }
 
 /* end of file yait.c */

@@ -6,6 +6,14 @@ This README.dev file describes the development environment.
   are permitted in any medium without royalty provided the copyright
   notice and this notice are preserved.
 
+Notice
+------
+
+This documentation is standard across all GCK package and is not specified per
+package; however, this is the defacto standard for most package. The only place
+where this commonly differs is in non-binary or library packages.
+
+
 Build system
 ------------
 

@@ -1,8 +1,8 @@
 \input texinfo @c -*-texinfo-*-
 @c %**start of header
-@setfilename yait.info
+@setfilename hello.info
 @include version.texi
-@settitle GCK yait @value{VERSION}
+@settitle GCK Hello @value{VERSION}
 
 @c Define a new index for options.
 @defcodeindex op
@@ -12,8 +12,8 @@
 @c %**end of header
 
 @copying
-This manual is for GCK yait (version @value{VERSION}, @value{UPDATED}),
-which generates an optionated C project.
+This manual is for GCK Hello (version @value{VERSION}, @value{UPDATED}),
+which greets you nicely.
 
 Copyright @copyright{} 2025 GCK.
 
@@ -25,7 +25,7 @@ notice and this notice are preserved.
 @end copying
 
 @titlepage
-@title GCK yait
+@title GCK Hello
 @subtitle for version @value{VERSION}, @value{UPDATED}
 @page
 @vskip 0pt plus 1filll
@@ -37,16 +37,16 @@ notice and this notice are preserved.
 
 @ifnottex
 @node Top
-@top GNU Hello
+@top GCK Hello
 
-This manual is for GCK yait (version @value{VERSION}, @value{UPDATED}),
-which generates an optionated C project.
+This manual is for GCK Hello (version @value{VERSION}, @value{UPDATED}),
+which greets you nicely.
 @end ifnottex
 
 @menu
 * Overview::		General purpose and information.
-* Sample output::	Sample output from @command{yait}.
-* Invoking hello::	How to run @command{yait}.
+* Sample output::	Sample output from @command{hello}.
+* Invoking hello::	How to run @command{hello}.
 * Reporting bugs::	Sending bug reports and feature suggestions.
 * Concept index::	Index of concepts.
 @end menu
@@ -58,113 +58,35 @@ which generates an optionated C project.
 @cindex greetings
 @cindex overview
 
-The GNU @command{hello} program
-(@url{http://www.gnu.org/software/hello/}) produces a familiar,
-friendly greeting.  It allows nonprogrammers to use a classic computer
-science tool which would otherwise be unavailable to them.  Because it
-is protected by the GNU General Public License, users are free (in
-perpetuity) to share and change it.
+The GCK @command{hello} program produces a simple, friendly greeting.
+It serves as a minimal example of a C program with proper GNU-style
+structure and build system.
 
-@cindex joke, not
-Not to spoil the joke, but of course the practical purpose of GNU
-Hello is to serve as a minimal example of a GNU package.  So, although
-most manuals don't need to discuss the implementation of the programs
-they document, that is part of the goal here.
+@cindex example program
+@cindex template
+This program is designed as a template and example for other projects.
+It demonstrates basic C programming practices, proper project structure,
+and standard GNU conventions.
 
-@cindex GNU coding standards
-@cindex GNU maintainer standards
-@cindex standards, GNU coding
-@cindex standards, GNU maintainer
-First, GNU Hello follows the GNU coding standards
-(@pxref{Top,,Preface,standards,GNU Coding Standards}) and GNU
-maintainer standards (@pxref{Top,,Preface,maintain, Information for
-GNU Maintainers}).  These are the basic documents which all GNU
-packages should adhere to.
-
-The Hello package also implements recommended development practices
-not embodied in the standards, using other GNU packages and features:
+@cindex features
+GCK Hello has the following features:
 
 @itemize @bullet
-@item
-@cindex Automake
-@cindex Autoconf
-It uses Automake (@pxref{Top,,Introduction,automake,GNU Automake}) and
-hence also Autoconf (@pxref{Top,,Introduction,autoconf,GNU Autoconf})
-for configuration.
-
-@item
-@cindex Gnulib
-@cindex @command{srclist-update} script
-@cindex @file{README-dev} source file
-It uses Gnulib (@pxref{Top,,Introduction,gnulib,GNU Gnulib}) to enhance
-portability and avoid duplication of common sources.  Both
-@code{gnulib-tool} and @code{srclist-update} are used, for purposes of
-example.  See the @file{README-dev} file in the distribution.
-
-@item
-@cindex Gettext
-GNU Gettext (@pxref{Top,,Introduction,gettext,GNU Gettext}) is used
-for internationalization support.  Hello's greeting has been translated
-into many languages.
-
-@item
-@opindex --help
-Internally, Hello uses the GNU @code{getopt_long} function
-(@pxref{Getopt Long Options,,,libc,GNU C Library}) to parse options,
-thus supporting GNU-style long options such as @option{--help}.
-
-@item
-@cindex Help2man
-The Hello Man page is generated with GNU @code{help2man}
-(@pxref{Top,,Overview,help2man,GNU @code{help2man}}) from the
-@option{--help} output.  This relieves the maintainers from the burden
-of updating separate man documentation, yet provides a reasonable
-overview for man devotees.
-
-@item
-@cindex Texinfo
-Finally, Texinfo (@pxref{Top,,Introduction,texinfo,Texinfo}) is the
-documentation format for this manual.  It supports output in Info,
-HTML, PDF, DVI, plain text, XML, and other formats.
-
+@item Simple and friendly greeting
+@item Support for command-line arguments
+@item Standard GNU-style help and version options
+@item Clean, readable C source code
+@item Proper project structure with build system
 @end itemize
 
-GNU Hello is implemented in C@.  The GNU Gettext distribution contains
-``hello world'' examples in many other programming languages; see the
-Gettext home page at @url{http://www.gnu.org/software/gettext/}.
+@cindex implementation
+GCK Hello is implemented in C and follows standard POSIX conventions.
+The program accepts command-line arguments and greets each one individually,
+or prints a default greeting if no arguments are provided.
 
-@cindex @file{Makefile.am} targets
-The top-level @file{Makefile.am} in Hello also contains a few special
-targets for other projects to adapt as desired:
-
-@table @code
-@item diff
-Make a diff from the previous release, assuming the current tarball is
-in the current tarball.
-
-@item po-check
-Verify that all source files using @code{_()} are included for
-translation in @file{po/POTFILES.in}, so translators will have all the
-messages.
-
-@item wwwdoc
-Sample procedure for updating the manual on the GNU web site, in this
-case @url{http://www.gnu.org/software/hello/manual/}.
-@end table
-
-@cindex authors
-@cindex Haertel, Mike
-@cindex MacKenzie, David
-@cindex Brittenson, Jan
-@cindex Hannum, Charles
-@cindex McGrath, Roland
-@cindex Friedman, Noah
-@cindex Eichwalder, Karl
-@cindex King, The
-@cindex Berry, Karl
-GNU Hello was written by Mike Haertel, David MacKenzie, Jan
-Brittenson, Charles Hannum, Roland McGrath, Noah Friedman, Karl
-Eichwalder, Karl Berry, and @w{The King}.
+@cindex license
+This program is distributed under the BSD 3-Clause License, allowing
+free use, modification, and distribution with minimal restrictions.
 
 
 @node Sample output
@@ -173,24 +95,35 @@ Eichwalder, Karl Berry, and @w{The King}.
 @cindex sample output
 @cindex examples
 
-Here are some examples of running GNU Hello.
+Here are some examples of running GCK Hello.
 
 This is the output of the command @samp{hello}:
 
 @example
-Hello, world!
+Hello, World!
 @end example
 
-This is the output of the command @samp{hello --traditional}:
+This is the output of the command @samp{hello Alice}:
 
 @example
-hello, world
+Hello, Alice!
 @end example
 
-This is the output of the command @samp{hello --greeting=hi}:
+This is the output of the command @samp{hello Alice Bob}:
 
 @example
-hi
+Hello, Alice!
+Hello, Bob!
+@end example
+
+This is the output of the command @samp{hello --help}:
+
+@example
+Usage: hello [OPTION]...
+Greets you nicely.
+
+      --help                  display this help and exit
+      --version               display version information and exit
 @end example
 
 
@@ -205,56 +138,27 @@ hi
 The format for running the @command{hello} program is:
 
 @example
-hello @var{option} @dots{}
+hello [@var{option}]... [@var{name}]...
 @end example
 
-With no options, @command{hello} prints the greeting @samp{Hello,
-world!}.
+With no arguments, @command{hello} prints the greeting @samp{Hello, World!}.
+
+If one or more @var{name} arguments are provided, @command{hello} greets
+each name individually with @samp{Hello, @var{name}!}.
 
 @command{hello} supports the following options:
 
 @table @option
-@item --greeting=@var{text}
-@itemx -g @var{text}
-@opindex --greeting
-@opindex -g
-Output @var{text} instead of the default greeting.
-
 @item --help
-@itemx -h
 @opindex --help
-@opindex -h
 Print an informative help message on standard output and exit
 successfully.
 
-@cindex environment variables, help for
-@c This comment prevents `make syntax-check' from diagnosing a doubled word "for\nFor"
-For the @option{--help} output of GNU programs, it's strongly
-encouraged to include a brief (one or two sentences) description of
-what the program does, as well as the synopsis of how to run the
-program.  Any environment variables which affect execution should also
-be mentioned (Hello doesn't have any).
-
-@item --traditional
-@itemx -t
-@opindex --traditional
-@opindex -t
-@cindex traditional
-@cindex modern
-Output the traditional greeting message @samp{hello, world}.
-
 @item --version
-@itemx -v
 @opindex --version
-@opindex -v
 Print the version number and licensing information of Hello on
 standard output and then exit successfully.
-
 @end table
-
-If more than one of the greeting options (@option{-g},
-@option{-t}, and their long-named equivalents) is specified, whichever
-comes last takes precedence.
 
 
 @node Reporting bugs
@@ -264,8 +168,8 @@ comes last takes precedence.
 @cindex problems
 @cindex reporting bugs
 
-To report bugs, suggest enhancements or otherwise discuss GNU Hello,
-please send electronic mail to @email{bug-hello@@gnu.org}.
+To report bugs, suggest enhancements or otherwise discuss GCK Hello,
+please send electronic mail to the project maintainers.
 
 @cindex checklist for bug reports
 For bug reports, please include enough information for the maintainers
@@ -289,15 +193,43 @@ better to include too much than to leave out something important.
 
 @cindex patches, contributing
 Patches are welcome; if possible, please make them with @samp{@w{diff
--c}} (@pxref{Top,, Overview, diff, Comparing and Merging Files}) and
-include @file{ChangeLog} entries (@pxref{Change Log,,, emacs, The GNU
-Emacs Manual}).  Please follow the existing coding style.
+-c}} and include @file{ChangeLog} entries.  Please follow the existing
+coding style.
 
 
-@node GNU Free Documentation License
-@appendix GNU Free Documentation License
+@node BSD License
+@appendix BSD License
 
-@include fdl.texi
+This program is distributed under the BSD 3-Clause License:
+
+@quotation
+Copyright (c) 2025, GCK
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+@end quotation
 
 
 @node Concept index
